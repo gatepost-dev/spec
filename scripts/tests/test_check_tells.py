@@ -108,6 +108,10 @@ class DebugCallTest(unittest.TestCase):
         self.assertEqual(check_text("example_test.go", 'fmt.Println("EK-01")'), [])
         self.assertEqual(check_text("src/a.ts", " * console.log(parse(code));"), [])
 
+    def test_ignores_doctest_examples(self) -> None:
+        self.assertEqual(check_text("pkg/a.py", '    >>> print(parse("EK01A03FK01"))'), [])
+        self.assertEqual(check_text("pkg/a.py", "    ...     print(code)"), [])
+
     def test_reads_the_language_from_a_shebang(self) -> None:
         self.assertEqual(
             rules(check_text("scripts/run", "#!/usr/bin/env python3\nprint(1)")), ["TELL-13"]

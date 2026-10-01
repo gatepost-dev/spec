@@ -85,7 +85,7 @@ convention = "google"
 - **PY-8 MUST.** Durations are seconds as `float`, as in httpx. Names have no unit suffix: `timeout`, `cache_ttl` and `retry_after`.
 - **PY-9 MUST.** The async client lets `asyncio.CancelledError` pass through. It never catches it and never wraps it.
 - **PY-10 MUST.** Errors subclass `PostcodeError`, which subclasses `Exception`. A raised error keeps its cause with `raise ... from ...`.
-- **PY-11 MUST.** Each public symbol has a Google-style docstring with an `Example:` section. **(tool)**
+- **PY-11 MUST.** Each public symbol has a Google-style docstring with an `Example:` section. Write the example with doctest prompts (`>>>`). **(tool)**
 - **PY-12 MUST.** The package does not call `print`, `pprint`, `breakpoint` or `pdb.set_trace`. Importing a module has no side effects. **(tool)**
 - **PY-13 MUST.** `__all__` in `gatepost_postcode/__init__.py` lists every public symbol. Other modules start with an underscore.
 - **PY-14 MUST.** Each `noqa` and each `type: ignore` comment names the rule and gives a reason.

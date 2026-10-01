@@ -106,7 +106,7 @@ Coding agents repeat some habits so often that readers spot them at once. Each r
 - **TELL-1.** It checks line length in source and config files, and it counts a tab as 4 columns. It skips lines with a URL, files marked as generated, lockfiles, JSON files in a folder named `data` or `vectors`, and Markdown prose.
 - **TELL-7.** It rejects files named `utils`, `helpers`, `common` or `misc`, with any extension.
 - **TELL-12 and CS-6.** It rejects each `TODO` without the form `TODO(#123)`.
-- **TELL-13.** It rejects the debug calls that the language file lists.
+- **TELL-13.** It rejects the debug calls that the language file lists. It skips test files, comment lines and doctest lines that start with `>>>` or `...`.
 - **TELL-14.** It rejects emojis everywhere, including Markdown. It rejects other non-ASCII characters in source files, config files and commit messages. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because contributors' names can need any script.
 - **TELL-18.** With `--commit-msg <file>`, it checks the length of a commit subject. Repos without commitlint use this mode.
 

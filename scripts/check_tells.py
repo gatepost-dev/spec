@@ -137,7 +137,8 @@ TEST_PATH = re.compile(
     r"|(^|/)test_[^/]*\.py$"
     r"|Tests?\.(kt|java|cs|swift)$"
 )
-COMMENT_LINE = re.compile(r"^\s*(//|/\*|\*|#|--)")
+# Doctest prompts (>>> and ...) start the examples in Python docstrings.
+COMMENT_LINE = re.compile(r"^\s*(//|/\*|\*|#|--|>>>|\.\.\.)")
 URL = re.compile(r"https?://")
 TODO_FORM = re.compile(r"\bTODO\b(?!\(#\d+\))")
 SKIP = re.compile(r"check-tells: allow ([A-Z]+-\d+)(?: because (\S.*))?")
