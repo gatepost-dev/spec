@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "function": "isLegacy",
+  "description": "Finds old 6-digit postcodes.",
+  "cases": [
+    {
+      "id": "is-legacy-001",
+      "description": "accepts six digits",
+      "input": "900108",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-002",
+      "description": "accepts six digits with a space",
+      "input": "900 108",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-003",
+      "description": "accepts six full-width digits",
+      "input": "\uff19\uff10\uff10\uff11\uff10\uff18",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-004",
+      "description": "rejects five digits",
+      "input": "90010",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-005",
+      "description": "rejects seven digits",
+      "input": "9001080",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-006",
+      "description": "rejects a new postcode",
+      "input": "EK01A03FK01",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-007",
+      "description": "rejects empty input",
+      "input": "",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-008",
+      "description": "rejects a letter O among digits",
+      "input": "90O108",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    }
+  ]
+}

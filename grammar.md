@@ -28,6 +28,8 @@ A partial postcode stops after the state, LGA, district or area segment. Its len
 2. Remove each separator in `data/format.json`: white space, hyphens and dashes, the full stop, and zero-width characters.
 3. Change the ASCII letters a to z to upper case. Keep every other character as it is.
 
+A format character that is not in the list stays. For example, the right-to-left override U+202E can change the order in which a code shows on screen, so `parse` gives `bad_character` for it.
+
 ## Parse
 
 Normalise the input. Then apply these checks in order. The first check that fails gives the error code.

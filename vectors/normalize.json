@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "function": "normalize",
+  "description": "Cleans input before parsing.",
+  "cases": [
+    {
+      "id": "normalize-001",
+      "description": "removes hyphens",
+      "input": "EK-01-A03-FK-01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-002",
+      "description": "removes spaces and makes letters upper case",
+      "input": "ek 01 a03 fk 01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-003",
+      "description": "removes leading and trailing spaces",
+      "input": "  EK01A03FK01  ",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-004",
+      "description": "removes dots",
+      "input": "EK.01.A03.FK.01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-005",
+      "description": "removes en dashes",
+      "input": "EK\u201301\u2013A03\u2013FK\u201301",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-006",
+      "description": "removes em dashes",
+      "input": "EK\u201401\u2014A03\u2014FK\u201401",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-007",
+      "description": "removes minus signs",
+      "input": "EK\u221201\u2212A03\u2212FK\u221201",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-008",
+      "description": "removes no-break spaces",
+      "input": "EK\u00a001\u00a0A03\u00a0FK\u00a001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-009",
+      "description": "removes narrow no-break spaces",
+      "input": "EK\u202f01\u202fA03\u202fFK\u202f01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-010",
+      "description": "removes a zero-width space",
+      "input": "EK01A03FK01\u200b",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-011",
+      "description": "removes a byte order mark",
+      "input": "\ufeffEK01A03FK01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-012",
+      "description": "removes soft hyphens",
+      "input": "EK\u00ad01\u00adA03\u00adFK\u00ad01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-013",
+      "description": "removes direction marks",
+      "input": "\u200eEK01A03FK01\u200f",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-014",
+      "description": "keeps a right-to-left override",
+      "input": "\u202eEK01A03FK01",
+      "options": {},
+      "expect": {
+        "value": "\u202eEK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-015",
+      "description": "changes full-width letters and digits to ASCII",
+      "input": "\uff25\uff2b\uff10\uff11\uff21\uff10\uff13\uff26\uff2b\uff10\uff11",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-016",
+      "description": "removes tabs and line feeds",
+      "input": "EK01\tA03\nFK01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-017",
+      "description": "changes a ligature to its letters",
+      "input": "EK01A03\ufb0101",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FI01"
+      }
+    },
+    {
+      "id": "normalize-018",
+      "description": "makes mixed-case letters upper case",
+      "input": "eK01a03Fk01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-019",
+      "description": "keeps a legacy code",
+      "input": "900 108",
+      "options": {},
+      "expect": {
+        "value": "900108"
+      }
+    },
+    {
+      "id": "normalize-020",
+      "description": "keeps characters that are not separators",
+      "input": "EK01A03FK0!",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK0!"
+      }
+    },
+    {
+      "id": "normalize-021",
+      "description": "makes only ASCII letters upper case",
+      "input": "ek01a03f\u00e901",
+      "options": {},
+      "expect": {
+        "value": "EK01A03F\u00e901"
+      }
+    },
+    {
+      "id": "normalize-022",
+      "description": "returns an empty string for empty input",
+      "input": "",
+      "options": {},
+      "expect": {
+        "value": ""
+      }
+    },
+    {
+      "id": "normalize-023",
+      "description": "returns an empty string for separators only",
+      "input": " - . ",
+      "options": {},
+      "expect": {
+        "value": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "function": "contains",
+  "description": "Checks that one code lies inside another.",
+  "cases": [
+    {
+      "id": "contains-001",
+      "description": "finds a full code in its district",
+      "input": {
+        "prefix": "EK-01-A03",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "contains-002",
+      "description": "finds a full code in its state",
+      "input": {
+        "prefix": "EK",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "contains-003",
+      "description": "finds a code in itself",
+      "input": {
+        "prefix": "EK-01-A03-FK-01",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "contains-004",
+      "description": "finds a unit in its area",
+      "input": {
+        "prefix": "EK-01-A03-FK",
+        "code": "EK-01-A03-FK-02"
+      },
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "contains-005",
+      "description": "rejects a code from another district",
+      "input": {
+        "prefix": "EK-01-A04",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "contains-006",
+      "description": "rejects a code from another state",
+      "input": {
+        "prefix": "FC",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "contains-007",
+      "description": "rejects a less precise code inside a more precise one",
+      "input": {
+        "prefix": "EK-01-A03-FK-01",
+        "code": "EK-01-A03"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "contains-008",
+      "description": "rejects a different unit",
+      "input": {
+        "prefix": "EK-01-A03-FK-01",
+        "code": "EK-01-A03-FK-02"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    }
+  ]
+}

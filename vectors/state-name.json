@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "function": "stateName",
+  "description": "Names the state for a state code.",
+  "cases": [
+    {
+      "id": "state-name-001",
+      "description": "names AB",
+      "input": "AB",
+      "options": {},
+      "expect": {
+        "value": "Abia"
+      }
+    },
+    {
+      "id": "state-name-002",
+      "description": "names AD",
+      "input": "AD",
+      "options": {},
+      "expect": {
+        "value": "Adamawa"
+      }
+    },
+    {
+      "id": "state-name-003",
+      "description": "names AK",
+      "input": "AK",
+      "options": {},
+      "expect": {
+        "value": "Akwa Ibom"
+      }
+    },
+    {
+      "id": "state-name-004",
+      "description": "names AN",
+      "input": "AN",
+      "options": {},
+      "expect": {
+        "value": "Anambra"
+      }
+    },
+    {
+      "id": "state-name-005",
+      "description": "names BA",
+      "input": "BA",
+      "options": {},
+      "expect": {
+        "value": "Bauchi"
+      }
+    },
+    {
+      "id": "state-name-006",
+      "description": "names BE",
+      "input": "BE",
+      "options": {},
+      "expect": {
+        "value": "Benue"
+      }
+    },
+    {
+      "id": "state-name-007",
+      "description": "names BO",
+      "input": "BO",
+      "options": {},
+      "expect": {
+        "value": "Borno"
+      }
+    },
+    {
+      "id": "state-name-008",
+      "description": "names BY",
+      "input": "BY",
+      "options": {},
+      "expect": {
+        "value": "Bayelsa"
+      }
+    },
+    {
+      "id": "state-name-009",
+      "description": "names CR",
+      "input": "CR",
+      "options": {},
+      "expect": {
+        "value": "Cross River"
+      }
+    },
+    {
+      "id": "state-name-010",
+      "description": "names DE",
+      "input": "DE",
+      "options": {},
+      "expect": {
+        "value": "Delta"
+      }
+    },
+    {
+      "id": "state-name-011",
+      "description": "names EB",
+      "input": "EB",
+      "options": {},
+      "expect": {
+        "value": "Ebonyi"
+      }
+    },
+    {
+      "id": "state-name-012",
+      "description": "names ED",
+      "input": "ED",
+      "options": {},
+      "expect": {
+        "value": "Edo"
+      }
+    },
+    {
+      "id": "state-name-013",
+      "description": "names EK",
+      "input": "EK",
+      "options": {},
+      "expect": {
+        "value": "Ekiti"
+      }
+    },
+    {
+      "id": "state-name-014",
+      "description": "names EN",
+      "input": "EN",
+      "options": {},
+      "expect": {
+        "value": "Enugu"
+      }
+    },
+    {
+      "id": "state-name-015",
+      "description": "names FC",
+      "input": "FC",
+      "options": {},
+      "expect": {
+        "value": "Federal Capital Territory"
+      }
+    },
+    {
+      "id": "state-name-016",
+      "description": "names GO",
+      "input": "GO",
+      "options": {},
+      "expect": {
+        "value": "Gombe"
+      }
+    },
+    {
+      "id": "state-name-017",
+      "description": "names IM",
+      "input": "IM",
+      "options": {},
+      "expect": {
+        "value": "Imo"
+      }
+    },
+    {
+      "id": "state-name-018",
+      "description": "names JI",
+      "input": "JI",
+      "options": {},
+      "expect": {
+        "value": "Jigawa"
+      }
+    },
+    {
+      "id": "state-name-019",
+      "description": "names KD",
+      "input": "KD",
+      "options": {},
+      "expect": {
+        "value": "Kaduna"
+      }
+    },
+    {
+      "id": "state-name-020",
+      "description": "names KE",
+      "input": "KE",
+      "options": {},
+      "expect": {
+        "value": "Kebbi"
+      }
+    },
+    {
+      "id": "state-name-021",
+      "description": "names KN",
+      "input": "KN",
+      "options": {},
+      "expect": {
+        "value": "Kano"
+      }
+    },
+    {
+      "id": "state-name-022",
+      "description": "names KO",
+      "input": "KO",
+      "options": {},
+      "expect": {
+        "value": "Kogi"
+      }
+    },
+    {
+      "id": "state-name-023",
+      "description": "names KT",
+      "input": "KT",
+      "options": {},
+      "expect": {
+        "value": "Katsina"
+      }
+    },
+    {
+      "id": "state-name-024",
+      "description": "names KW",
+      "input": "KW",
+      "options": {},
+      "expect": {
+        "value": "Kwara"
+      }
+    },
+    {
+      "id": "state-name-025",
+      "description": "names LA",
+      "input": "LA",
+      "options": {},
+      "expect": {
+        "value": "Lagos"
+      }
+    },
+    {
+      "id": "state-name-026",
+      "description": "names NA",
+      "input": "NA",
+      "options": {},
+      "expect": {
+        "value": "Nasarawa"
+      }
+    },
+    {
+      "id": "state-name-027",
+      "description": "names NI",
+      "input": "NI",
+      "options": {},
+      "expect": {
+        "value": "Niger"
+      }
+    },
+    {
+      "id": "state-name-028",
+      "description": "names OG",
+      "input": "OG",
+      "options": {},
+      "expect": {
+        "value": "Ogun"
+      }
+    },
+    {
+      "id": "state-name-029",
+      "description": "names ON",
+      "input": "ON",
+      "options": {},
+      "expect": {
+        "value": "Ondo"
+      }
+    },
+    {
+      "id": "state-name-030",
+      "description": "names OS",
+      "input": "OS",
+      "options": {},
+      "expect": {
+        "value": "Osun"
+      }
+    },
+    {
+      "id": "state-name-031",
+      "description": "names OY",
+      "input": "OY",
+      "options": {},
+      "expect": {
+        "value": "Oyo"
+      }
+    },
+    {
+      "id": "state-name-032",
+      "description": "names PL",
+      "input": "PL",
+      "options": {},
+      "expect": {
+        "value": "Plateau"
+      }
+    },
+    {
+      "id": "state-name-033",
+      "description": "names RI",
+      "input": "RI",
+      "options": {},
+      "expect": {
+        "value": "Rivers"
+      }
+    },
+    {
+      "id": "state-name-034",
+      "description": "names SO",
+      "input": "SO",
+      "options": {},
+      "expect": {
+        "value": "Sokoto"
+      }
+    },
+    {
+      "id": "state-name-035",
+      "description": "names TA",
+      "input": "TA",
+      "options": {},
+      "expect": {
+        "value": "Taraba"
+      }
+    },
+    {
+      "id": "state-name-036",
+      "description": "names YO",
+      "input": "YO",
+      "options": {},
+      "expect": {
+        "value": "Yobe"
+      }
+    },
+    {
+      "id": "state-name-037",
+      "description": "names ZA",
+      "input": "ZA",
+      "options": {},
+      "expect": {
+        "value": "Zamfara"
+      }
+    },
+    {
+      "id": "state-name-038",
+      "description": "accepts lower case",
+      "input": "ek",
+      "options": {},
+      "expect": {
+        "value": "Ekiti"
+      }
+    },
+    {
+      "id": "state-name-039",
+      "description": "accepts mixed case",
+      "input": "Fc",
+      "options": {},
+      "expect": {
+        "value": "Federal Capital Territory"
+      }
+    },
+    {
+      "id": "state-name-040",
+      "description": "returns nothing for an unknown code",
+      "input": "XX",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-041",
+      "description": "returns nothing for empty input",
+      "input": "",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-042",
+      "description": "returns nothing for three letters",
+      "input": "EKI",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    }
+  ]
+}

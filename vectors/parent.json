@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "function": "parent",
+  "description": "Gives the code one segment shorter.",
+  "cases": [
+    {
+      "id": "parent-001",
+      "description": "gives the area of a full code",
+      "input": {
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03-FK"
+      }
+    },
+    {
+      "id": "parent-002",
+      "description": "gives the district of an area code",
+      "input": {
+        "code": "EK-01-A03-FK"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03"
+      }
+    },
+    {
+      "id": "parent-003",
+      "description": "gives the LGA of a district code",
+      "input": {
+        "code": "EK-01-A03"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01"
+      }
+    },
+    {
+      "id": "parent-004",
+      "description": "gives the state of an LGA code",
+      "input": {
+        "code": "EK-01"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK"
+      }
+    },
+    {
+      "id": "parent-005",
+      "description": "gives nothing for a state code",
+      "input": {
+        "code": "EK"
+      },
+      "options": {},
+      "expect": {
+        "canonical": null
+      }
+    }
+  ]
+}
