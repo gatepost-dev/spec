@@ -1,0 +1,388 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+"""Find the agent tells that language tools miss.
+
+The rules come from standards/CODING_STANDARDS.md: TELL-1, TELL-7, TELL-13, TELL-14
+and TELL-18, and CS-6 for the form of to-do comments.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
+from typing import Literal
+
+Kind = Literal["code", "config", "prose", "catalogue", "exempt", "other"]
+
+MAX_LINE = 100
+TAB_WIDTH = 4
+MAX_SUBJECT = 72
+LAST_ASCII = 0x7F
+GENERATED_MARKERS = ("@generated", "DO NOT EDIT")
+SIGN_OFF_PREFIXES = ("Signed-off-by:", "Co-authored-by:")
+
+CODE_EXTENSIONS = frozenset(
+    {
+        ".ts",
+        ".tsx",
+        ".mts",
+        ".cts",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".php",
+        ".py",
+        ".go",
+        ".kt",
+        ".kts",
+        ".java",
+        ".cs",
+        ".dart",
+        ".swift",
+        ".sql",
+        ".sh",
+        ".bash",
+    }
+)
+CONFIG_EXTENSIONS = frozenset(
+    {".json", ".yml", ".yaml", ".toml", ".xml", ".ini", ".cfg", ".properties", ".gradle"}
+)
+CONFIG_NAMES = frozenset(
+    {"Makefile", "Dockerfile", ".editorconfig", ".gitignore", ".gitattributes", ".npmrc"}
+)
+PROSE_EXTENSIONS = frozenset({".md", ".mdx"})
+EXEMPT_EXTENSIONS = frozenset(
+    {".svg", ".lock", ".csv", ".txt", ".api", ".snap", ".png", ".jpg", ".ico"}
+)
+LOCKFILES = frozenset(
+    {
+        "pnpm-lock.yaml",
+        "package-lock.json",
+        "yarn.lock",
+        "composer.lock",
+        "go.sum",
+        "uv.lock",
+        "poetry.lock",
+        "Cargo.lock",
+        "Package.resolved",
+        "pubspec.lock",
+        "gradle.lockfile",
+        "packages.lock.json",
+    }
+)
+CATALOGUE_FOLDERS = frozenset({"locales", "i18n", "l10n", "messages"})
+DATA_FOLDERS = frozenset({"data", "vectors"})
+CATALOGUE_EXTENSIONS = frozenset({".arb", ".po", ".xlf", ".xliff", ".strings", ".stringsdict"})
+FORBIDDEN_STEMS = frozenset({"utils", "helpers", "common", "misc"})
+SKIPPABLE_RULES = frozenset({"TELL-1", "TELL-13", "TELL-14", "CS-6"})
+
+LANGUAGE_BY_EXTENSION = {
+    ".ts": "javascript",
+    ".tsx": "javascript",
+    ".mts": "javascript",
+    ".cts": "javascript",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".mjs": "javascript",
+    ".cjs": "javascript",
+    ".php": "php",
+    ".py": "python",
+    ".go": "go",
+    ".kt": "jvm",
+    ".kts": "jvm",
+    ".java": "jvm",
+    ".cs": "dotnet",
+    ".dart": "dart",
+    ".swift": "swift",
+}
+LANGUAGE_BY_INTERPRETER = {"python3": "python", "python": "python", "node": "javascript"}
+
+DEBUG_CALLS: dict[str, tuple[re.Pattern[str], ...]] = {
+    "javascript": (re.compile(r"\bconsole\.(log|debug|dir)\s*\("), re.compile(r"\bdebugger\b")),
+    "php": (
+        re.compile(
+            r"(?<![\w>$:])(var_dump|print_r|var_export|dd|dump|error_log|debug_print_backtrace)"
+            r"\s*\("
+        ),
+    ),
+    "python": (
+        re.compile(r"(?<![\w.])(print|pprint|breakpoint)\s*\("),
+        re.compile(r"\bpdb\.set_trace\s*\("),
+    ),
+    "go": (
+        re.compile(r"\bfmt\.Print(f|ln)?\s*\("),
+        re.compile(r"\blog\.(Print|Fatal|Panic)(f|ln)?\s*\("),
+        re.compile(r"(?<![\w.])(print|println)\s*\("),
+    ),
+    "jvm": (
+        re.compile(r"(?<![\w.])(print|println)\s*\("),
+        re.compile(r"\bSystem\.(out|err)\b"),
+        re.compile(r"\.printStackTrace\s*\("),
+        re.compile(r"\bLog\.(v|d|i|w|e|wtf)\s*\("),
+    ),
+    "dotnet": (re.compile(r"\b(Console|Debug|Trace)\.Write(Line)?\s*\("),),
+    "dart": (re.compile(r"(?<![\w.])(print|debugPrint)\s*\("),),
+    "swift": (re.compile(r"(?<![\w.])(print|dump|debugPrint)\s*\("),),
+}
+
+TEST_PATH = re.compile(
+    r"(^|/)(test|tests|__tests__|testdata|Tests)/"
+    r"|_test\.(go|dart)$"
+    r"|\.(test|spec)\.[cm]?[jt]sx?$"
+    r"|(^|/)test_[^/]*\.py$"
+    r"|Tests?\.(kt|java|cs|swift)$"
+)
+COMMENT_LINE = re.compile(r"^\s*(//|/\*|\*|#|--)")
+URL = re.compile(r"https?://")
+TODO_FORM = re.compile(r"\bTODO\b(?!\(#\d+\))")
+SKIP = re.compile(r"check-tells: allow ([A-Z]+-\d+)(?: because (\S.*))?")
+EMOJI_RANGES = ((0x1F000, 0x1FAFF), (0x2600, 0x27BF), (0x2B00, 0x2BFF), (0xFE0F, 0xFE0F))
+
+
+@dataclass(frozen=True, order=True)
+class Violation:
+    """One broken rule at one place in a file."""
+
+    path: str
+    line: int
+    column: int
+    rule: str
+    message: str
+
+    def __str__(self) -> str:
+        """Format the violation like a compiler message."""
+        return f"{self.path}:{self.line}:{self.column}: {self.rule} {self.message}"
+
+
+@dataclass(frozen=True)
+class FileInfo:
+    """What a file holds, which decides the rules that apply to it."""
+
+    path: str
+    kind: Kind
+    language: str | None
+    is_test: bool
+    is_generated: bool
+
+
+def classify(path: str, text: str) -> FileInfo:
+    """Decide the kind and the language of one file."""
+    pure = PurePosixPath(path)
+    head = "\n".join(text.splitlines()[:5])
+    return FileInfo(
+        path=path,
+        kind=_kind(pure, text),
+        language=_language(pure, text),
+        is_test=bool(TEST_PATH.search(path)),
+        is_generated=any(marker in head for marker in GENERATED_MARKERS),
+    )
+
+
+def _kind(pure: PurePosixPath, text: str) -> Kind:
+    suffix = pure.suffix.lower()
+    if pure.name in LOCKFILES or suffix in EXEMPT_EXTENSIONS:
+        return "exempt"
+    if _is_catalogue(pure):
+        return "catalogue"
+    if suffix in PROSE_EXTENSIONS:
+        return "prose"
+    if suffix in CODE_EXTENSIONS or (not suffix and text.startswith("#!")):
+        return "code"
+    if suffix in CONFIG_EXTENSIONS or pure.name in CONFIG_NAMES:
+        return "config"
+    return "other"
+
+
+def _is_catalogue(pure: PurePosixPath) -> bool:
+    in_folder = any(part in CATALOGUE_FOLDERS for part in pure.parts[:-1])
+    android = pure.name == "strings.xml" and pure.parent.name.startswith("values")
+    return in_folder or android or pure.suffix.lower() in CATALOGUE_EXTENSIONS
+
+
+def _language(pure: PurePosixPath, text: str) -> str | None:
+    if pure.suffix:
+        return LANGUAGE_BY_EXTENSION.get(pure.suffix.lower())
+    first_line = text.splitlines()[0] if text else ""
+    if not first_line.startswith("#!"):
+        return None
+    interpreter = first_line.split()[-1].rsplit("/", 1)[-1]
+    return LANGUAGE_BY_INTERPRETER.get(interpreter)
+
+
+def _is_emoji(character: str) -> bool:
+    return any(low <= ord(character) <= high for low, high in EMOJI_RANGES)
+
+
+def check_text(path: str, text: str) -> list[Violation]:
+    """Check the name and every line of one file."""
+    info = classify(path, text)
+    violations = _check_name(info)
+    for number, line in enumerate(text.splitlines(), start=1):
+        violations.extend(_check_line(info, number, line))
+    return violations
+
+
+def _check_name(info: FileInfo) -> list[Violation]:
+    stem = PurePosixPath(info.path).name.split(".")[0].lower()
+    if stem not in FORBIDDEN_STEMS:
+        return []
+    message = "Name the file after the concept that it holds, not utils, helpers, common or misc."
+    return [Violation(info.path, 1, 1, "TELL-7", message)]
+
+
+def _check_line(info: FileInfo, number: int, line: str) -> list[Violation]:
+    skipped, problems = _skips(info.path, number, line)
+    found = [
+        violation
+        for check in (_line_length, _todo_form, _debug_calls, _characters)
+        for violation in check(info, number, line)
+        if violation.rule not in skipped
+    ]
+    return problems + found
+
+
+def _skips(path: str, number: int, line: str) -> tuple[set[str], list[Violation]]:
+    skipped: set[str] = set()
+    problems: list[Violation] = []
+    for match in SKIP.finditer(line):
+        rule, reason = match.group(1), match.group(2)
+        if rule in SKIPPABLE_RULES and reason:
+            skipped.add(rule)
+            continue
+        message = (
+            f"Skip only {', '.join(sorted(SKIPPABLE_RULES))}, and give a reason after because."
+        )
+        problems.append(Violation(path, number, match.start() + 1, "SKIP", message))
+    return skipped, problems
+
+
+def _line_length(info: FileInfo, number: int, line: str) -> list[Violation]:
+    if info.kind not in ("code", "config") or info.is_generated or _is_data_json(info.path):
+        return []
+    width = len(line.expandtabs(TAB_WIDTH))
+    if width <= MAX_LINE or URL.search(line):
+        return []
+    message = f"The line is {width} characters wide. Keep lines at {MAX_LINE} or fewer."
+    return [Violation(info.path, number, MAX_LINE + 1, "TELL-1", message)]
+
+
+def _is_data_json(path: str) -> bool:
+    pure = PurePosixPath(path)
+    in_folder = any(part in DATA_FOLDERS for part in pure.parts[:-1])
+    return in_folder and pure.suffix.lower() == ".json"
+
+
+def _todo_form(info: FileInfo, number: int, line: str) -> list[Violation]:
+    if info.kind != "code":
+        return []
+    message = "Link an issue in the form TODO(#123)."
+    return [
+        Violation(info.path, number, match.start() + 1, "CS-6", message)
+        for match in TODO_FORM.finditer(line)
+    ]
+
+
+def _debug_calls(info: FileInfo, number: int, line: str) -> list[Violation]:
+    if info.kind != "code" or info.is_test or info.language is None or COMMENT_LINE.match(line):
+        return []
+    patterns = DEBUG_CALLS.get(info.language, ())
+    return [
+        Violation(info.path, number, match.start() + 1, "TELL-13", f"Remove {match.group(0)!r}.")
+        for pattern in patterns
+        for match in pattern.finditer(line)
+    ]
+
+
+def _characters(info: FileInfo, number: int, line: str) -> list[Violation]:
+    if info.kind == "exempt":
+        return []
+    found = [
+        Violation(info.path, number, index + 1, "TELL-14", f"Remove the emoji U+{ord(char):04X}.")
+        for index, char in enumerate(line)
+        if _is_emoji(char)
+    ]
+    if found or info.kind not in ("code", "config"):
+        return found
+    for index, char in enumerate(line):
+        if ord(char) > LAST_ASCII:
+            message = f"Write U+{ord(char):04X} as an escape sequence. Code and config use ASCII."
+            return [Violation(info.path, number, index + 1, "TELL-14", message)]
+    return []
+
+
+def check_commit_message(text: str) -> list[Violation]:
+    """Check the subject length and the characters of a commit message."""
+    lines = [line for line in text.splitlines() if not line.startswith("#")]
+    violations: list[Violation] = []
+    subject = next((line for line in lines if line.strip()), "")
+    if len(subject) > MAX_SUBJECT:
+        message = f"The subject has {len(subject)} characters. Use {MAX_SUBJECT} or fewer."
+        violations.append(Violation("commit message", 1, MAX_SUBJECT + 1, "TELL-18", message))
+    for number, line in enumerate(lines, start=1):
+        for index, char in enumerate(line):
+            if _is_emoji(char) or (
+                ord(char) > LAST_ASCII and not line.startswith(SIGN_OFF_PREFIXES)
+            ):
+                message = f"Remove U+{ord(char):04X}. Commit messages use ASCII."
+                violations.append(
+                    Violation("commit message", number, index + 1, "TELL-14", message)
+                )
+                break
+    return violations
+
+
+def tracked_files(root: Path) -> list[Path]:
+    """List the files that git tracks, or would track, under root."""
+    command = [
+        "git",
+        "-C",
+        str(root),
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+    ]
+    names = subprocess.run(command, check=True, capture_output=True).stdout.decode().split("\0")
+    return [root / name for name in names if name and (root / name).is_file()]
+
+
+def check_files(root: Path, files: list[Path]) -> list[Violation]:
+    """Check each file. Skip files that are not UTF-8 text, because they have no lines."""
+    violations: list[Violation] = []
+    for file in files:
+        try:
+            text = file.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        violations.extend(check_text(file.relative_to(root).as_posix(), text))
+    return violations
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the checks, print each violation and return 1 if any rule broke."""
+    parser = argparse.ArgumentParser(
+        prog="check-tells", description="Find the agent tells that language tools miss."
+    )
+    parser.add_argument("--root", type=Path, default=Path.cwd(), help="The repo root.")
+    parser.add_argument("--commit-msg", type=Path, help="Check this commit message file.")
+    parser.add_argument("paths", nargs="*", type=Path, help="Files to check. Default: all.")
+    args = parser.parse_args(argv)
+    if args.commit_msg is not None:
+        violations = check_commit_message(args.commit_msg.read_text(encoding="utf-8"))
+    else:
+        root = args.root.resolve()
+        files = [(root / path).resolve() for path in args.paths] or tracked_files(root)
+        violations = check_files(root, files)
+    for violation in sorted(violations):
+        sys.stdout.write(f"{violation}\n")
+    return 1 if violations else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

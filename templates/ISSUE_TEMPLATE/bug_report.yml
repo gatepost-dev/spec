@@ -4,9 +4,12 @@ labels: [bug, needs-triage]
 body:
   - type: markdown
     attributes:
-      value: |
-        Gatepost is unofficial. For problems with NIPOST's own app, data or API, contact NIPOST at postcode@nipost.gov.ng.
-        Do not paste API keys, NINs, email addresses or the postcodes of private homes. Use synthetic postcodes, such as FC-01-Z99-ZZ-01.
+      value: >
+        Gatepost is unofficial. For problems with NIPOST's own app, data or API,
+        contact NIPOST at postcode@nipost.gov.ng.
+
+        Do not paste API keys, NINs, email addresses or the postcodes of private homes.
+        Use synthetic postcodes, such as FC-01-Z99-ZZ-01.
   - type: input
     id: package
     attributes:

@@ -103,7 +103,7 @@ Coding agents repeat some habits so often that readers spot them at once. Each r
 
 `spec/scripts/check-tells` runs in the CI of every repo. It covers the tool rules that no language tool covers:
 
-- **TELL-1.** It checks line length in source and config files, and it counts a tab as 4 columns. It skips lines with a URL, files marked as generated, lockfiles, `spec/vectors/` and Markdown prose.
+- **TELL-1.** It checks line length in source and config files, and it counts a tab as 4 columns. It skips lines with a URL, files marked as generated, lockfiles, JSON files in a folder named `data` or `vectors`, and Markdown prose.
 - **TELL-7.** It rejects files named `utils`, `helpers`, `common` or `misc`, with any extension.
 - **TELL-12 and CS-6.** It rejects each `TODO` without the form `TODO(#123)`.
 - **TELL-13.** It rejects the debug calls that the language file lists.

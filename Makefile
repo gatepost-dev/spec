@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2026 The Gatepost authors
 # SPDX-License-Identifier: Apache-2.0
-.PHONY: check test lint types licences
+.PHONY: check test tells lint types licences
 
-check: test lint types licences
+check: test tells lint types licences
 
 test:
 	python3 -m unittest discover -s scripts/tests -t scripts
+
+tells:
+	python3 scripts/check-tells
 
 lint:
 	uvx ruff check scripts
