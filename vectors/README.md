@@ -12,7 +12,7 @@ Each case has these fields:
 
 | Field | Meaning |
 |---|---|
-| `id` | a stable id, such as `parse-001` |
+| `id` | an id that is unique within one spec version, such as `parse-001`. A new case can change the ids after it. |
 | `description` | the behaviour in domain words. Use it in the test name. |
 | `input` | the argument, or an object of named arguments |
 | `options` | options for the function, such as `{ "allowPartial": true }` |
