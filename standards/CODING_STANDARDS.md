@@ -107,10 +107,10 @@ Coding agents repeat some habits so often that readers spot them at once. Each r
 - **TELL-7.** It rejects files named `utils`, `helpers`, `common` or `misc`, with any extension.
 - **TELL-12 and CS-6.** It rejects each `TODO` in source and config files that does not have the form `TODO(#123)`.
 - **TELL-13.** It rejects the debug calls that the language file lists. It skips test files, comment lines and, in Python, doctest lines that start with `>>>` or `...`.
-- **TELL-14.** It rejects emojis everywhere, including Markdown. It rejects other non-ASCII characters in source files, config files and commit messages. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because contributors' names can need any script.
+- **TELL-14.** It rejects emojis everywhere, including Markdown. It rejects other non-ASCII characters in source files, config files and commit messages. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because translations and contributors' names can need any script. A message catalogue is a data file: a file that is not code in a folder named `locales`, `i18n`, `l10n` or `messages`, a `.po`, `.arb`, `.xlf`, `.xliff`, `.strings` or `.stringsdict` file, or an Android `strings.xml`. A code file in such a folder is code, so translations live in data files.
 - **TELL-18.** With `--commit-msg <file>`, it checks the length of a commit subject. Repos without commitlint use this mode.
 
-A line can skip one check with a comment that names the rule and gives a reason, for example `check-tells: allow TELL-1 because the regex cannot be split`. Reviewers check each skip.
+A line in a code or config file can skip one check with a comment that names the rule and gives a reason, for example `check-tells: allow TELL-1 because the regex cannot be split`. Reviewers check each skip.
 
 ## Dependencies
 

@@ -17,6 +17,7 @@ NO_BREAK_SPACE = chr(0x00A0)
 E_ACUTE = chr(0x00E9)
 EM_DASH = chr(0x2014)
 LINE_SEPARATOR = chr(0x2028)
+O_DOT_BELOW = chr(0x1ECD)
 # Built from two parts, so that this file passes its own to-do check.
 TO_DO = "TO" + "DO"
 # Built from two parts, so that this file passes its own skip check.
@@ -196,6 +197,10 @@ class CharacterTest(unittest.TestCase):
         self.assertEqual(check_text("docs/guide.md", f"Caf{E_ACUTE}"), [])
         self.assertEqual(check_text("src/locales/yo.json", f'{{"title": "Caf{E_ACUTE}"}}'), [])
 
+    def test_holds_a_code_file_in_a_catalogue_folder_to_ascii(self) -> None:
+        line = "export const title = '" + O_DOT_BELOW + "';"
+        self.assertEqual(rules(check_text("src/i18n/yo.ts", line)), ["TELL-14"])
+
     def test_rejects_an_emoji_in_a_catalogue(self) -> None:
         found = check_text("src/locales/en.json", f'{{"ok": "{EMOJI}"}}')
         self.assertEqual(rules(found), ["TELL-14"])
@@ -281,6 +286,10 @@ class CommitMessageTest(unittest.TestCase):
         found = check_commit_message("# note\nfix: " + "a" * 70)
         self.assertEqual(rules(found), ["TELL-18"])
         self.assertEqual(found[0].line, 2)
+
+    def test_keeps_a_line_separator_in_a_commit_message(self) -> None:
+        found = check_commit_message("fix: a\n\nb" + LINE_SEPARATOR + "c")
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 3)])
 
 
 class CommandTest(unittest.TestCase):
