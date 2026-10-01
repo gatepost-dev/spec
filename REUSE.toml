@@ -5,9 +5,3 @@ path = ["**/*.md", "**/*.json", "**/*.yml", "VERSION", "NOTICE", "templates/NOTI
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 The Gatepost authors"
 SPDX-License-Identifier = "Apache-2.0"
-
-[[annotations]]
-path = ["**/__pycache__/**"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 The Gatepost authors"
-SPDX-License-Identifier = "Apache-2.0"

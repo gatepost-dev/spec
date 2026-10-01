@@ -9,14 +9,14 @@ from pathlib import Path
 from typing import Any
 
 DATA = Path(__file__).resolve().parents[2] / "data"
-PRECISIONS = ["state", "lga", "district", "area", "unit"]
+SEGMENT_NAMES = ["state", "lga", "district", "area", "unit"]
 
 
 def load(name: str) -> dict[str, Any]:
-    value: object = json.loads((DATA / name).read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
+    document: object = json.loads((DATA / name).read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
         raise TypeError(f"{name} must hold a JSON object.")
-    return value
+    return document
 
 
 class StatesTest(unittest.TestCase):
@@ -34,17 +34,18 @@ class StatesTest(unittest.TestCase):
 
 class PrecisionTest(unittest.TestCase):
     def test_raises_the_limit_as_precision_falls(self) -> None:
-        data = load("precision.json")
-        limits = [row["maxAccuracyM"] for row in data["thresholds"]]
+        precision_rules = load("precision.json")
+        limits = [row["maxAccuracyM"] for row in precision_rules["thresholds"]]
         self.assertEqual(limits, sorted(limits))
-        names = [row["precision"] for row in data["thresholds"]] + [data["fallback"]]
+        thresholds = [row["precision"] for row in precision_rules["thresholds"]]
+        names = [*thresholds, precision_rules["fallback"]]
         self.assertEqual(names, ["unit", "area", "district", "lga"])
 
 
 class FormatTest(unittest.TestCase):
     def test_names_five_segments_of_11_characters(self) -> None:
         segments = load("format.json")["segments"]
-        self.assertEqual([segment["name"] for segment in segments], PRECISIONS)
+        self.assertEqual([segment["name"] for segment in segments], SEGMENT_NAMES)
         self.assertEqual(sum(segment["length"] for segment in segments), 11)
 
     def test_writes_each_separator_as_a_code_point(self) -> None:

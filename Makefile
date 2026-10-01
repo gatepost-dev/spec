@@ -15,4 +15,4 @@ types:
 	uvx mypy
 
 licences:
-	uvx --with charset-normalizer reuse lint
+	uvx reuse lint
