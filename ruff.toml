@@ -27,4 +27,5 @@ max-positional-args = 4
 convention = "google"
 
 [lint.per-file-ignores]
+# PT: these tests use unittest, so the pytest-style rules do not apply.
 "scripts/tests/**" = ["S101", "D", "ANN", "PLR2004", "PT"]

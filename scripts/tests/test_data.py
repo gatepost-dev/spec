@@ -8,12 +8,12 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-DATA = Path(__file__).resolve().parents[2] / "data"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 SEGMENT_NAMES = ["state", "lga", "district", "area", "unit"]
 
 
 def load(name: str) -> dict[str, Any]:
-    document: object = json.loads((DATA / name).read_text(encoding="utf-8"))
+    document: object = json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
     if not isinstance(document, dict):
         raise TypeError(f"{name} must hold a JSON object.")
     return document
@@ -37,8 +37,8 @@ class PrecisionTest(unittest.TestCase):
         precision_rules = load("precision.json")
         limits = [row["maxAccuracyM"] for row in precision_rules["thresholds"]]
         self.assertEqual(limits, sorted(limits))
-        thresholds = [row["precision"] for row in precision_rules["thresholds"]]
-        names = [*thresholds, precision_rules["fallback"]]
+        threshold_precisions = [row["precision"] for row in precision_rules["thresholds"]]
+        names = [*threshold_precisions, precision_rules["fallback"]]
         self.assertEqual(names, ["unit", "area", "district", "lga"])
 
 
