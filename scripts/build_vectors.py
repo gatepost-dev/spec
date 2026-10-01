@@ -37,6 +37,10 @@ SOFT_HYPHEN = chr(0x00AD)
 LEFT_TO_RIGHT_MARK = chr(0x200E)
 RIGHT_TO_LEFT_MARK = chr(0x200F)
 RIGHT_TO_LEFT_OVERRIDE = chr(0x202E)
+FULL_WIDTH_HYPHEN = chr(0xFF0D)
+ARABIC_INDIC_LEGACY = "".join(
+    chr(code_point) for code_point in (0x0669, 0x0660, 0x0660, 0x0661, 0x0660, 0x0668)
+)
 
 WIDTHS = (("state", 2), ("lga", 2), ("district", 3), ("area", 2), ("unit", 2))
 PRECISION_BY_LENGTH = {2: "state", 4: "lga", 7: "district", 9: "area", 11: "unit"}
@@ -91,9 +95,9 @@ def failed(code: str, segment: str | None = None, suggestion: str | None = None)
     return {"ok": False, "error": {"code": code, "segment": segment, "suggestion": suggestion}}
 
 
-def value(result: Any) -> dict[str, Any]:
+def value(returned: Any) -> dict[str, Any]:
     """The expected result of a function that returns one value."""
-    return {"value": result}
+    return {"value": returned}
 
 
 def load_states() -> list[dict[str, str]]:
@@ -106,9 +110,19 @@ def load_states() -> list[dict[str, str]]:
     return states
 
 
+def load_separators() -> list[int]:
+    """Read data/format.json and return its separators as code points."""
+    postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
+    return [int(label.removeprefix("U+"), 16) for label in postcode_format["separators"]]
+
+
 def normalize_rows() -> list[Row]:
     """Cases for normalize."""
     want = value(CODE)
+    separator_rows = [
+        row(f"removes the separator U+{code_point:04X}", joined(chr(code_point)), want)
+        for code_point in load_separators()
+    ]
     return [
         row("removes hyphens", "EK-01-A03-FK-01", want),
         row("removes spaces and makes letters upper case", "ek 01 a03 fk 01", want),
@@ -129,6 +143,7 @@ def normalize_rows() -> list[Row]:
             value(RIGHT_TO_LEFT_OVERRIDE + CODE),
         ),
         row("changes full-width letters and digits to ASCII", full_width(CODE), want),
+        row("removes full-width hyphens", joined(FULL_WIDTH_HYPHEN), want),
         row("removes tabs and line feeds", "EK01" + TAB + "A03" + LINE_FEED + "FK01", want),
         row(
             "changes a ligature to its letters",
@@ -145,6 +160,7 @@ def normalize_rows() -> list[Row]:
         ),
         row("returns an empty string for empty input", "", value("")),
         row("returns an empty string for separators only", " - . ", value("")),
+        *separator_rows,
     ]
 
 
@@ -157,11 +173,16 @@ def parse_rows() -> list[Row]:
         row("parses a code with en dashes", joined(EN_DASH), ok(CODE)),
         row("parses a code with no-break spaces", joined(NO_BREAK_SPACE), ok(CODE)),
         row("parses a code with a zero-width space", CODE + ZERO_WIDTH_SPACE, ok(CODE)),
+        row("parses a code with a byte order mark", BYTE_ORDER_MARK + CODE, ok(CODE)),
         row("parses full-width letters and digits", full_width("EK-01-A03-FK-01"), ok(CODE)),
         row("parses the example on NIPOST's homepage", "FC-02-A09-DB-09", ok("FC02A09DB09")),
         row("parses the example in NIPOST's blog", "LA 12 K23 IV 95", ok("LA12K23IV95")),
         row("parses a NIPOST test code", "AK-11-I61-ZF-12", ok("AK11I61ZF12")),
-        row("accepts a letter O in the district", "JI-24-O18-JP-23", ok("JI24O18JP23")),
+        row(
+            "accepts a letter O in the district of a NIPOST test code",
+            "JI-24-O18-JP-23",
+            ok("JI24O18JP23"),
+        ),
         row("rejects empty input", "", failed("empty")),
         row("rejects spaces only", "   ", failed("empty")),
         row("rejects separators only", " - . ", failed("empty")),
@@ -190,6 +211,7 @@ def parse_rows() -> list[Row]:
             RIGHT_TO_LEFT_OVERRIDE + CODE,
             failed("bad_character"),
         ),
+        row("rejects Arabic-Indic digits", ARABIC_INDIC_LEGACY, failed("bad_character")),
         row("rejects 10 characters", "EK01A03FK1", failed("bad_length")),
         row("rejects 12 characters", "EK01A03FK01X", failed("bad_length")),
         row("rejects a unit that lost its zero", "EK-01-A03-FK-1", failed("bad_length")),
@@ -217,8 +239,26 @@ def parse_rows() -> list[Row]:
             PARTIAL,
         ),
         row(
+            "rejects 5 characters when partial codes are allowed",
+            "EK01A",
+            failed("bad_length"),
+            PARTIAL,
+        ),
+        row(
             "rejects 6 characters when partial codes are allowed",
             "EK01A0",
+            failed("bad_length"),
+            PARTIAL,
+        ),
+        row(
+            "rejects 8 characters when partial codes are allowed",
+            "EK01A03F",
+            failed("bad_length"),
+            PARTIAL,
+        ),
+        row(
+            "rejects 10 characters when partial codes are allowed",
+            "EK01A03FK0",
             failed("bad_length"),
             PARTIAL,
         ),
@@ -293,6 +333,11 @@ def segment_rows() -> list[Row]:
             failed("bad_segment", "unit", "EK-01-A03-FK-12"),
         ),
         row(
+            "suggests 1 for a letter L in the unit",
+            "EK01A03FKL1",
+            failed("bad_segment", "unit", "EK-01-A03-FK-11"),
+        ),
+        row(
             "suggests 1 for a letter I after a zero in the unit",
             "EK01A03FK0I",
             failed("bad_segment", "unit", "EK-01-A03-FK-01"),
@@ -327,7 +372,16 @@ def segment_rows() -> list[Row]:
             failed("bad_segment", "area", "EK-01-A03-FI"),
             PARTIAL,
         ),
-        row("never changes the district", "EK01AO3FK01", ok("EK01AO3FK01")),
+        row(
+            "keeps a letter O in the district when it fixes the LGA",
+            "EKO1AO3FK01",
+            failed("bad_segment", "lga", "EK-01-AO3-FK-01"),
+        ),
+        row(
+            "keeps letters I and L in the district when it fixes the LGA",
+            "EKO1AILFK01",
+            failed("bad_segment", "lga", "EK-01-AIL-FK-01"),
+        ),
         row(
             "accepts letters and digits in any district position", "EK01A0OFK01", ok("EK01A0OFK01")
         ),
@@ -352,11 +406,12 @@ def legacy_rows() -> list[Row]:
         row("accepts six digits", "900108", value(True)),
         row("accepts six digits with a space", "900 108", value(True)),
         row("accepts six full-width digits", full_width("900108"), value(True)),
-        row("rejects five digits", "90010", value(False)),
+        row("rejects five digits as a legacy code", "90010", value(False)),
         row("rejects seven digits", "9001080", value(False)),
         row("rejects a new postcode", CODE, value(False)),
-        row("rejects empty input", "", value(False)),
+        row("rejects empty input as a legacy code", "", value(False)),
         row("rejects a letter O among digits", "90O108", value(False)),
+        row("rejects six Arabic-Indic digits as a legacy code", ARABIC_INDIC_LEGACY, value(False)),
     ]
 
 
@@ -535,13 +590,17 @@ def render(stem: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Write the vector files, or with --check, report the ones that are out of date."""
+    """Write the vector files, or with --check, report the ones that are out of date.
+
+    In both modes, report each JSON file in vectors/ that the builder does not write.
+    """
     parser = argparse.ArgumentParser(description="Build the shared test vectors.")
     parser.add_argument(
         "--check", action="store_true", help="Fail if a vector file is out of date."
     )
     args = parser.parse_args(argv)
-    VECTORS.mkdir(exist_ok=True)
+    if not args.check:
+        VECTORS.mkdir(exist_ok=True)
     stale: list[str] = []
     for stem in FILES:
         path = VECTORS / f"{stem}.json"
@@ -550,12 +609,14 @@ def main(argv: list[str] | None = None) -> int:
             path.write_text(text, encoding="utf-8")
         elif not path.exists() or path.read_text(encoding="utf-8") != text:
             stale.append(path.name)
-    extra = sorted({path.stem for path in VECTORS.glob("*.json")} - set(FILES))
-    stale.extend(f"{stem}.json (not built by this script)" for stem in extra)
+    strays = sorted(path.name for path in VECTORS.glob("*.json") if path.stem not in FILES)
     if stale:
         sys.stderr.write(
             f"Out of date: {', '.join(stale)}. Run python3 scripts/build_vectors.py.\n"
         )
+    for name in strays:
+        sys.stderr.write(f"vectors/{name} is not a builder output. Remove it.\n")
+    if stale or strays:
         return 1
     return 0
 

@@ -3,7 +3,9 @@
 """Tests for build_vectors."""
 
 import json
+import math
 import unittest
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +39,13 @@ class BuildVectorsTest(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertGreaterEqual(len(ids), 200)
 
+    def test_each_description_is_unique_across_all_vector_files(self) -> None:
+        counts = Counter(
+            case["description"] for stem in build_vectors.FILES for case in load(stem)["cases"]
+        )
+        repeated = sorted(text for text, count in counts.items() if count > 1)
+        self.assertEqual(repeated, [])
+
     def test_each_state_has_a_parse_case_and_a_name_case(self) -> None:
         states = json.loads((ROOT / "data" / "states.json").read_text(encoding="utf-8"))
         codes = {state["code"] for state in states["states"]}
@@ -44,3 +53,22 @@ class BuildVectorsTest(unittest.TestCase):
         named = {case["input"] for case in load("state-name")["cases"]}
         self.assertEqual(parsed, codes)
         self.assertLessEqual(codes, named)
+
+    def test_each_gps_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
+        rules = json.loads((ROOT / "data" / "precision.json").read_text(encoding="utf-8"))
+        limits = [threshold["maxAccuracyM"] for threshold in rules["thresholds"]]
+        at_limit = [threshold["precision"] for threshold in rules["thresholds"]]
+        above_limit = [*at_limit[1:], rules["fallback"]]
+        ceilings = [*limits[1:], math.inf]
+        measured = [
+            (case["input"], case["expect"]["value"])
+            for case in load("precision-for-accuracy")["cases"]
+            if isinstance(case["input"], int | float)
+        ]
+        for limit, ceiling, precision, next_precision in zip(
+            limits, ceilings, at_limit, above_limit, strict=True
+        ):
+            with self.subTest(limit=limit):
+                self.assertIn((limit, precision), measured)
+                above = [expected for metres, expected in measured if limit < metres <= ceiling]
+                self.assertIn(next_precision, above)

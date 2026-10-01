@@ -125,6 +125,26 @@
     },
     {
       "id": "parse-007",
+      "description": "parses a code with a byte order mark",
+      "input": "\ufeffEK01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-008",
       "description": "parses full-width letters and digits",
       "input": "\uff25\uff2b-\uff10\uff11-\uff21\uff10\uff13-\uff26\uff2b-\uff10\uff11",
       "options": {},
@@ -144,7 +164,7 @@
       }
     },
     {
-      "id": "parse-008",
+      "id": "parse-009",
       "description": "parses the example on NIPOST's homepage",
       "input": "FC-02-A09-DB-09",
       "options": {},
@@ -164,7 +184,7 @@
       }
     },
     {
-      "id": "parse-009",
+      "id": "parse-010",
       "description": "parses the example in NIPOST's blog",
       "input": "LA 12 K23 IV 95",
       "options": {},
@@ -184,7 +204,7 @@
       }
     },
     {
-      "id": "parse-010",
+      "id": "parse-011",
       "description": "parses a NIPOST test code",
       "input": "AK-11-I61-ZF-12",
       "options": {},
@@ -204,8 +224,8 @@
       }
     },
     {
-      "id": "parse-011",
-      "description": "accepts a letter O in the district",
+      "id": "parse-012",
+      "description": "accepts a letter O in the district of a NIPOST test code",
       "input": "JI-24-O18-JP-23",
       "options": {},
       "expect": {
@@ -224,7 +244,7 @@
       }
     },
     {
-      "id": "parse-012",
+      "id": "parse-013",
       "description": "rejects empty input",
       "input": "",
       "options": {},
@@ -238,7 +258,7 @@
       }
     },
     {
-      "id": "parse-013",
+      "id": "parse-014",
       "description": "rejects spaces only",
       "input": "   ",
       "options": {},
@@ -252,7 +272,7 @@
       }
     },
     {
-      "id": "parse-014",
+      "id": "parse-015",
       "description": "rejects separators only",
       "input": " - . ",
       "options": {},
@@ -266,7 +286,7 @@
       }
     },
     {
-      "id": "parse-015",
+      "id": "parse-016",
       "description": "names a legacy code",
       "input": "900108",
       "options": {},
@@ -280,7 +300,7 @@
       }
     },
     {
-      "id": "parse-016",
+      "id": "parse-017",
       "description": "names a legacy code with a space",
       "input": "900 108",
       "options": {},
@@ -294,7 +314,7 @@
       }
     },
     {
-      "id": "parse-017",
+      "id": "parse-018",
       "description": "names a legacy code in full-width digits",
       "input": "\uff19\uff10\uff10\uff11\uff10\uff18",
       "options": {},
@@ -308,7 +328,7 @@
       }
     },
     {
-      "id": "parse-018",
+      "id": "parse-019",
       "description": "names a legacy code when partial codes are allowed",
       "input": "123456",
       "options": {
@@ -324,7 +344,7 @@
       }
     },
     {
-      "id": "parse-019",
+      "id": "parse-020",
       "description": "rejects five digits",
       "input": "90010",
       "options": {},
@@ -338,7 +358,7 @@
       }
     },
     {
-      "id": "parse-020",
+      "id": "parse-021",
       "description": "rejects an exclamation mark",
       "input": "EK01A03FK0!",
       "options": {},
@@ -352,7 +372,7 @@
       }
     },
     {
-      "id": "parse-021",
+      "id": "parse-022",
       "description": "rejects an underscore",
       "input": "EK01A03FK0_",
       "options": {},
@@ -366,7 +386,7 @@
       }
     },
     {
-      "id": "parse-022",
+      "id": "parse-023",
       "description": "rejects slashes",
       "input": "EK01/A03/FK01",
       "options": {},
@@ -380,7 +400,7 @@
       }
     },
     {
-      "id": "parse-023",
+      "id": "parse-024",
       "description": "rejects a letter outside ASCII",
       "input": "EK01A03F\u00e901",
       "options": {},
@@ -394,7 +414,7 @@
       }
     },
     {
-      "id": "parse-024",
+      "id": "parse-025",
       "description": "rejects a right-to-left override",
       "input": "\u202eEK01A03FK01",
       "options": {},
@@ -408,7 +428,21 @@
       }
     },
     {
-      "id": "parse-025",
+      "id": "parse-026",
+      "description": "rejects Arabic-Indic digits",
+      "input": "\u0669\u0660\u0660\u0661\u0660\u0668",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-027",
       "description": "rejects 10 characters",
       "input": "EK01A03FK1",
       "options": {},
@@ -422,7 +456,7 @@
       }
     },
     {
-      "id": "parse-026",
+      "id": "parse-028",
       "description": "rejects 12 characters",
       "input": "EK01A03FK01X",
       "options": {},
@@ -436,7 +470,7 @@
       }
     },
     {
-      "id": "parse-027",
+      "id": "parse-029",
       "description": "rejects a unit that lost its zero",
       "input": "EK-01-A03-FK-1",
       "options": {},
@@ -450,7 +484,7 @@
       }
     },
     {
-      "id": "parse-028",
+      "id": "parse-030",
       "description": "rejects a state alone by default",
       "input": "EK",
       "options": {},
@@ -464,7 +498,7 @@
       }
     },
     {
-      "id": "parse-029",
+      "id": "parse-031",
       "description": "rejects a district code by default",
       "input": "EK01A03",
       "options": {},
@@ -478,7 +512,7 @@
       }
     },
     {
-      "id": "parse-030",
+      "id": "parse-032",
       "description": "parses a state when partial codes are allowed",
       "input": "EK",
       "options": {
@@ -500,7 +534,7 @@
       }
     },
     {
-      "id": "parse-031",
+      "id": "parse-033",
       "description": "parses an LGA code when partial codes are allowed",
       "input": "EK01",
       "options": {
@@ -522,7 +556,7 @@
       }
     },
     {
-      "id": "parse-032",
+      "id": "parse-034",
       "description": "parses a district code when partial codes are allowed",
       "input": "ek-01-a03",
       "options": {
@@ -544,7 +578,7 @@
       }
     },
     {
-      "id": "parse-033",
+      "id": "parse-035",
       "description": "parses an area code when partial codes are allowed",
       "input": "EK01A03FK",
       "options": {
@@ -566,7 +600,7 @@
       }
     },
     {
-      "id": "parse-034",
+      "id": "parse-036",
       "description": "parses a full code when partial codes are allowed",
       "input": "EK01A03FK01",
       "options": {
@@ -588,7 +622,7 @@
       }
     },
     {
-      "id": "parse-035",
+      "id": "parse-037",
       "description": "rejects 3 characters when partial codes are allowed",
       "input": "EK0",
       "options": {
@@ -604,9 +638,57 @@
       }
     },
     {
-      "id": "parse-036",
+      "id": "parse-038",
+      "description": "rejects 5 characters when partial codes are allowed",
+      "input": "EK01A",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-039",
       "description": "rejects 6 characters when partial codes are allowed",
       "input": "EK01A0",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-040",
+      "description": "rejects 8 characters when partial codes are allowed",
+      "input": "EK01A03F",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-041",
+      "description": "rejects 10 characters when partial codes are allowed",
+      "input": "EK01A03FK0",
       "options": {
         "allowPartial": true
       },

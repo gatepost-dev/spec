@@ -140,6 +140,15 @@
     },
     {
       "id": "normalize-016",
+      "description": "removes full-width hyphens",
+      "input": "EK\uff0d01\uff0dA03\uff0dFK\uff0d01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-017",
       "description": "removes tabs and line feeds",
       "input": "EK01\tA03\nFK01",
       "options": {},
@@ -148,7 +157,7 @@
       }
     },
     {
-      "id": "normalize-017",
+      "id": "normalize-018",
       "description": "changes a ligature to its letters",
       "input": "EK01A03\ufb0101",
       "options": {},
@@ -157,7 +166,7 @@
       }
     },
     {
-      "id": "normalize-018",
+      "id": "normalize-019",
       "description": "makes mixed-case letters upper case",
       "input": "eK01a03Fk01",
       "options": {},
@@ -166,7 +175,7 @@
       }
     },
     {
-      "id": "normalize-019",
+      "id": "normalize-020",
       "description": "keeps a legacy code",
       "input": "900 108",
       "options": {},
@@ -175,7 +184,7 @@
       }
     },
     {
-      "id": "normalize-020",
+      "id": "normalize-021",
       "description": "keeps characters that are not separators",
       "input": "EK01A03FK0!",
       "options": {},
@@ -184,7 +193,7 @@
       }
     },
     {
-      "id": "normalize-021",
+      "id": "normalize-022",
       "description": "makes only ASCII letters upper case",
       "input": "ek01a03f\u00e901",
       "options": {},
@@ -193,7 +202,7 @@
       }
     },
     {
-      "id": "normalize-022",
+      "id": "normalize-023",
       "description": "returns an empty string for empty input",
       "input": "",
       "options": {},
@@ -202,12 +211,390 @@
       }
     },
     {
-      "id": "normalize-023",
+      "id": "normalize-024",
       "description": "returns an empty string for separators only",
       "input": " - . ",
       "options": {},
       "expect": {
         "value": ""
+      }
+    },
+    {
+      "id": "normalize-025",
+      "description": "removes the separator U+0009",
+      "input": "EK\t01\tA03\tFK\t01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-026",
+      "description": "removes the separator U+000A",
+      "input": "EK\n01\nA03\nFK\n01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-027",
+      "description": "removes the separator U+000B",
+      "input": "EK\u000b01\u000bA03\u000bFK\u000b01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-028",
+      "description": "removes the separator U+000C",
+      "input": "EK\f01\fA03\fFK\f01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-029",
+      "description": "removes the separator U+000D",
+      "input": "EK\r01\rA03\rFK\r01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-030",
+      "description": "removes the separator U+0020",
+      "input": "EK 01 A03 FK 01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-031",
+      "description": "removes the separator U+002D",
+      "input": "EK-01-A03-FK-01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-032",
+      "description": "removes the separator U+002E",
+      "input": "EK.01.A03.FK.01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-033",
+      "description": "removes the separator U+0085",
+      "input": "EK\u008501\u0085A03\u0085FK\u008501",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-034",
+      "description": "removes the separator U+00A0",
+      "input": "EK\u00a001\u00a0A03\u00a0FK\u00a001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-035",
+      "description": "removes the separator U+00AD",
+      "input": "EK\u00ad01\u00adA03\u00adFK\u00ad01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-036",
+      "description": "removes the separator U+1680",
+      "input": "EK\u168001\u1680A03\u1680FK\u168001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-037",
+      "description": "removes the separator U+2000",
+      "input": "EK\u200001\u2000A03\u2000FK\u200001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-038",
+      "description": "removes the separator U+2001",
+      "input": "EK\u200101\u2001A03\u2001FK\u200101",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-039",
+      "description": "removes the separator U+2002",
+      "input": "EK\u200201\u2002A03\u2002FK\u200201",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-040",
+      "description": "removes the separator U+2003",
+      "input": "EK\u200301\u2003A03\u2003FK\u200301",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-041",
+      "description": "removes the separator U+2004",
+      "input": "EK\u200401\u2004A03\u2004FK\u200401",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-042",
+      "description": "removes the separator U+2005",
+      "input": "EK\u200501\u2005A03\u2005FK\u200501",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-043",
+      "description": "removes the separator U+2006",
+      "input": "EK\u200601\u2006A03\u2006FK\u200601",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-044",
+      "description": "removes the separator U+2007",
+      "input": "EK\u200701\u2007A03\u2007FK\u200701",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-045",
+      "description": "removes the separator U+2008",
+      "input": "EK\u200801\u2008A03\u2008FK\u200801",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-046",
+      "description": "removes the separator U+2009",
+      "input": "EK\u200901\u2009A03\u2009FK\u200901",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-047",
+      "description": "removes the separator U+200A",
+      "input": "EK\u200a01\u200aA03\u200aFK\u200a01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-048",
+      "description": "removes the separator U+200B",
+      "input": "EK\u200b01\u200bA03\u200bFK\u200b01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-049",
+      "description": "removes the separator U+200C",
+      "input": "EK\u200c01\u200cA03\u200cFK\u200c01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-050",
+      "description": "removes the separator U+200D",
+      "input": "EK\u200d01\u200dA03\u200dFK\u200d01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-051",
+      "description": "removes the separator U+200E",
+      "input": "EK\u200e01\u200eA03\u200eFK\u200e01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-052",
+      "description": "removes the separator U+200F",
+      "input": "EK\u200f01\u200fA03\u200fFK\u200f01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-053",
+      "description": "removes the separator U+2010",
+      "input": "EK\u201001\u2010A03\u2010FK\u201001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-054",
+      "description": "removes the separator U+2011",
+      "input": "EK\u201101\u2011A03\u2011FK\u201101",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-055",
+      "description": "removes the separator U+2012",
+      "input": "EK\u201201\u2012A03\u2012FK\u201201",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-056",
+      "description": "removes the separator U+2013",
+      "input": "EK\u201301\u2013A03\u2013FK\u201301",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-057",
+      "description": "removes the separator U+2014",
+      "input": "EK\u201401\u2014A03\u2014FK\u201401",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-058",
+      "description": "removes the separator U+2015",
+      "input": "EK\u201501\u2015A03\u2015FK\u201501",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-059",
+      "description": "removes the separator U+2028",
+      "input": "EK\u202801\u2028A03\u2028FK\u202801",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-060",
+      "description": "removes the separator U+2029",
+      "input": "EK\u202901\u2029A03\u2029FK\u202901",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-061",
+      "description": "removes the separator U+202F",
+      "input": "EK\u202f01\u202fA03\u202fFK\u202f01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-062",
+      "description": "removes the separator U+205F",
+      "input": "EK\u205f01\u205fA03\u205fFK\u205f01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-063",
+      "description": "removes the separator U+2060",
+      "input": "EK\u206001\u2060A03\u2060FK\u206001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-064",
+      "description": "removes the separator U+2212",
+      "input": "EK\u221201\u2212A03\u2212FK\u221201",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-065",
+      "description": "removes the separator U+3000",
+      "input": "EK\u300001\u3000A03\u3000FK\u300001",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
+    },
+    {
+      "id": "normalize-066",
+      "description": "removes the separator U+FEFF",
+      "input": "EK\ufeff01\ufeffA03\ufeffFK\ufeff01",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
       }
     }
   ]

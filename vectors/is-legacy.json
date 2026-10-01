@@ -32,7 +32,7 @@
     },
     {
       "id": "is-legacy-004",
-      "description": "rejects five digits",
+      "description": "rejects five digits as a legacy code",
       "input": "90010",
       "options": {},
       "expect": {
@@ -59,7 +59,7 @@
     },
     {
       "id": "is-legacy-007",
-      "description": "rejects empty input",
+      "description": "rejects empty input as a legacy code",
       "input": "",
       "options": {},
       "expect": {
@@ -70,6 +70,15 @@
       "id": "is-legacy-008",
       "description": "rejects a letter O among digits",
       "input": "90O108",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-009",
+      "description": "rejects six Arabic-Indic digits as a legacy code",
+      "input": "\u0669\u0660\u0660\u0661\u0660\u0668",
       "options": {},
       "expect": {
         "value": false
