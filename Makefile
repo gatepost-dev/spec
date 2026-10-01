@@ -14,5 +14,6 @@ lint:
 types:
 	uvx mypy
 
+# reuse needs an encoding detector, and uvx installs reuse without one.
 licences:
-	uvx reuse lint
+	uvx --with charset-normalizer reuse lint
