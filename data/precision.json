@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "source": "The GPS rule in NIPOST's postcode widget docs.",
+  "thresholds": [
+    { "maxAccuracyM": 8, "precision": "unit" },
+    { "maxAccuracyM": 20, "precision": "area" },
+    { "maxAccuracyM": 50, "precision": "district" }
+  ],
+  "fallback": "lga"
+}
