@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest a change to a Gatepost package.
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What do you want to do? What stops you now?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your proposal
+      description: A change to the public interface starts in the spec repo (API-1).
+  - type: dropdown
+    id: packages
+    attributes:
+      label: Packages
+      multiple: true
+      options:
+        - core
+        - client
+        - field
+        - React wrapper
+        - PHP SDK
+        - WooCommerce plugin
+        - another package

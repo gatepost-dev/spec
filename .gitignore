@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+observed-raw/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
