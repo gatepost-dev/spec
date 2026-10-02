@@ -42,8 +42,9 @@ PLACEHOLDER_ADDRESS = "you@example.com"
 TEMPLATE_PARAGRAPH = "Write two or three sentences of plain prose"
 EMPTY_CLOSES_LINE = re.compile(r"closes #\s*", re.IGNORECASE)
 # Renovate adds this comment to the very end of each pull request body. The author did not
-# write it, and its payload is base64.
-RENOVATE_COMMENT = re.compile(r"\n?<!--renovate-debug:[A-Za-z0-9+/=]*-->\s*$")
+# write it, and its payload is base64. Only ASCII white space may follow it, because \s also
+# matches characters such as U+3000, and TELL-14 must see those.
+RENOVATE_COMMENT = re.compile(r"\n?<!--renovate-debug:[A-Za-z0-9+/=]*-->[ \t\r\n]*\Z")
 SQUASH_NOTE = " The subject is the title plus the ' (#N)' that the squash merge adds."
 
 

@@ -252,6 +252,23 @@ class HtmlCommentTest(unittest.TestCase):
         found = check_squash_message("\n" + RENOVATE_COMMENT + "\n")
         self.assertEqual(found[0].message, "The message has no subject.")
 
+    def test_leaves_out_the_comment_of_renovate_when_ascii_white_space_follows_it(self) -> None:
+        for tail in ("", " ", "\t", "\n", "\r\n", " \t\r\n\n"):
+            with self.subTest(tail=tail):
+                found = check_squash_message("\n" + RENOVATE_COMMENT + tail)
+                self.assertEqual(found[0].message, "The message has no subject.")
+
+    def test_reads_the_comment_of_renovate_when_non_ascii_white_space_follows_it(self) -> None:
+        # \s matches each of these, so a pattern that ends in \s* hides them from TELL-14.
+        for code_point in (0x3000, 0x2028, 0x00A0, 0x0085, 0x2003):
+            with self.subTest(code_point=f"U+{code_point:04X}"):
+                message = squash("ci: update an action (#4)")
+                found = check_squash_message(message + RENOVATE_COMMENT + chr(code_point) + "\n")
+                self.assertEqual(
+                    [(v.rule, v.line, v.column) for v in found],
+                    [("TELL-14", 6, len(RENOVATE_COMMENT) + 1)],
+                )
+
     def test_reads_the_text_that_a_comment_holds(self) -> None:
         for text, character in ((EMOJI, EMOJI), (f"a dash {EM_DASH} here", EM_DASH)):
             with self.subTest(text=text):
