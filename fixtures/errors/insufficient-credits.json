@@ -7,7 +7,7 @@
   "body": {
     "error": {
       "code": "insufficient_credits",
-      "message": "not enough credits; top up to continue"
+      "message": "the organisation has no credits for this lookup level"
     }
   }
 }

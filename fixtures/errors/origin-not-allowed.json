@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "A publishable key from an origin off its list. The message is Gatepost's.",
-  "evidence": "documented",
+  "evidence": "assumed",
   "schema": "ErrorEnvelope",
   "status": 403,
   "body": {

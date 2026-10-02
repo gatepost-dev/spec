@@ -192,9 +192,69 @@ class FixtureTest(unittest.TestCase):
             with self.subTest(name):
                 self.assertEqual(gateway_files.fixture_problems(name, fixture, CHECK), [])
 
-    def test_each_fixture_uses_a_schema_of_a_response(self) -> None:
-        used = gateway_files.schemas_in_responses(OPENAPI)
-        self.assertEqual(sorted({fixture["schema"] for fixture in FIXTURES.values()} - used), [])
+    def test_each_fixture_matches_a_response_of_the_openapi_file(self) -> None:
+        for name, fixture in FIXTURES.items():
+            with self.subTest(name):
+                self.assertEqual(
+                    gateway_files.fixture_response_problems(name, fixture, OPENAPI), []
+                )
+
+    def test_rejects_a_status_that_no_response_with_the_schema_has(self) -> None:
+        cases = {
+            "errors/rate-limited": (200, "ErrorEnvelope"),
+            "lookup/valid-level-1": (500, "LookupEnvelope"),
+        }
+        for name, (status, schema) in cases.items():
+            with self.subTest(name):
+                fixture = edited_fixture(name, status=status)
+                [problem] = gateway_files.fixture_response_problems(name, fixture, OPENAPI)
+                self.assertEqual(
+                    problem,
+                    f"Fixture {name}: no response with the schema {schema} "
+                    f"has the status {status}.",
+                )
+
+    def test_rejects_an_error_code_that_the_status_does_not_carry(self) -> None:
+        fixture = edited_fixture("errors/rate-limited")
+        fixture["body"]["error"]["code"] = "banana"
+        self.assertEqual(
+            gateway_files.fixture_response_problems("errors/rate-limited", fixture, OPENAPI),
+            [
+                "Fixture errors/rate-limited: its name asks for the error code rate_limited.",
+                "Fixture errors/rate-limited: no 429 response has the error code banana.",
+            ],
+        )
+
+    def test_rejects_an_error_code_that_differs_from_the_file_name(self) -> None:
+        fixture = edited_fixture("errors/level-not-granted-2")
+        fixture["body"]["error"]["code"] = "scope_not_granted"
+        name = "errors/level-not-granted-2"
+        self.assertEqual(
+            gateway_files.fixture_response_problems(name, fixture, OPENAPI),
+            [f"Fixture {name}: its name asks for the error code level_not_granted."],
+        )
+
+    def test_rejects_evidence_that_claims_more_than_the_openapi_file(self) -> None:
+        fixture = edited_fixture("errors/invalid-api-key", evidence="observed")
+        self.assertEqual(
+            gateway_files.fixture_response_problems("errors/invalid-api-key", fixture, OPENAPI),
+            ["Fixture errors/invalid-api-key claims observed, but the OpenAPI file says assumed."],
+        )
+
+    def test_accepts_a_status_in_a_range_of_the_openapi_file(self) -> None:
+        fixture = edited_fixture("errors/rate-limited", status=503, evidence="assumed")
+        fixture["body"]["error"]["code"] = "unavailable"
+        self.assertEqual(
+            gateway_files.fixture_response_problems("errors/unavailable", fixture, OPENAPI), []
+        )
+
+    def test_loads_a_fixture_in_a_deeper_folder_and_not_the_key_file(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "lookup" / "extra").mkdir(parents=True)
+            (root / "lookup" / "extra" / "deep.json").write_text("{}", encoding="utf-8")
+            (root / "keys.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(list(gateway_files.load_fixtures(root)), ["lookup/extra/deep"])
 
     def test_has_a_body_for_each_lookup_level_that_a_mock_key_holds(self) -> None:
         for level in (1, 2, 3):
@@ -258,21 +318,22 @@ class KeysTest(unittest.TestCase):
 
 
 class SyntheticPostcodeTest(unittest.TestCase):
-    def test_finds_no_real_postcode_in_the_committed_files(self) -> None:
-        files = sorted(
-            [
-                *gateway_files.FIXTURES.rglob("*.json"),
-                *(gateway_files.ROOT / "contract").glob("*.json"),
-            ]
-        )
-        self.assertEqual(gateway_files.postcode_problems(files), [])
-
     def test_finds_a_real_postcode_in_each_form_and_case(self) -> None:
         text = "EK-01-A03-FK-01, EK 01 A03 FK 01, ek01a03fk01 and FC-01-Z99-ZZ-01"
         self.assertEqual(
             gateway_files.real_postcodes(text),
             ["EK-01-A03-FK-01", "EK 01 A03 FK 01", "ek01a03fk01"],
         )
+
+    def test_finds_a_postcode_with_other_separators(self) -> None:
+        text = "EK/01/A03/FK/01, EK_01_A03_FK_01 and EK.01.A03.FK.01"
+        self.assertEqual(
+            gateway_files.real_postcodes(text),
+            ["EK/01/A03/FK/01", "EK_01_A03_FK_01", "EK.01.A03.FK.01"],
+        )
+
+    def test_finds_a_synthetic_district_in_a_state_other_than_fc(self) -> None:
+        self.assertEqual(gateway_files.real_postcodes("LA-01-Z99-ZZ-01"), ["LA-01-Z99-ZZ-01"])
 
     def test_keeps_a_partial_postcode_and_a_longer_word(self) -> None:
         self.assertEqual(gateway_files.real_postcodes("EK-01-A03 and XEK01A03FK01"), [])
@@ -285,3 +346,25 @@ class SyntheticPostcodeTest(unittest.TestCase):
         self.assertTrue(
             problem.endswith("probe.json holds the postcode LA-12-K23-IV-95. Use a synthetic code.")
         )
+
+
+class KeyTextTest(unittest.TestCase):
+    def test_names_the_file_that_holds_text_in_the_form_of_a_real_key(self) -> None:
+        with tempfile.TemporaryDirectory(dir=gateway_files.ROOT) as folder:
+            path = Path(folder) / "probe.json"
+            path.write_text(
+                '{"message": "nipost_live_a1b2c3d4e5f6a7b8", "key": "nipost_test_mock_l1"}',
+                encoding="utf-8",
+            )
+            [problem] = gateway_files.key_text_problems([path])
+        self.assertTrue(
+            problem.endswith(
+                "probe.json holds the key nipost_live_a1b2c3d4e5f6a7b8. Use a mock key."
+            )
+        )
+
+    def test_keeps_the_prefixes_that_the_docs_name(self) -> None:
+        with tempfile.TemporaryDirectory(dir=gateway_files.ROOT) as folder:
+            path = Path(folder) / "probe.md"
+            path.write_text("A key starts with nipost_test_ or nipost_pk_live_.", encoding="utf-8")
+            self.assertEqual(gateway_files.key_text_problems([path]), [])

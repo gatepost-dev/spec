@@ -16,9 +16,12 @@ The mock server answers with these files. Each file holds one response of NIPOST
 ```
 
 - `version` is the format version, which is 1.
-- `evidence` is `observed`, `documented` or `assumed`, as in `openapi/gateway.completed.yaml`.
-- `schema` names a schema in `components/schemas` of that file. The body must match it, and `make check` tests that it does.
-- `status` is the HTTP status of the response.
+- `evidence` is `observed`, `documented` or `assumed`, as in `openapi/gateway.completed.yaml`. It cannot claim more than the mark of the response in that file, or of its error code.
+- `schema` names a schema in `components/schemas` of that file. The body must match it.
+- `status` is the HTTP status of the response. A response of the OpenAPI file with the same schema must have this status.
+- An error body carries an error code of that response. The file name of an error states its code: `rate-limited.json` holds `rate_limited`. A number at the end names a level. `unknown-path.json` names a case, not a code.
+
+`make check` tests each of these rules. It also fails on a postcode outside `FC`, `Z99` and `ZZ`, and on text in the form of a key that is not a mock key.
 
 ## How the mock server uses them
 
@@ -31,6 +34,7 @@ The mock server answers with these files. Each file holds one response of NIPOST
 | `reverse` at any other coordinate | `reverse/not-found.json` |
 | `nearby` | `nearby/empty.json` |
 | an error | the file in `errors/` with the same error code |
+| a path that the gateway does not serve | `errors/unknown-path.json` |
 
 - The mock server puts the caller's text, in upper case, in `postcode` of a lookup body, as the gateway does.
 - It puts the request's coordinate and the applied radius in a reverse body.

@@ -15,6 +15,7 @@ SCENARIOS = contract_files.load_scenarios()
 FIXTURE_NAMES = set(gateway_files.load_fixtures())
 CODES = contract_files.error_codes()
 STANDARDS = gateway_files.ROOT / "standards" / "CODING_STANDARDS.md"
+FILES = contract_files.synthetic_files()
 
 
 def problems_of(name: str, edit: Any) -> list[str]:
@@ -189,3 +190,22 @@ class CoverageTest(unittest.TestCase):
             contract_files.coverage_problems(scenarios, CODES),
             ["The scenario lookup-queue-limit is missing."],
         )
+
+
+class SyntheticFilesTest(unittest.TestCase):
+    def test_scans_the_fixtures_the_scenarios_and_the_docs_beside_them(self) -> None:
+        names = {path.relative_to(gateway_files.ROOT).as_posix() for path in FILES}
+        for name in (
+            "client.md",
+            "contract/README.md",
+            "contract/lookup-level-1.json",
+            "fixtures/README.md",
+            "fixtures/keys.json",
+            "fixtures/lookup/valid-level-1.json",
+            "openapi/gateway.completed.yaml",
+        ):
+            self.assertIn(name, names)
+
+    def test_finds_no_real_postcode_and_no_real_key_in_them(self) -> None:
+        self.assertEqual(gateway_files.postcode_problems(FILES), [])
+        self.assertEqual(gateway_files.key_text_problems(FILES), [])

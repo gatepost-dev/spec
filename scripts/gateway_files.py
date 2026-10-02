@@ -26,6 +26,7 @@ EVIDENCE = ("observed", "documented", "assumed")
 MARKS = ", ".join(EVIDENCE)
 EVIDENCE_MARK = "x-gatepost-evidence"
 ERROR_CODES = "x-gatepost-error-codes"
+ERROR_SCHEMA = "ErrorEnvelope"
 # The gateway answers a path that it does not serve. This key of the file describes that answer.
 UNKNOWN_PATH = "x-gatepost-unknown-path"
 HTTP_METHODS = ("get", "put", "post", "delete", "options", "head", "patch", "trace")
@@ -43,11 +44,15 @@ FIXTURE_FIELDS = ("version", "description", "evidence", "schema", "status", "bod
 KEY_FIELDS = ("key", "kind", "lookupLevel", "lookupScope", "credits", "rateLimited", "origins")
 # A mock key must never look like a real key, so a real key cannot slip into the table.
 MOCK_KEY = re.compile(r"nipost_(?:pk_)?test_mock(?:_[a-z0-9]+)*")
+# Text in the form of a NIPOST key. Only a mock key may appear in a committed file.
+KEY_TEXT = re.compile(r"nipost_(?:pk_)?(?:test|live)_[A-Za-z0-9_]+")
 # Five segments, with or without separators, in either letter case.
 POSTCODE = re.compile(
-    r"(?<![A-Za-z0-9])([A-Za-z]{2})[- ]?([0-9]{2})[- ]?([A-Za-z0-9]{3})[- ]?([A-Za-z]{2})"
-    r"[- ]?([0-9]{2})(?![A-Za-z0-9])"
+    r"(?<![A-Za-z0-9])([A-Za-z]{2})[-_ ./]?([0-9]{2})[-_ ./]?([A-Za-z0-9]{3})[-_ ./]?"
+    r"([A-Za-z]{2})[-_ ./]?([0-9]{2})(?![A-Za-z0-9])"
 )
+# The state, district and area of every postcode in the fixtures and the scenarios.
+SYNTHETIC = ("FC", "Z99", "ZZ")
 OPENAPI_URI = "urn:gatepost:openapi"
 
 SchemaCheck = Callable[[str, object], list[str]]
@@ -156,20 +161,29 @@ def schema_check(openapi: dict[str, Any]) -> SchemaCheck:
     return check
 
 
-def schemas_in_responses(openapi: dict[str, Any]) -> set[str]:
-    """Return the names of the schemas that the responses use directly."""
-    names = set()
-    for _, _, response in responses(openapi):
-        for media in response.get("content", {}).values():
-            names.add(media["schema"]["$ref"].rpartition("/")[2])
-    return names
+def status_matches(declared: str, status: int) -> bool:
+    """Tell whether a status key of the OpenAPI file, such as 404 or 5XX, covers a status."""
+    if declared.endswith("XX"):
+        return str(status).startswith(declared[0])
+    return declared == str(status)
+
+
+def schema_name(response: dict[str, Any]) -> str | None:
+    """Return the name of the schema of a JSON response, or None for a response with no body."""
+    media = response.get("content", {}).get("application/json")
+    return None if media is None else str(media["schema"]["$ref"].rpartition("/")[2])
 
 
 def load_fixtures(root: Path = FIXTURES) -> dict[str, Any]:
-    """Return each fixture by its name, the path under the folder without `.json`."""
+    """Return each fixture by its name, the path under the folder without `.json`.
+
+    A fixture lives in a folder under the root, at any depth. The root holds `keys.json`, which
+    is not a fixture.
+    """
     return {
         path.relative_to(root).with_suffix("").as_posix(): read_json(path)
-        for path in sorted(root.glob("*/*.json"))
+        for path in sorted(root.rglob("*.json"))
+        if path.parent != root
     }
 
 
@@ -188,6 +202,55 @@ def fixture_problems(name: str, fixture: Any, check: SchemaCheck) -> list[str]:
         f"Fixture {name}: {message}" for message in check(fixture["schema"], fixture["body"])
     ]
     return problems
+
+
+def stated_code(name: str) -> str:
+    """Return the error code that the file name of a fixture states.
+
+    errors/level-not-granted-2 states level_not_granted. A number at the end names a level.
+    """
+    return re.sub(r"-[0-9]+$", "", name.rpartition("/")[2]).replace("-", "_")
+
+
+def evidence_problems(name: str, evidence: str, marks: list[str]) -> list[str]:
+    """Return a problem when a fixture claims more than the strongest of the marks."""
+    strongest = min(marks, key=EVIDENCE.index)
+    if EVIDENCE.index(evidence) >= EVIDENCE.index(strongest):
+        return []
+    return [f"Fixture {name} claims {evidence}, but the OpenAPI file says {strongest}."]
+
+
+def fixture_response_problems(
+    name: str, fixture: dict[str, Any], openapi: dict[str, Any]
+) -> list[str]:
+    """Return the problems of a fixture against the responses of the OpenAPI file.
+
+    A response with the fixture's schema must declare the fixture's status. An error fixture
+    must carry a code of such a response, and the code that its file name states. The fixture's
+    evidence can claim no more than the mark of its response or of its error code.
+    """
+    status, schema = fixture["status"], fixture["schema"]
+    found = [
+        response
+        for _, declared, response in responses(openapi)
+        if status_matches(declared, status) and schema_name(response) == schema
+    ]
+    if not found:
+        return [f"Fixture {name}: no response with the schema {schema} has the status {status}."]
+    if schema != ERROR_SCHEMA:
+        return evidence_problems(name, fixture["evidence"], [r[EVIDENCE_MARK] for r in found])
+    code = fixture["body"]["error"]["code"]
+    named = stated_code(name)
+    listed = {
+        each for _, _, response in responses(openapi) for each in response.get(ERROR_CODES, {})
+    }
+    problems = []
+    if named in listed and named != code:
+        problems.append(f"Fixture {name}: its name asks for the error code {named}.")
+    marks = [r[ERROR_CODES][code] for r in found if code in r.get(ERROR_CODES, {})]
+    if not marks:
+        return [*problems, f"Fixture {name}: no {status} response has the error code {code}."]
+    return problems + evidence_problems(name, fixture["evidence"], marks)
 
 
 def key_problems(document: Any) -> list[str]:
@@ -213,12 +276,12 @@ def key_problems(document: Any) -> list[str]:
 def real_postcodes(text: str) -> list[str]:
     """Return each full postcode in the text that is not synthetic.
 
-    A synthetic postcode has the district Z99 and the area ZZ.
+    A synthetic postcode has the state FC, the district Z99 and the area ZZ.
     """
     return [
         match.group(0)
         for match in POSTCODE.finditer(text)
-        if (match.group(3).upper(), match.group(4).upper()) != ("Z99", "ZZ")
+        if tuple(match.group(i).upper() for i in (1, 3, 4)) != SYNTHETIC
     ]
 
 
@@ -228,4 +291,14 @@ def postcode_problems(paths: list[Path]) -> list[str]:
         f"{path.relative_to(ROOT)} holds the postcode {code}. Use a synthetic code."
         for path in paths
         for code in real_postcodes(path.read_text(encoding="utf-8"))
+    ]
+
+
+def key_text_problems(paths: list[Path]) -> list[str]:
+    """Return a problem for each text in the files in the form of a key that is no mock key."""
+    return [
+        f"{path.relative_to(ROOT)} holds the key {key}. Use a mock key."
+        for path in paths
+        for key in KEY_TEXT.findall(path.read_text(encoding="utf-8"))
+        if not MOCK_KEY.fullmatch(key)
     ]

@@ -195,6 +195,16 @@ def coverage_problems(scenarios: dict[str, Any], codes: list[str]) -> list[str]:
     return problems
 
 
+def synthetic_files() -> list[Path]:
+    """Return the files that may hold only synthetic postcodes and mock keys.
+
+    These are the fixtures, the scenarios, the docs beside them, client.md and the OpenAPI file.
+    """
+    folders = [*gateway_files.FIXTURES.rglob("*"), *CONTRACT.rglob("*")]
+    files = [path for path in folders if path.suffix in (".json", ".md")]
+    return sorted([*files, CLIENT_DOC, gateway_files.OPENAPI])
+
+
 def all_problems() -> list[str]:
     """Return the problems of the OpenAPI file, the fixtures, the keys and the scenarios."""
     openapi = gateway_files.load_openapi()
@@ -204,21 +214,18 @@ def all_problems() -> list[str]:
     codes = error_codes()
     problems = gateway_files.openapi_problems(openapi)
     for name, fixture in fixtures.items():
-        problems += gateway_files.fixture_problems(name, fixture, check)
-    used = gateway_files.schemas_in_responses(openapi)
-    problems += [
-        f"Fixture {name} uses {fixture['schema']}, which no response uses."
-        for name, fixture in fixtures.items()
-        if fixture.get("schema") not in used
-    ]
+        shape = gateway_files.fixture_problems(name, fixture, check)
+        problems += shape or gateway_files.fixture_response_problems(name, fixture, openapi)
     problems += gateway_files.key_problems(
         gateway_files.read_json(gateway_files.FIXTURES / "keys.json")
     )
     for name, scenario in scenarios.items():
         problems += scenario_problems(name, scenario, set(fixtures), codes)
     problems += coverage_problems(scenarios, codes)
-    files = sorted([*gateway_files.FIXTURES.rglob("*.json"), *CONTRACT.glob("*.json")])
-    return problems + gateway_files.postcode_problems(files)
+    files = synthetic_files()
+    return (
+        problems + gateway_files.postcode_problems(files) + gateway_files.key_text_problems(files)
+    )
 
 
 def main() -> int:

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "description": "A key that the gateway does not know. The message is Gatepost's.",
-  "evidence": "observed",
+  "description": "A key that the gateway does not know. No call showed the code or the message.",
+  "evidence": "assumed",
   "schema": "ErrorEnvelope",
   "status": 401,
   "body": {
