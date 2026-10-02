@@ -65,6 +65,18 @@ _Avoid_: pretty, human form
 To change input in three steps, in this order: apply NFKC, remove the separators, and change the ASCII letters to upper case. `grammar.md` defines the steps.
 _Avoid_: sanitise, canonicalise
 
+**Code point**:
+One Unicode code point. It is not a UTF-16 unit, a byte or a grapheme cluster. For example, U+1D404 is one code point and two UTF-16 units.
+_Avoid_: character (when you count input), char
+
+**Input limit**:
+The most code points that `parse` and `isLegacy` read. It is `maxInputCodePoints` in `data/format.json`. Over the limit, `parse` gives `bad_length` and `isLegacy` gives false. Both functions apply the limit before they normalise.
+_Avoid_: max length, length limit, size limit
+
+**Suggestion**:
+The canonical form that `parse` offers with `unknown_state` or `bad_segment`, when a fix of look-alike characters makes the code parse. It is a hint, never a success. The word means this hint from `parse`. It does not mean the suggestions that NIPOST's autocomplete API returns.
+_Avoid_: correction, autocorrect
+
 ### NIPOST's API
 
 **Gateway**:
@@ -140,15 +152,3 @@ _Avoid_: verify, validate (for this step)
 **Tell**:
 A habit that makes code look machine-written, such as very long lines.
 _Avoid_: smell (smells are design problems), anti-pattern
-
-**Code point**:
-One Unicode code point. It is not a UTF-16 unit, a byte or a grapheme cluster. For example, U+1D404 is one code point and two UTF-16 units.
-_Avoid_: character (when you count input), char
-
-**Input limit**:
-The most code points that `parse` and `isLegacy` read. It is `maxInputCodePoints` in `data/format.json`. Over the limit, `parse` gives `bad_length` and `isLegacy` gives false. Both functions apply the limit before they normalise.
-_Avoid_: max length, length limit, size limit
-
-**Suggestion**:
-The canonical code that `parse` offers with `unknown_state` or `bad_segment`, when a fix of look-alike characters makes the code parse. It is a hint, never a success.
-_Avoid_: correction, autocorrect

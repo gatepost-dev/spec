@@ -120,6 +120,15 @@ def load_states() -> list[dict[str, str]]:
     return states
 
 
+def load_unused_iso_codes() -> list[tuple[str, str]]:
+    """Return the name and ISO code of each state where NIPOST's code is not the ISO code."""
+    return [
+        (state["name"], state["iso"].removeprefix("NG-"))
+        for state in load_states()
+        if state["iso"] != "NG-" + state["code"]
+    ]
+
+
 def load_format() -> dict[str, Any]:
     """Read data/format.json."""
     postcode_format: dict[str, Any] = json.loads(
@@ -339,14 +348,18 @@ def parse_rows() -> list[Row]:
 
 def segment_rows() -> list[Row]:
     """Cases for segment rules and typo suggestions."""
+    unused_iso = [
+        row(
+            f"rejects {iso_code}, the ISO code of {name}, as a state",
+            iso_code + "01Z99ZZ01",
+            failed("unknown_state", "state"),
+        )
+        for name, iso_code in load_unused_iso_codes()
+    ]
     return [
         row("rejects an unknown state", "XX01A03FK01", failed("unknown_state", "state")),
         row("rejects the synthetic state ZZ", "ZZ01Z99ZZ01", failed("unknown_state", "state")),
-        row(
-            "rejects the ISO code of a state that NIPOST does not use",
-            "BO01Z99ZZ01",
-            failed("unknown_state", "state"),
-        ),
+        *unused_iso,
         row(
             "suggests O for a zero in the state",
             "0G01A03FK01",
@@ -647,6 +660,10 @@ def state_name_rows() -> list[Row]:
         row(f"names {state['code']}", state["code"], value(state["name"]))
         for state in load_states()
     ]
+    unused_iso = [
+        row(f"returns nothing for {iso_code}, the ISO code of {name}", iso_code, value(None))
+        for name, iso_code in load_unused_iso_codes()
+    ]
     return [
         *named,
         row("accepts lower case", "ek", value("Ekiti")),
@@ -661,12 +678,8 @@ def state_name_rows() -> list[Row]:
         # Python's upper() changes U+017F to S and U+0131 to I. These two would give Osun and Imo.
         row("returns nothing for a long s", "O" + LONG_S, value(None)),
         row("returns nothing for a dotless i", DOTLESS_I + "M", value(None)),
-        # NIPOST uses BR, GM, KG, SK and YB for these five states, so ISO's codes are unknown.
-        row("returns nothing for BO, the ISO code of Borno", "BO", value(None)),
-        row("returns nothing for GO, the ISO code of Gombe", "GO", value(None)),
-        row("returns nothing for KO, the ISO code of Kogi", "KO", value(None)),
-        row("returns nothing for SO, the ISO code of Sokoto", "SO", value(None)),
-        row("returns nothing for YO, the ISO code of Yobe", "YO", value(None)),
+        # Where NIPOST's code is not the ISO code, the ISO code is an unknown state.
+        *unused_iso,
     ]
 
 

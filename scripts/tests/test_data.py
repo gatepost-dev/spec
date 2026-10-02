@@ -40,7 +40,9 @@ class StatesTest(unittest.TestCase):
                 self.assertTrue(state["name"].isascii() and state["name"].strip())
 
     def test_keeps_the_iso_code_of_each_state_beside_the_nipost_code(self) -> None:
+        seen: list[str] = []
         for state in load("states.json")["states"]:
+            seen.append(state["name"])
             with self.subTest(name=state["name"]):
                 self.assertRegex(state["iso"], r"^NG-[A-Z]{2}$")
                 if state["name"] in NIPOST_CODES_OFF_ISO:
@@ -49,6 +51,7 @@ class StatesTest(unittest.TestCase):
                     )
                 else:
                     self.assertEqual(state["iso"], "NG-" + state["code"])
+        self.assertEqual(sorted(set(NIPOST_CODES_OFF_ISO) - set(seen)), [])
 
 
 class PrecisionTest(unittest.TestCase):

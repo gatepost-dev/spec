@@ -14,9 +14,6 @@ import build_vectors
 
 ROOT = Path(__file__).resolve().parents[2]
 ZERO_WIDTH_JOINER = chr(0x200D)
-# The ISO 3166-2:NG codes that NIPOST does not use. Its codes for the same five states are
-# BR, GM, KG, SK and YB.
-UNUSED_ISO_CODES = ("BO", "GO", "KO", "SO", "YO")
 
 
 def load(stem: str) -> dict[str, Any]:
@@ -63,11 +60,33 @@ class BuildVectorsTest(unittest.TestCase):
         self.assertEqual(parsed, codes)
         self.assertLessEqual(codes, named)
 
-    def test_each_unused_iso_code_has_a_state_name_case_that_returns_nothing(self) -> None:
-        names = [(case["input"], case["expect"]["value"]) for case in load("state-name")["cases"]]
-        for iso_code in UNUSED_ISO_CODES:
-            with self.subTest(iso_code):
-                self.assertIn((iso_code, None), names)
+    def test_each_unused_iso_code_has_a_state_name_case_and_a_parse_case(self) -> None:
+        states = json.loads((ROOT / "data" / "states.json").read_text(encoding="utf-8"))["states"]
+        iso_codes = [
+            state["iso"].removeprefix("NG-")
+            for state in states
+            if state["iso"] != "NG-" + state["code"]
+        ]
+        self.assertTrue(iso_codes)
+        unknown_state = {
+            "ok": False,
+            "error": {"code": "unknown_state", "segment": "state", "suggestion": None},
+        }
+        nameless = {
+            case["input"] for case in load("state-name")["cases"] if case["expect"]["value"] is None
+        }
+        rejected = {
+            case["input"][:2]
+            for case in load("parse-segments")["cases"]
+            if case["expect"] == unknown_state and not case["options"]
+        }
+        missing: list[str] = []
+        for iso_code in iso_codes:
+            if iso_code not in nameless:
+                missing.append(f"state-name: {iso_code}")
+            if iso_code not in rejected:
+                missing.append(f"parse-segments: {iso_code}")
+        self.assertEqual(missing, [])
 
     def test_each_separator_has_a_normalize_case(self) -> None:
         postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
@@ -101,33 +120,26 @@ class BuildVectorsTest(unittest.TestCase):
                 above = [expected for metres, expected in measured if limit < metres < ceiling]
                 self.assertIn(next_precision, above)
 
-    def test_the_input_limit_has_cases_on_both_sides_and_for_each_counting_mistake(self) -> None:
+    def test_parse_has_cases_at_the_limit_above_it_and_for_each_counting_mistake(self) -> None:
         postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
         limit = postcode_format["maxInputCodePoints"]
         parsed = [
             (case["input"], "ok" if case["expect"]["ok"] else case["expect"]["error"]["code"])
             for case in load("parse")["cases"]
         ]
-        legacy = [(case["input"], case["expect"]["value"]) for case in load("is-legacy")["cases"]]
-        parse_outcomes = [(len(text), outcome) for text, outcome in parsed]
-        legacy_outcomes = [(len(text), outcome) for text, outcome in legacy]
-        self.assertIn((limit, "ok"), parse_outcomes)
-        self.assertIn((limit + 1, "bad_length"), parse_outcomes)
-        self.assertIn((limit + 1, False), legacy_outcomes)
-        self.assertIn((limit, True), legacy_outcomes)
+        outcomes = [(len(text), outcome) for text, outcome in parsed]
+        self.assertIn((limit, "ok"), outcomes)
+        self.assertIn((limit + 1, "bad_length"), outcomes)
         accepted = [text for text, outcome in parsed if outcome == "ok" and len(text) <= limit]
         rejected = [
             text for text, outcome in parsed if outcome == "bad_length" and len(text) > limit
         ]
-        legacy_accepted = [
-            text for text, outcome in legacy if outcome is True and len(text) <= limit
-        ]
-        legacy_rejected = [
-            text for text, outcome in legacy if outcome is False and len(text) > limit
-        ]
         pins = {
             "a success with more UTF-16 units than the limit": [
                 text for text in accepted if utf16_units(text) > limit
+            ],
+            "a success with the limit in code points and more UTF-16 units": [
+                text for text in accepted if len(text) == limit and utf16_units(text) > limit
             ],
             "a success that grows past the limit under NFKC": [
                 text for text in accepted if len(unicodedata.normalize("NFKC", text)) > limit
@@ -140,25 +152,40 @@ class BuildVectorsTest(unittest.TestCase):
             "a rejection over the limit that ends in a line feed": [
                 text for text in rejected if text.endswith("\n")
             ],
-            "an accepted legacy code that grows past the limit under NFKC": [
-                text for text in legacy_accepted if len(unicodedata.normalize("NFKC", text)) > limit
-            ],
-            "a rejected legacy code that is within the limit without its zero-width joiners": [
-                text
-                for text in legacy_rejected
-                if len(text.replace(ZERO_WIDTH_JOINER, "")) <= limit
-            ],
-            "a rejected legacy code over the limit that ends in a line feed": [
-                text for text in legacy_rejected if text.endswith("\n")
-            ],
         }
         for requirement, texts in pins.items():
             with self.subTest(requirement):
                 self.assertTrue(texts)
         # A check that ends in $ instead of \z skips a final line feed. Only an input with
         # exactly one code point over the limit shows it.
-        line_feed_lengths = {
-            len(text) for text in [*rejected, *legacy_rejected] if text.endswith("\n")
+        line_feed_lengths = {len(text) for text in rejected if text.endswith("\n")}
+        with self.subTest("each rejection that ends in a line feed is one code point over"):
+            self.assertEqual(line_feed_lengths, {limit + 1})
+
+    def test_is_legacy_has_cases_at_the_limit_above_it_and_for_each_counting_mistake(self) -> None:
+        postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
+        limit = postcode_format["maxInputCodePoints"]
+        legacy = [(case["input"], case["expect"]["value"]) for case in load("is-legacy")["cases"]]
+        outcomes = [(len(text), outcome) for text, outcome in legacy]
+        self.assertIn((limit, True), outcomes)
+        self.assertIn((limit + 1, False), outcomes)
+        accepted = [text for text, outcome in legacy if outcome is True and len(text) <= limit]
+        rejected = [text for text, outcome in legacy if outcome is False and len(text) > limit]
+        pins = {
+            "an accepted legacy code that grows past the limit under NFKC": [
+                text for text in accepted if len(unicodedata.normalize("NFKC", text)) > limit
+            ],
+            "a rejected legacy code that is within the limit without its zero-width joiners": [
+                text for text in rejected if len(text.replace(ZERO_WIDTH_JOINER, "")) <= limit
+            ],
+            "a rejected legacy code over the limit that ends in a line feed": [
+                text for text in rejected if text.endswith("\n")
+            ],
         }
+        for requirement, texts in pins.items():
+            with self.subTest(requirement):
+                self.assertTrue(texts)
+        # The same one-over rule as for parse: a check that ends in $ lets such an input through.
+        line_feed_lengths = {len(text) for text in rejected if text.endswith("\n")}
         with self.subTest("each rejection that ends in a line feed is one code point over"):
             self.assertEqual(line_feed_lengths, {limit + 1})

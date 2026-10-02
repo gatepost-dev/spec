@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "NIPOST's autocomplete API returned these 37 codes on 2 Oct 2026. 32 equal ISO 3166-2:NG. NIPOST uses BR, GM, KG, SK and YB for Borno, Gombe, Kogi, Sokoto and Yobe, where ISO uses BO, GO, KO, SO and YO. The API returns no names. The names of these five come from the first-letter groups and the Nigerian vehicle plate codes.",
+  "source": "NIPOST's autocomplete API returned these 37 codes on 2 Oct 2026. 32 equal ISO 3166-2:NG. NIPOST uses BR, GM, KG, SK and YB for Borno, Gombe, Kogi, Sokoto and Yobe, where ISO uses BO, GO, KO, SO and YO. The API returns no names. The names of these five come from the first-letter groups: each group lacks one ISO code and has one NIPOST code.",
   "states": [
     { "code": "AB", "name": "Abia", "iso": "NG-AB" },
     { "code": "AD", "name": "Adamawa", "iso": "NG-AD" },

@@ -31,7 +31,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 | publint and `@arethetypeswrong/cli` | package checks | every published package |
 | API Extractor | API report | `etc/<package>.api.md`, checked in CI |
 | Changesets | versions and changelogs | one change file per user-visible change |
-| commitlint | commit messages | `@commitlint/config-conventional`, scopes from package names, and `scope-empty` set to `never`, so each commit needs a scope (GIT-1) |
+| commitlint | commit messages | `@commitlint/config-conventional`, `scope-enum` with the scopes `core`, `client`, `field`, `react`, `repo`, `deps` and `release`, `scope-empty` set to `never` so each commit needs a scope (GIT-1), and `header-max-length` set to 72 characters (TELL-18) |
 | REUSE | licence headers | `reuse lint` |
 | gitleaks | secret scan | each pull request and each push to `main` |
 | `spec/scripts/check-tells` | agent tells | line length 100, file names, TODO form, debug calls, emojis and non-ASCII |
