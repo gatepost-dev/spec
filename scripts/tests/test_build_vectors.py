@@ -29,6 +29,14 @@ def utf16_units(text: str) -> int:
     return len(text.encode("utf-16-le", errors="surrogatepass")) // 2
 
 
+def separator_characters() -> frozenset[str]:
+    return frozenset(chr(code_point) for code_point in build_vectors.load_separators())
+
+
+def holds_only_ascii_and_separators(text: str, separators: frozenset[str]) -> bool:
+    return all(character.isascii() or character in separators for character in text)
+
+
 def table_form(character: str, separators: frozenset[str]) -> str:
     """Return the NFKC form of a character if the form holds only ASCII characters and separators.
 
@@ -36,19 +44,33 @@ def table_form(character: str, separators: frozenset[str]) -> str:
     every other character as it is.
     """
     form = unicodedata.normalize("NFKC", character)
-    if all(part.isascii() or part in separators for part in form):
+    if holds_only_ascii_and_separators(form, separators):
         return form
     return character
+
+
+def remove_separators_and_upper_case(text: str, separators: frozenset[str]) -> str:
+    """Apply steps 2 and 3 of the Normalise section in grammar.md."""
+    kept = "".join(character for character in text if character not in separators)
+    return kept.translate(ASCII_UPPER_CASE)
+
+
+def full_normalize(text: str, separators: frozenset[str]) -> str:
+    """Normalise as grammar.md says, with a full NFKC."""
+    return remove_separators_and_upper_case(unicodedata.normalize("NFKC", text), separators)
 
 
 def reduced_normalize(text: str, separators: frozenset[str]) -> str:
     """Normalise as an SDK without a full NFKC does (grammar.md, section Normalise)."""
     mapped = "".join(table_form(character, separators) for character in text)
-    kept = "".join(character for character in mapped if character not in separators)
-    return kept.translate(ASCII_UPPER_CASE)
+    return remove_separators_and_upper_case(mapped, separators)
 
 
 class BuildVectorsTest(unittest.TestCase):
+    def assert_same_text(self, actual: str, expected: str) -> None:
+        # ASCII forms keep a failure readable: U+00B5 and U+03BC look alike.
+        self.assertEqual(ascii(actual), ascii(expected))
+
     def test_vector_files_match_the_builder(self) -> None:
         self.assertEqual(build_vectors.main(["--check"]), 0)
 
@@ -122,15 +144,38 @@ class BuildVectorsTest(unittest.TestCase):
                 missing.append(label)
         self.assertEqual(missing, [])
 
-    def test_each_normalize_case_gives_the_same_result_with_nfkc_through_a_table(self) -> None:
-        separators = frozenset(chr(code_point) for code_point in build_vectors.load_separators())
+    def test_each_separator_has_an_nfkc_form_of_ascii_characters_and_separators(self) -> None:
+        separators = separator_characters()
+        # Otherwise full NFKC leaves a character where a table removes the separator.
+        outside = [
+            f"U+{ord(separator):04X}"
+            for separator in sorted(separators)
+            if not holds_only_ascii_and_separators(
+                unicodedata.normalize("NFKC", separator), separators
+            )
+        ]
+        self.assertEqual(outside, [])
+
+    def test_each_normalize_case_holds_with_full_nfkc_and_with_a_table(self) -> None:
+        separators = separator_characters()
+        normalizers = {"full NFKC": full_normalize, "NFKC through a table": reduced_normalize}
         for case in load("normalize")["cases"]:
-            with self.subTest(case["id"]):
-                # ASCII forms keep a failure readable: U+00B5 and U+03BC look alike.
-                self.assertEqual(
-                    ascii(reduced_normalize(case["input"], separators)),
-                    ascii(case["expect"]["value"]),
-                )
+            for name, normalizer in normalizers.items():
+                with self.subTest(case["id"], normalizer=name):
+                    self.assert_same_text(
+                        normalizer(case["input"], separators), case["expect"]["value"]
+                    )
+
+    def test_a_table_keeps_a_micro_sign_but_changes_a_full_width_letter(self) -> None:
+        separators = separator_characters()
+        micro_sign = chr(0x00B5)
+        full_width_a = chr(0xFF21)
+        with self.subTest("full NFKC changes the micro sign"):
+            self.assert_same_text(full_normalize(micro_sign, separators), chr(0x03BC))
+        with self.subTest("a table keeps the micro sign"):
+            self.assert_same_text(reduced_normalize(micro_sign, separators), micro_sign)
+        with self.subTest("a table changes the full-width letter"):
+            self.assert_same_text(reduced_normalize(full_width_a, separators), "A")
 
     def test_each_gps_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
         rules = json.loads((ROOT / "data" / "precision.json").read_text(encoding="utf-8"))

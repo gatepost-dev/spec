@@ -38,6 +38,7 @@ LEFT_TO_RIGHT_MARK = chr(0x200E)
 RIGHT_TO_LEFT_MARK = chr(0x200F)
 RIGHT_TO_LEFT_OVERRIDE = chr(0x202E)
 FULL_WIDTH_HYPHEN = chr(0xFF0D)
+SUPERSCRIPT_MINUS = chr(0x207B)
 COMBINING_ACUTE = chr(0x0301)
 HORIZONTAL_ELLIPSIS = chr(0x2026)
 ZERO_WIDTH_JOINER = chr(0x200D)
@@ -182,6 +183,8 @@ def normalize_rows() -> list[Row]:
             want,
         ),
         row("removes full-width hyphens", joined(FULL_WIDTH_HYPHEN), want),
+        # NFKC changes U+207B to the separator U+2212. A table of ASCII forms only would keep it.
+        row("removes a superscript minus", "EK" + SUPERSCRIPT_MINUS + "01A03FK01", want),
         row("removes tabs and line feeds", "EK01" + TAB + "A03" + LINE_FEED + "FK01", want),
         row(
             "changes a ligature to its letters",

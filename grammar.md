@@ -28,7 +28,9 @@ A partial postcode stops after the state, LGA, district or area segment. Its len
 2. Remove each separator in `data/format.json`: white space, hyphens and dashes, the full stop, and zero-width characters.
 3. Change the ASCII letters a to z to upper case. Keep every other character as it is.
 
-An SDK without a full NFKC can apply NFKC only to the characters whose NFKC form holds only ASCII characters and separators. Its `parse` and `isLegacy` must then give the same results as with full NFKC, for every input. Its `normalize` can keep a character that full NFKC changes, such as U+00B5, in text that holds no postcode. Each `normalize` vector gives the same result either way.
+An SDK without a full NFKC can apply NFKC through a table. The table lists only the characters whose NFKC form holds only ASCII characters and separators. The SDK's `parse` and `isLegacy` must then give the same results as with full NFKC, for every input. The SDK's `normalize` can keep a character that full NFKC changes, such as U+00B5, in text that `parse` rejects. Each `normalize` vector gives the same result either way.
+
+Unicode 17.0 is the baseline for NFKC. A table must come from that version. A platform can have a Unicode version older than 17.0. An SDK on that platform can give other results for a character that a later version added or changed. For example, NFKC in Unicode 17.0 changes U+1CCDA to E. No vector holds such a character.
 
 A format character that is not in the list stays. For example, the right-to-left override U+202E can change the order in which a code shows on screen, so `parse` gives `bad_character` for it.
 
@@ -47,7 +49,7 @@ First count the Unicode code points of the input. Do not count UTF-16 units, UTF
 
 For `unknown_state` and `bad_segment`, the error names the segment. For the other codes, the segment is null.
 
-Input that is not well-formed Unicode is never a postcode. This covers bytes that are not valid UTF-8, in a language whose strings hold bytes, and a lone surrogate, in a language whose strings can hold one. Such input gives `bad_length` when it is over the input limit, and `bad_character` otherwise. An SDK whose strings hold bytes can treat input of more than 4 x `maxInputCodePoints` bytes as over the limit without decoding it, because a code point takes at most 4 bytes in UTF-8. `isLegacy` gives false for such input. `normalize` keeps each unit that is not well-formed. No function throws for such input.
+Input that is not well-formed Unicode is never a postcode. In a language whose strings hold bytes, the SDK does not count the code points of input that is not valid UTF-8. `parse` gives `bad_length` for such input when it has more than 4 x `maxInputCodePoints` bytes, and `bad_character` otherwise. In a language whose strings can hold a lone surrogate, the surrogate counts as one code point. The input limit applies as usual. Within the limit, `parse` gives `bad_character` for input that holds a lone surrogate. `isLegacy` gives false for input that is not well-formed. `normalize` keeps each byte that is not part of a valid UTF-8 sequence, and each lone surrogate, in place. It normalises the text on each side of such a byte or surrogate on its own. No function throws for input that is not well-formed.
 
 ## Suggestions
 
