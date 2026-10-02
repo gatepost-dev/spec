@@ -27,7 +27,7 @@ The second segment. Two digits that name a local government area within a state.
 _Avoid_: council, local government, municipality
 
 **District**:
-The third segment. Three characters that name a district within an LGA. NIPOST uses districts for postal sorting.
+The third segment. Three characters that name a district within an LGA.
 _Avoid_: sorting code, sector
 
 **Area**:
@@ -114,7 +114,7 @@ _Avoid_: using this word for a Gatepost component
 ### Gatepost
 
 **Spec**:
-The `spec` repo, which holds the grammar, the vectors, the fixtures, the completed OpenAPI file and these standards.
+The `spec` repo. It holds the grammar, the data, the vectors and the standards. The API fixtures and the completed OpenAPI file come later.
 _Avoid_: schema, contract (for the repo)
 
 **Vector**:
