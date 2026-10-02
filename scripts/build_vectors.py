@@ -228,6 +228,12 @@ def normalize_rows() -> list[Row]:
         row(
             "removes spaces from input over the input limit", " " * limit + CODE + " " * limit, want
         ),
+        # A case table that lacks one letter still passes every postcode that does not hold it.
+        row(
+            "makes each ASCII letter upper case",
+            "abcdefghijklmnopqrstuvwxyz",
+            value("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+        ),
     ]
 
 

@@ -677,6 +677,15 @@
       "expect": {
         "value": "EK01A03FK01"
       }
+    },
+    {
+      "id": "normalize-076",
+      "description": "makes each ASCII letter upper case",
+      "input": "abcdefghijklmnopqrstuvwxyz",
+      "options": {},
+      "expect": {
+        "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      }
     }
   ]
 }
