@@ -15,7 +15,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 
 ## Tools
 
-`pnpm check` runs every tool below. CI runs `pnpm check` on each push and each pull request.
+`pnpm check` runs every tool below. CI runs `pnpm check` on each pull request and each push to `main`.
 
 | Tool | Job | Settings |
 |---|---|---|
@@ -33,7 +33,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 | Changesets | versions and changelogs | one change file per user-visible change |
 | commitlint | commit messages | `@commitlint/config-conventional`, scopes from package names |
 | REUSE | licence headers | `reuse lint` |
-| gitleaks | secret scan | every push |
+| gitleaks | secret scan | each pull request and each push to `main` |
 | `spec/scripts/check-tells` | agent tells | line length 100, file names, TODO form, debug calls, emojis and non-ASCII |
 | TypeDoc | API pages | the docs site renders them |
 

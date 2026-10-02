@@ -15,7 +15,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for PHP 
 
 ### Tools
 
-`composer check` runs every tool below. CI runs `composer check` on each push and each pull request.
+`composer check` runs every tool below. CI runs `composer check` on each pull request and each push to `main`.
 
 | Tool | Job | Settings |
 |---|---|---|
@@ -24,11 +24,11 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for PHP 
 | PHPUnit 10 | unit and contract tests | coverage floors from T-7 |
 | Infection | mutation tests | the core namespace, weekly scheduled job |
 | Roave BackwardCompatibilityCheck | API check against the last tag | enforces GIT-7 and API-13 |
-| `composer validate --strict` and `composer-normalize` | package checks | every push |
+| `composer validate --strict` and `composer-normalize` | package checks | each pull request and each push to `main` |
 | PHPMD | size and complexity | `CyclomaticComplexity` 10, `ExcessiveParameterList` minimum 5, enforces TELL-2 and TELL-3 |
 | changie | change files and changelog | one change file per user-visible change, enforces DOC-5 |
 | REUSE | licence headers | `reuse lint` |
-| gitleaks | secret scan | every push |
+| gitleaks | secret scan | each pull request and each push to `main` |
 | `spec/scripts/check-tells` | agent tells | line length 100, file names, TODO form, debug calls, emojis and non-ASCII |
 
 PHP-CS-Fixer does not limit line length, so `check-tells` enforces TELL-1. PHPMD has no nesting rule, so reviewers check nesting for TELL-2.
@@ -88,7 +88,7 @@ CHANGELOG.md
 
 ### Tools
 
-`composer check` runs every tool below. CI runs it on each push and each pull request.
+`composer check` runs every tool below. CI runs it on each pull request and each push to `main`.
 
 | Tool | Job | Settings |
 |---|---|---|

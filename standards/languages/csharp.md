@@ -14,7 +14,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for C# c
 
 ## Tools
 
-`make check` runs every tool below. CI runs `make check` on each push and each pull request.
+`make check` runs every tool below. CI runs `make check` on each pull request and each push to `main`.
 
 | Tool | Job | Settings |
 |---|---|---|
@@ -32,7 +32,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for C# c
 | changie | change files and changelog | one change file per user-visible change |
 | `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in source, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
 | REUSE | licence headers | `reuse lint` |
-| gitleaks | secret scan | every push |
+| gitleaks | secret scan | each pull request and each push to `main` |
 
 ### Agent-tell checks
 

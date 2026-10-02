@@ -13,7 +13,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Go c
 
 ## Tools
 
-`make check` runs every tool below. CI runs `make check` on each push and each pull request.
+`make check` runs every tool below. CI runs `make check` on each pull request and each push to `main`.
 
 | Tool | Job | Settings |
 |---|---|---|
@@ -23,12 +23,12 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Go c
 | golangci-lint | lint | the settings below |
 | `go test` | unit, vector, contract and example tests | `-race -cover`, coverage floors from T-7 |
 | `go test -fuzz` | fuzz tests | `FuzzParse` for 30 seconds on each pull request |
-| govulncheck | vulnerability scan | every push |
+| govulncheck | vulnerability scan | each pull request and each push to `main` |
 | gorelease | API check against the last tag | enforces GIT-7 and API-13 |
 | changie | change files and changelog | one change file per user-visible change |
 | `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in source, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
 | REUSE | licence headers | `reuse lint` |
-| gitleaks | secret scan | every push |
+| gitleaks | secret scan | each pull request and each push to `main` |
 
 ### golangci-lint settings
 
