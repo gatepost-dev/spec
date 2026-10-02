@@ -138,7 +138,7 @@ A line in a code or config file can skip one check with a comment that names the
 - **SEC-2 MUST.** There is no telemetry. An SDK sends only the requests that the caller makes.
 - **SEC-3 MUST.** The cache is off by default. When on, it has a time limit and a clear command.
 - **SEC-4 MUST.** Call only the documented gateway endpoints.
-- **SEC-5 MUST.** CI scans each push for secrets. **(tool)**
+- **SEC-5 MUST.** CI scans each pull request and each push to `main` for secrets. **(tool)**
 - **SEC-6 MUST.** Each GitHub Action is pinned to a full commit SHA. **(tool)**
 - **SEC-7 MUST.** Releases come only from CI. They carry provenance or a signature where the registry supports it.
 - **SEC-8 MUST.** Each repo has `SECURITY.md`. A reporter gets a reply within 3 working days.
