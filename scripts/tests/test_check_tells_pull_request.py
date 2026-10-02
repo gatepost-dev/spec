@@ -199,6 +199,16 @@ class CommunityTemplatesTest(unittest.TestCase):
         self.assertIn("commit message on `main`", section)
         self.assertIn("Conventional Commits", section)
 
+    def test_contributing_gives_the_title_form_that_the_spec_repo_accepts(self) -> None:
+        text = read_template("CONTRIBUTING.md")
+        scoped, plain = "fix(core): reject a unit of 00", "fix: reject a unit of 00"
+        found = check_squash_message(squash(scoped + " (#7)"), no_scope=True)
+        self.assertEqual(rules(found), ["GIT-1"])
+        self.assertEqual(check_squash_message(squash(plain + " (#7)"), no_scope=True), [])
+        # Each title with a scope needs the title that the spec repo uses, which has none.
+        self.assertEqual(text.count(f"`{plain}`"), text.count(f"`{scoped}`"))
+        self.assertIn("no scope", text)
+
     def test_agents_names_the_interface_section_of_the_grammar(self) -> None:
         text = read_template("AGENTS.md")
         self.assertIn("grammar, with its Interface section, and the vectors", text)

@@ -22,7 +22,7 @@ Gatepost is unofficial. For problems with NIPOST's own app, data or API, contact
 
 ## Commit
 
-- Use Conventional Commits, for example `fix(core): reject a unit of 00` (GIT-1).
+- Use Conventional Commits, for example `fix(core): reject a unit of 00` (GIT-1). The `spec` repo has no packages, so its commits use no scope, as in `fix: reject a unit of 00`.
 - Keep the subject at 72 characters or fewer. Explain why in the body (TELL-18).
 - Sign off each commit with `git commit -s` (GIT-2). The sign-off states that you accept the Developer Certificate of Origin at https://developercertificate.org.
 - If you forget a sign-off, run `git rebase --signoff` with the base branch of your pull request, for example `git rebase --signoff origin/main`. Then push to your own branch with `git push --force-with-lease`. GIT-4 forbids a force-push only to `main` and to shared branches.
@@ -37,7 +37,7 @@ You can use AI tools. You are responsible for each line that you submit. If an A
 The title and the body of the pull request become the commit message on `main`, and CI checks both.
 
 1. Keep it to one topic. Aim for 400 changed lines or fewer, not counting tests, vectors and generated files (GIT-5).
-2. Write the title as a Conventional Commits subject, for example `fix(core): reject a unit of 00` (GIT-1). GitHub adds ` (#N)` to it, and the whole subject has 72 characters or fewer (TELL-18).
+2. Write the title as a Conventional Commits subject, for example `fix(core): reject a unit of 00` (GIT-1). GitHub adds ` (#N)` to it, and the whole subject has 72 characters or fewer (TELL-18). The `spec` repo uses no scope, so its titles look like `fix: reject a unit of 00`.
 3. Fill in the pull request template.
    - Replace the first paragraph with two or three sentences of plain prose that say what the change does and why.
    - Replace `Closes #` with the number of the issue that the change closes, or remove the line.

@@ -1,6 +1,14 @@
 # Postcode grammar
 
-Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, with two exceptions. Two groups of rules have no shared vectors: the Unicode version (see Normalise) and text that is not well-formed (see Parse). JSON cannot carry invalid UTF-8, and PHP rejects an escape for a lone surrogate. Each SDK tests these rules itself. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
+Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, except the rules in the list below. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
+
+No shared vector tests these rules. Each SDK tests them itself.
+
+- The Unicode version of NFKC (see Normalise).
+- That `normalize` accepts input of any length (see Normalise).
+- Text that is not well-formed (see Parse). JSON cannot carry invalid UTF-8, and PHP rejects an escape for a lone surrogate.
+- That `truncate` fails for a value that is not a precision (see Hierarchy).
+- That each SDK exposes `SPEC_VERSION` (see Versions).
 
 ## Forms
 
