@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "function": "redact",
+  "description": "Hides the unit for logs.",
+  "cases": [
+    {
+      "id": "redact-001",
+      "description": "hides the unit of a full code",
+      "input": {
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": "EK-01-A03-FK-**"
+      }
+    },
+    {
+      "id": "redact-002",
+      "description": "keeps an area code as it is",
+      "input": {
+        "code": "EK-01-A03-FK"
+      },
+      "options": {},
+      "expect": {
+        "value": "EK-01-A03-FK"
+      }
+    },
+    {
+      "id": "redact-003",
+      "description": "keeps a state code as it is",
+      "input": {
+        "code": "EK"
+      },
+      "options": {},
+      "expect": {
+        "value": "EK"
+      }
+    }
+  ]
+}

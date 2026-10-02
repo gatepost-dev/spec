@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+target-version = "py311"
+line-length = 100
+
+[lint]
+preview = true
+explicit-preview-rules = true
+select = [
+  "E", "F", "W", "I", "B", "UP", "SIM", "RUF", "D", "ANN", "S", "PT",
+  "PL", "C4", "PIE", "RET", "ERA", "T20", "T10", "C90",
+]
+extend-select = ["PLR1702", "PLR0917"]
+# S603 and S607: check-tells runs git with a fixed argument list.
+# ANN401: JSON values in the vector builder are Any.
+# PLR0913: TELL-3 counts only positional parameters.
+ignore = ["S603", "S607", "ANN401", "PLR0913"]
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.pylint]
+max-nested-blocks = 3
+max-positional-args = 4
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+# PT: these tests use unittest, so the pytest-style rules do not apply.
+"scripts/tests/**" = ["S101", "D", "ANN", "PLR2004", "PT"]

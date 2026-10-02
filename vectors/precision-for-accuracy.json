@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "function": "precisionForAccuracy",
+  "description": "Maps GPS accuracy to precision.",
+  "cases": [
+    {
+      "id": "precision-for-accuracy-001",
+      "description": "gives the unit at 0 m",
+      "input": 0,
+      "options": {},
+      "expect": {
+        "value": "unit"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-002",
+      "description": "gives the unit at 5 m",
+      "input": 5,
+      "options": {},
+      "expect": {
+        "value": "unit"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-003",
+      "description": "gives the unit at exactly 8 m",
+      "input": 8,
+      "options": {},
+      "expect": {
+        "value": "unit"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-004",
+      "description": "gives the area just above 8 m",
+      "input": 8.1,
+      "options": {},
+      "expect": {
+        "value": "area"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-005",
+      "description": "gives the area at exactly 20 m",
+      "input": 20,
+      "options": {},
+      "expect": {
+        "value": "area"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-006",
+      "description": "gives the district above 20 m",
+      "input": 20.5,
+      "options": {},
+      "expect": {
+        "value": "district"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-007",
+      "description": "gives the district at exactly 50 m",
+      "input": 50,
+      "options": {},
+      "expect": {
+        "value": "district"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-008",
+      "description": "gives the LGA just above 50 m",
+      "input": 50.1,
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-009",
+      "description": "gives the LGA at 1000 m",
+      "input": 1000,
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-010",
+      "description": "gives the LGA when the accuracy is unknown",
+      "input": null,
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-011",
+      "description": "gives the LGA for a negative accuracy",
+      "input": -1,
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-012",
+      "description": "gives the unit for negative zero",
+      "input": -0.0,
+      "options": {},
+      "expect": {
+        "value": "unit"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-013",
+      "description": "gives the LGA for NaN",
+      "input": "NaN",
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-014",
+      "description": "gives the LGA for infinity",
+      "input": "Infinity",
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-015",
+      "description": "gives the LGA for negative infinity",
+      "input": "-Infinity",
+      "options": {},
+      "expect": {
+        "value": "lga"
+      }
+    }
+  ]
+}

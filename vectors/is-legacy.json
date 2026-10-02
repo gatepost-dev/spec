@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "function": "isLegacy",
+  "description": "Finds old 6-digit postcodes.",
+  "cases": [
+    {
+      "id": "is-legacy-001",
+      "description": "accepts six digits",
+      "input": "900108",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-002",
+      "description": "accepts six digits with a space",
+      "input": "900 108",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-003",
+      "description": "accepts six full-width digits",
+      "input": "\uff19\uff10\uff10\uff11\uff10\uff18",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-004",
+      "description": "rejects five digits as a legacy code",
+      "input": "90010",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-005",
+      "description": "rejects seven digits",
+      "input": "9001080",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-006",
+      "description": "rejects a new postcode",
+      "input": "EK01A03FK01",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-007",
+      "description": "rejects empty input as a legacy code",
+      "input": "",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-008",
+      "description": "rejects a letter O among digits",
+      "input": "90O108",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-009",
+      "description": "rejects six Arabic-Indic digits as a legacy code",
+      "input": "\u0669\u0660\u0660\u0661\u0660\u0668",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-010",
+      "description": "finds a legacy code padded to the input limit",
+      "input": "900108                                                          ",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-011",
+      "description": "rejects a legacy code over the input limit",
+      "input": "900108                                                           ",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-012",
+      "description": "counts zero-width joiners as code points for legacy codes",
+      "input": "900108\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-013",
+      "description": "counts the input before it normalises for legacy codes",
+      "input": "900108\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-014",
+      "description": "rejects a legacy code over the limit that ends in a line feed",
+      "input": "900108                                                          \n",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    }
+  ]
+}

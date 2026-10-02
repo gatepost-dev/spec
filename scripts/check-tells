@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+"""Run the check_tells package. The rules are in that package."""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from check_tells import main
+
+raise SystemExit(main())

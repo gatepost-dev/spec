@@ -1,0 +1,587 @@
+{
+  "version": 1,
+  "function": "parse",
+  "description": "Segment rules and typo suggestions.",
+  "cases": [
+    {
+      "id": "parse-segments-001",
+      "description": "rejects an unknown state",
+      "input": "XX01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-002",
+      "description": "rejects the synthetic state ZZ",
+      "input": "ZZ01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-003",
+      "description": "rejects BO, the ISO code of Borno, as a state",
+      "input": "BO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-004",
+      "description": "rejects GO, the ISO code of Gombe, as a state",
+      "input": "GO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-005",
+      "description": "rejects KO, the ISO code of Kogi, as a state",
+      "input": "KO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-006",
+      "description": "rejects SO, the ISO code of Sokoto, as a state",
+      "input": "SO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-007",
+      "description": "rejects YO, the ISO code of Yobe, as a state",
+      "input": "YO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-008",
+      "description": "suggests O for a zero in the state",
+      "input": "0G01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": "OG-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-009",
+      "description": "suggests I for a one in the state",
+      "input": "1M01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": "IM-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-010",
+      "description": "gives no suggestion when the fixed state is unknown",
+      "input": "E101A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-011",
+      "description": "gives no suggestion when the state cannot be fixed",
+      "input": "XXO1A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-012",
+      "description": "fixes later segments in a state suggestion",
+      "input": "0GO1A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": "OG-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-013",
+      "description": "rejects an LGA of 00",
+      "input": "EK00A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-014",
+      "description": "rejects a unit of 00",
+      "input": "EK01A03FK00",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-015",
+      "description": "rejects a letter after a digit in the LGA",
+      "input": "JI9XCHKLS18",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-016",
+      "description": "rejects a letter after a digit in the unit",
+      "input": "JI99CHKLS1X",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-017",
+      "description": "suggests 0 for a letter O in the LGA",
+      "input": "EKO1A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-018",
+      "description": "suggests 1 for a letter I in the LGA",
+      "input": "EKI1A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-11-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-019",
+      "description": "suggests 1 for a letter L in the LGA",
+      "input": "EKL1A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-11-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-020",
+      "description": "suggests I for a one in the area",
+      "input": "EK01A03F101",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "area",
+          "suggestion": "EK-01-A03-FI-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-021",
+      "description": "suggests O for a zero in the area",
+      "input": "EK01A03F001",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "area",
+          "suggestion": "EK-01-A03-FO-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-022",
+      "description": "rejects a digit before a letter in the area",
+      "input": "EK01A031K01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "area",
+          "suggestion": "EK-01-A03-IK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-023",
+      "description": "suggests 0 for a letter O in the unit",
+      "input": "EK01A03FKO1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": "EK-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-024",
+      "description": "suggests 1 for a letter I in the unit",
+      "input": "EK01A03FKI2",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": "EK-01-A03-FK-12"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-025",
+      "description": "suggests 1 for a letter L in the unit",
+      "input": "EK01A03FKL1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": "EK-01-A03-FK-11"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-026",
+      "description": "suggests 1 for a letter I after a zero in the unit",
+      "input": "EK01A03FK0I",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": "EK-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-027",
+      "description": "gives no suggestion when the fix makes a unit of 00",
+      "input": "EK01A03FK0O",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "unit",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-028",
+      "description": "gives no suggestion when a segment cannot be fixed",
+      "input": "EK01A03F2O1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "area",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-029",
+      "description": "reports the first bad segment and fixes them all",
+      "input": "EKO1A03F1O1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-A03-FI-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-030",
+      "description": "suggests a fix after making letters upper case",
+      "input": "eko1a03fk01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-A03-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-031",
+      "description": "rejects an LGA of 00 in a partial code",
+      "input": "EK00",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-032",
+      "description": "suggests a partial code",
+      "input": "EKO1",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-033",
+      "description": "suggests a partial area code",
+      "input": "EK01A03F1",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "area",
+          "suggestion": "EK-01-A03-FI"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-034",
+      "description": "rejects an unknown state when partial codes are allowed",
+      "input": "XX",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-035",
+      "description": "suggests a state for a partial code",
+      "input": "0G",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": "OG"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-036",
+      "description": "suggests an LGA fix for a district code",
+      "input": "EKO1A03",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-A03"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-037",
+      "description": "rejects an LGA of 00 in a district code",
+      "input": "EK00A03",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-038",
+      "description": "keeps a letter O in the district when it fixes the LGA",
+      "input": "EKO1AO3FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-AO3-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-039",
+      "description": "keeps letters I and L in the district when it fixes the LGA",
+      "input": "EKO1AILFK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-AIL-FK-01"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-040",
+      "description": "accepts letters and digits in any district position",
+      "input": "EK01A0OFK01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A0OFK01",
+        "canonical": "EK-01-A0O-FK-01",
+        "display": "EK 01 A0O FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A0O",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    }
+  ]
+}

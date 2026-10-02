@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question
+    url: https://github.com/orgs/gatepost-dev/discussions
+    about: Ask how to use a Gatepost package.
+  - name: Security problem
+    url: https://github.com/gatepost-dev/.github/blob/main/SECURITY.md
+    about: Report a vulnerability privately.
+  - name: NIPOST's own app or data
+    url: https://postcode.gov.ng/faq
+    about: Gatepost is unofficial. Contact NIPOST about NIPOST's services.

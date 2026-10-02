@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "function": "truncate",
+  "description": "Cuts a code to a less precise segment.",
+  "cases": [
+    {
+      "id": "truncate-001",
+      "description": "keeps a full code at unit precision",
+      "input": {
+        "code": "EK-01-A03-FK-01",
+        "to": "unit"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03-FK-01"
+      }
+    },
+    {
+      "id": "truncate-002",
+      "description": "cuts a full code to its area",
+      "input": {
+        "code": "EK-01-A03-FK-01",
+        "to": "area"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03-FK"
+      }
+    },
+    {
+      "id": "truncate-003",
+      "description": "cuts a full code to its district",
+      "input": {
+        "code": "EK-01-A03-FK-01",
+        "to": "district"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03"
+      }
+    },
+    {
+      "id": "truncate-004",
+      "description": "cuts a full code to its LGA",
+      "input": {
+        "code": "EK-01-A03-FK-01",
+        "to": "lga"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01"
+      }
+    },
+    {
+      "id": "truncate-005",
+      "description": "cuts a full code to its state",
+      "input": {
+        "code": "EK-01-A03-FK-01",
+        "to": "state"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK"
+      }
+    },
+    {
+      "id": "truncate-006",
+      "description": "keeps a district code at district precision",
+      "input": {
+        "code": "EK-01-A03",
+        "to": "district"
+      },
+      "options": {},
+      "expect": {
+        "canonical": "EK-01-A03"
+      }
+    },
+    {
+      "id": "truncate-007",
+      "description": "refuses to add precision to a district code",
+      "input": {
+        "code": "EK-01-A03",
+        "to": "area"
+      },
+      "options": {},
+      "expect": {
+        "rejects": true
+      }
+    },
+    {
+      "id": "truncate-008",
+      "description": "refuses to add precision to a state code",
+      "input": {
+        "code": "EK",
+        "to": "lga"
+      },
+      "options": {},
+      "expect": {
+        "rejects": true
+      }
+    }
+  ]
+}

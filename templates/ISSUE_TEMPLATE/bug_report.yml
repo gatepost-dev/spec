@@ -1,0 +1,47 @@
+name: Bug report
+description: A Gatepost package does not work as its docs say.
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Gatepost is unofficial. For problems with NIPOST's own app, data or API,
+        contact NIPOST through the contact details on its official website.
+
+        Do not paste API keys, NINs, email addresses or the postcodes of private homes.
+        Use synthetic postcodes, such as FC-01-Z99-ZZ-01.
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      placeholder: "@gatepost/client 0.2.1"
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and version
+      placeholder: "Node 22.11, Chrome 131, PHP 8.3 or iOS 18"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest code that shows the problem.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Include the error code, if there is one.
+    validations:
+      required: true

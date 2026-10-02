@@ -1,0 +1,747 @@
+{
+  "version": 1,
+  "function": "parse",
+  "description": "One valid code for each state.",
+  "cases": [
+    {
+      "id": "parse-states-001",
+      "description": "parses a code in Abia",
+      "input": "AB-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "AB01Z99ZZ01",
+        "canonical": "AB-01-Z99-ZZ-01",
+        "display": "AB 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "AB",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-002",
+      "description": "parses a code in Adamawa",
+      "input": "AD-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "AD01Z99ZZ01",
+        "canonical": "AD-01-Z99-ZZ-01",
+        "display": "AD 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "AD",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-003",
+      "description": "parses a code in Akwa Ibom",
+      "input": "AK-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "AK01Z99ZZ01",
+        "canonical": "AK-01-Z99-ZZ-01",
+        "display": "AK 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "AK",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-004",
+      "description": "parses a code in Anambra",
+      "input": "AN-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "AN01Z99ZZ01",
+        "canonical": "AN-01-Z99-ZZ-01",
+        "display": "AN 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "AN",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-005",
+      "description": "parses a code in Bauchi",
+      "input": "BA-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "BA01Z99ZZ01",
+        "canonical": "BA-01-Z99-ZZ-01",
+        "display": "BA 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "BA",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-006",
+      "description": "parses a code in Benue",
+      "input": "BE-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "BE01Z99ZZ01",
+        "canonical": "BE-01-Z99-ZZ-01",
+        "display": "BE 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "BE",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-007",
+      "description": "parses a code in Borno",
+      "input": "BR-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "BR01Z99ZZ01",
+        "canonical": "BR-01-Z99-ZZ-01",
+        "display": "BR 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "BR",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-008",
+      "description": "parses a code in Bayelsa",
+      "input": "BY-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "BY01Z99ZZ01",
+        "canonical": "BY-01-Z99-ZZ-01",
+        "display": "BY 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "BY",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-009",
+      "description": "parses a code in Cross River",
+      "input": "CR-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "CR01Z99ZZ01",
+        "canonical": "CR-01-Z99-ZZ-01",
+        "display": "CR 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "CR",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-010",
+      "description": "parses a code in Delta",
+      "input": "DE-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "DE01Z99ZZ01",
+        "canonical": "DE-01-Z99-ZZ-01",
+        "display": "DE 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "DE",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-011",
+      "description": "parses a code in Ebonyi",
+      "input": "EB-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EB01Z99ZZ01",
+        "canonical": "EB-01-Z99-ZZ-01",
+        "display": "EB 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EB",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-012",
+      "description": "parses a code in Edo",
+      "input": "ED-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "ED01Z99ZZ01",
+        "canonical": "ED-01-Z99-ZZ-01",
+        "display": "ED 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "ED",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-013",
+      "description": "parses a code in Ekiti",
+      "input": "EK-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01Z99ZZ01",
+        "canonical": "EK-01-Z99-ZZ-01",
+        "display": "EK 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-014",
+      "description": "parses a code in Enugu",
+      "input": "EN-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EN01Z99ZZ01",
+        "canonical": "EN-01-Z99-ZZ-01",
+        "display": "EN 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EN",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-015",
+      "description": "parses a code in Federal Capital Territory",
+      "input": "FC-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "FC01Z99ZZ01",
+        "canonical": "FC-01-Z99-ZZ-01",
+        "display": "FC 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "FC",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-016",
+      "description": "parses a code in Gombe",
+      "input": "GM-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "GM01Z99ZZ01",
+        "canonical": "GM-01-Z99-ZZ-01",
+        "display": "GM 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "GM",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-017",
+      "description": "parses a code in Imo",
+      "input": "IM-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "IM01Z99ZZ01",
+        "canonical": "IM-01-Z99-ZZ-01",
+        "display": "IM 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "IM",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-018",
+      "description": "parses a code in Jigawa",
+      "input": "JI-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "JI01Z99ZZ01",
+        "canonical": "JI-01-Z99-ZZ-01",
+        "display": "JI 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "JI",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-019",
+      "description": "parses a code in Kaduna",
+      "input": "KD-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KD01Z99ZZ01",
+        "canonical": "KD-01-Z99-ZZ-01",
+        "display": "KD 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KD",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-020",
+      "description": "parses a code in Kebbi",
+      "input": "KE-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KE01Z99ZZ01",
+        "canonical": "KE-01-Z99-ZZ-01",
+        "display": "KE 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KE",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-021",
+      "description": "parses a code in Kogi",
+      "input": "KG-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KG01Z99ZZ01",
+        "canonical": "KG-01-Z99-ZZ-01",
+        "display": "KG 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KG",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-022",
+      "description": "parses a code in Kano",
+      "input": "KN-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KN01Z99ZZ01",
+        "canonical": "KN-01-Z99-ZZ-01",
+        "display": "KN 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KN",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-023",
+      "description": "parses a code in Katsina",
+      "input": "KT-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KT01Z99ZZ01",
+        "canonical": "KT-01-Z99-ZZ-01",
+        "display": "KT 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KT",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-024",
+      "description": "parses a code in Kwara",
+      "input": "KW-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KW01Z99ZZ01",
+        "canonical": "KW-01-Z99-ZZ-01",
+        "display": "KW 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KW",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-025",
+      "description": "parses a code in Lagos",
+      "input": "LA-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "LA01Z99ZZ01",
+        "canonical": "LA-01-Z99-ZZ-01",
+        "display": "LA 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "LA",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-026",
+      "description": "parses a code in Nasarawa",
+      "input": "NA-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "NA01Z99ZZ01",
+        "canonical": "NA-01-Z99-ZZ-01",
+        "display": "NA 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "NA",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-027",
+      "description": "parses a code in Niger",
+      "input": "NI-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "NI01Z99ZZ01",
+        "canonical": "NI-01-Z99-ZZ-01",
+        "display": "NI 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "NI",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-028",
+      "description": "parses a code in Ogun",
+      "input": "OG-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "OG01Z99ZZ01",
+        "canonical": "OG-01-Z99-ZZ-01",
+        "display": "OG 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "OG",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-029",
+      "description": "parses a code in Ondo",
+      "input": "ON-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "ON01Z99ZZ01",
+        "canonical": "ON-01-Z99-ZZ-01",
+        "display": "ON 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "ON",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-030",
+      "description": "parses a code in Osun",
+      "input": "OS-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "OS01Z99ZZ01",
+        "canonical": "OS-01-Z99-ZZ-01",
+        "display": "OS 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "OS",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-031",
+      "description": "parses a code in Oyo",
+      "input": "OY-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "OY01Z99ZZ01",
+        "canonical": "OY-01-Z99-ZZ-01",
+        "display": "OY 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "OY",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-032",
+      "description": "parses a code in Plateau",
+      "input": "PL-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "PL01Z99ZZ01",
+        "canonical": "PL-01-Z99-ZZ-01",
+        "display": "PL 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "PL",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-033",
+      "description": "parses a code in Rivers",
+      "input": "RI-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "RI01Z99ZZ01",
+        "canonical": "RI-01-Z99-ZZ-01",
+        "display": "RI 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "RI",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-034",
+      "description": "parses a code in Sokoto",
+      "input": "SK-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "SK01Z99ZZ01",
+        "canonical": "SK-01-Z99-ZZ-01",
+        "display": "SK 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "SK",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-035",
+      "description": "parses a code in Taraba",
+      "input": "TA-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "TA01Z99ZZ01",
+        "canonical": "TA-01-Z99-ZZ-01",
+        "display": "TA 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "TA",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-036",
+      "description": "parses a code in Yobe",
+      "input": "YB-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "YB01Z99ZZ01",
+        "canonical": "YB-01-Z99-ZZ-01",
+        "display": "YB 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "YB",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-037",
+      "description": "parses a code in Zamfara",
+      "input": "ZA-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "ZA01Z99ZZ01",
+        "canonical": "ZA-01-Z99-ZZ-01",
+        "display": "ZA 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "ZA",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    }
+  ]
+}

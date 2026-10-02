@@ -1,0 +1,869 @@
+{
+  "version": 1,
+  "function": "parse",
+  "description": "Forms, lengths, characters and legacy codes.",
+  "cases": [
+    {
+      "id": "parse-001",
+      "description": "parses the canonical form",
+      "input": "EK-01-A03-FK-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-002",
+      "description": "parses the compact form",
+      "input": "EK01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-003",
+      "description": "parses the display form in lower case",
+      "input": "ek 01 a03 fk 01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-004",
+      "description": "parses a code with en dashes",
+      "input": "EK\u201301\u2013A03\u2013FK\u201301",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-005",
+      "description": "parses a code with no-break spaces",
+      "input": "EK\u00a001\u00a0A03\u00a0FK\u00a001",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-006",
+      "description": "parses a code with a zero-width space",
+      "input": "EK01A03FK01\u200b",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-007",
+      "description": "parses a code with a byte order mark",
+      "input": "\ufeffEK01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-008",
+      "description": "parses full-width letters and digits",
+      "input": "\uff25\uff2b-\uff10\uff11-\uff21\uff10\uff13-\uff26\uff2b-\uff10\uff11",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-009",
+      "description": "parses the example on NIPOST's homepage",
+      "input": "FC-02-A09-DB-09",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "FC02A09DB09",
+        "canonical": "FC-02-A09-DB-09",
+        "display": "FC 02 A09 DB 09",
+        "precision": "unit",
+        "segments": {
+          "state": "FC",
+          "lga": "02",
+          "district": "A09",
+          "area": "DB",
+          "unit": "09"
+        }
+      }
+    },
+    {
+      "id": "parse-010",
+      "description": "parses the example in NIPOST's blog",
+      "input": "LA 12 K23 IV 95",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "LA12K23IV95",
+        "canonical": "LA-12-K23-IV-95",
+        "display": "LA 12 K23 IV 95",
+        "precision": "unit",
+        "segments": {
+          "state": "LA",
+          "lga": "12",
+          "district": "K23",
+          "area": "IV",
+          "unit": "95"
+        }
+      }
+    },
+    {
+      "id": "parse-011",
+      "description": "parses a NIPOST test code",
+      "input": "AK-11-I61-ZF-12",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "AK11I61ZF12",
+        "canonical": "AK-11-I61-ZF-12",
+        "display": "AK 11 I61 ZF 12",
+        "precision": "unit",
+        "segments": {
+          "state": "AK",
+          "lga": "11",
+          "district": "I61",
+          "area": "ZF",
+          "unit": "12"
+        }
+      }
+    },
+    {
+      "id": "parse-012",
+      "description": "accepts a letter O in the district of a NIPOST test code",
+      "input": "JI-24-O18-JP-23",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "JI24O18JP23",
+        "canonical": "JI-24-O18-JP-23",
+        "display": "JI 24 O18 JP 23",
+        "precision": "unit",
+        "segments": {
+          "state": "JI",
+          "lga": "24",
+          "district": "O18",
+          "area": "JP",
+          "unit": "23"
+        }
+      }
+    },
+    {
+      "id": "parse-013",
+      "description": "rejects empty input",
+      "input": "",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "empty",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-014",
+      "description": "rejects spaces only",
+      "input": "   ",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "empty",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-015",
+      "description": "rejects separators only",
+      "input": " - . ",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "empty",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-016",
+      "description": "names a legacy code",
+      "input": "900108",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "legacy_code",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-017",
+      "description": "names a legacy code with a space",
+      "input": "900 108",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "legacy_code",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-018",
+      "description": "names a legacy code in full-width digits",
+      "input": "\uff19\uff10\uff10\uff11\uff10\uff18",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "legacy_code",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-019",
+      "description": "names a legacy code when partial codes are allowed",
+      "input": "123456",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "legacy_code",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-020",
+      "description": "rejects five digits",
+      "input": "90010",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-021",
+      "description": "rejects an exclamation mark",
+      "input": "EK01A03FK0!",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-022",
+      "description": "rejects an underscore",
+      "input": "EK01A03FK0_",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-023",
+      "description": "rejects slashes",
+      "input": "EK01/A03/FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-024",
+      "description": "rejects a letter outside ASCII",
+      "input": "EK01A03F\u00e901",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-025",
+      "description": "rejects a right-to-left override",
+      "input": "\u202eEK01A03FK01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-026",
+      "description": "rejects Arabic-Indic digits",
+      "input": "\u0669\u0660\u0660\u0661\u0660\u0668",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_character",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-027",
+      "description": "rejects 10 characters",
+      "input": "EK01A03FK1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-028",
+      "description": "rejects 12 characters",
+      "input": "EK01A03FK01X",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-029",
+      "description": "rejects a unit that lost its zero",
+      "input": "EK-01-A03-FK-1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-030",
+      "description": "rejects a state alone by default",
+      "input": "EK",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-031",
+      "description": "rejects a district code by default",
+      "input": "EK01A03",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-032",
+      "description": "checks the length before the state",
+      "input": "XX",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-033",
+      "description": "checks the length before the segments",
+      "input": "EK00",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-034",
+      "description": "checks the length before a fixable segment",
+      "input": "EKO1A03FK1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-035",
+      "description": "parses a state when partial codes are allowed",
+      "input": "EK",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": true,
+        "compact": "EK",
+        "canonical": "EK",
+        "display": "EK",
+        "precision": "state",
+        "segments": {
+          "state": "EK",
+          "lga": null,
+          "district": null,
+          "area": null,
+          "unit": null
+        }
+      }
+    },
+    {
+      "id": "parse-036",
+      "description": "parses an LGA code when partial codes are allowed",
+      "input": "EK01",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": true,
+        "compact": "EK01",
+        "canonical": "EK-01",
+        "display": "EK 01",
+        "precision": "lga",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": null,
+          "area": null,
+          "unit": null
+        }
+      }
+    },
+    {
+      "id": "parse-037",
+      "description": "parses a district code when partial codes are allowed",
+      "input": "ek-01-a03",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03",
+        "canonical": "EK-01-A03",
+        "display": "EK 01 A03",
+        "precision": "district",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": null,
+          "unit": null
+        }
+      }
+    },
+    {
+      "id": "parse-038",
+      "description": "parses an area code when partial codes are allowed",
+      "input": "EK01A03FK",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK",
+        "canonical": "EK-01-A03-FK",
+        "display": "EK 01 A03 FK",
+        "precision": "area",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": null
+        }
+      }
+    },
+    {
+      "id": "parse-039",
+      "description": "parses a full code when partial codes are allowed",
+      "input": "EK01A03FK01",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-040",
+      "description": "rejects 3 characters when partial codes are allowed",
+      "input": "EK0",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-041",
+      "description": "rejects 5 characters when partial codes are allowed",
+      "input": "EK01A",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-042",
+      "description": "rejects 6 characters when partial codes are allowed",
+      "input": "EK01A0",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-043",
+      "description": "rejects 8 characters when partial codes are allowed",
+      "input": "EK01A03F",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-044",
+      "description": "rejects 10 characters when partial codes are allowed",
+      "input": "EK01A03FK0",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-045",
+      "description": "parses a code padded to the input limit",
+      "input": "EK01A03FK01                                                     ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-046",
+      "description": "rejects input over the input limit",
+      "input": "EK01A03FK01                                                      ",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-047",
+      "description": "counts code points, not UTF-16 units",
+      "input": "\ud835\udc04\ud835\udc0a\ud835\udfce\ud835\udfcf\ud835\udc00\ud835\udfce\ud835\udfd1\ud835\udc05\ud835\udc0a\ud835\udfce\ud835\udfcf                                           ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-048",
+      "description": "parses an astral code padded to the input limit",
+      "input": "\ud835\udc04\ud835\udc0a\ud835\udfce\ud835\udfcf\ud835\udc00\ud835\udfce\ud835\udfd1\ud835\udc05\ud835\udc0a\ud835\udfce\ud835\udfcf                                                     ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-049",
+      "description": "counts combining marks as code points",
+      "input": "E\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-050",
+      "description": "counts the input before it normalises",
+      "input": "EK01A03FK01\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-051",
+      "description": "rejects input over the limit that ends in a line feed",
+      "input": "EK01A03FK01                                                     \n",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    }
+  ]
+}
