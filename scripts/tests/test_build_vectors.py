@@ -2,14 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for build_vectors."""
 
+import contextlib
+import io
 import json
 import math
+import shutil
 import string
+import tempfile
 import unicodedata
 import unittest
 from collections import Counter
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 import build_vectors
 
@@ -265,3 +270,76 @@ class BuildVectorsTest(unittest.TestCase):
         line_feed_lengths = {len(text) for text in rejected if text.endswith("\n")}
         with self.subTest("each rejection that ends in a line feed is one code point over"):
             self.assertEqual(line_feed_lengths, {limit + 1})
+
+
+class BuilderModesTest(unittest.TestCase):
+    """Run the builder on a temporary copy of the vector folder."""
+
+    def setUp(self) -> None:
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.vectors = Path(folder.name)
+        for stem in build_vectors.FILES:
+            shutil.copy(ROOT / "vectors" / f"{stem}.json", self.vectors)
+        patch = mock.patch.object(build_vectors, "VECTORS", self.vectors)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def snapshot(self) -> dict[str, str]:
+        return {
+            path.name: path.read_text(encoding="utf-8") for path in sorted(self.vectors.glob("*"))
+        }
+
+    def run_builder(self, *arguments: str) -> tuple[int, str]:
+        errors = io.StringIO()
+        with contextlib.redirect_stderr(errors):
+            exit_code = build_vectors.main(list(arguments))
+        return exit_code, errors.getvalue()
+
+    def test_check_passes_files_that_match_the_builder(self) -> None:
+        before = self.snapshot()
+        self.assertEqual(self.run_builder("--check"), (0, ""))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_check_reports_a_changed_file_and_a_stray_file_and_writes_nothing(self) -> None:
+        changed = self.vectors / "redact.json"
+        changed.write_text(changed.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        (self.vectors / "extra.json").write_text("{}\n", encoding="utf-8")
+        before = self.snapshot()
+        exit_code, errors = self.run_builder("--check")
+        self.assertEqual(exit_code, 1)
+        self.assertIn("Out of date: redact.json.", errors)
+        self.assertIn("vectors/extra.json is not a builder output. Remove it.", errors)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_check_fails_for_a_stray_file_alone(self) -> None:
+        (self.vectors / "extra.json").write_text("{}\n", encoding="utf-8")
+        exit_code, errors = self.run_builder("--check")
+        self.assertEqual(exit_code, 1)
+        self.assertNotIn("Out of date", errors)
+
+    def test_check_reports_a_missing_file_and_does_not_write_it(self) -> None:
+        (self.vectors / "parent.json").unlink()
+        before = self.snapshot()
+        exit_code, errors = self.run_builder("--check")
+        self.assertEqual(exit_code, 1)
+        self.assertIn("Out of date: parent.json.", errors)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_writing_makes_a_missing_folder_and_rewrites_a_changed_file(self) -> None:
+        expected = self.snapshot()
+        fresh = self.vectors / "fresh"
+        with mock.patch.object(build_vectors, "VECTORS", fresh):
+            self.assertEqual(self.run_builder(), (0, ""))
+            changed = fresh / "redact.json"
+            changed.write_text("{}\n", encoding="utf-8")
+            self.assertEqual(self.run_builder(), (0, ""))
+        self.assertEqual({path.name: path.read_text("utf-8") for path in fresh.glob("*")}, expected)
+
+    def test_writing_reports_a_stray_file_and_keeps_it(self) -> None:
+        stray = self.vectors / "extra.json"
+        stray.write_text("{}\n", encoding="utf-8")
+        exit_code, errors = self.run_builder()
+        self.assertEqual(exit_code, 1)
+        self.assertIn("vectors/extra.json is not a builder output. Remove it.", errors)
+        self.assertEqual(stray.read_text(encoding="utf-8"), "{}\n")

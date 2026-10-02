@@ -4,6 +4,8 @@ Each JSON file here holds shared test cases for one core function. Every SDK run
 
 `scripts/build_vectors.py` builds these files. Do not edit them by hand. Edit the builder, then run `python3 scripts/build_vectors.py`.
 
+`scripts/reference.py` is a plain reading of `grammar.md` and `data/`. `make check` runs every case through it. A case that the grammar contradicts fails the check, and the grammar wins.
+
 ## Format
 
     { "version": 1, "function": "parse", "description": "...", "cases": [ ... ] }

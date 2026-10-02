@@ -1,6 +1,6 @@
 # Postcode grammar
 
-Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule.
+Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
 
 ## Forms
 
@@ -11,6 +11,8 @@ Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Ni
 | Display | `EK 01 A03 FK 01` | screens and print |
 
 ## Segments
+
+`segments` in `data/format.json` holds the length, the characters and the minimum of each segment.
 
 | Segment | Length | Characters | Rule |
 |---|---|---|---|
@@ -41,7 +43,7 @@ A format character that is not in the list stays. For example, the right-to-left
 First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
 
 1. `empty`: no character is left.
-2. `legacy_code`: exactly 6 ASCII digits are left. These are old NIPOST postcodes.
+2. `legacy_code`: exactly 6 ASCII digits are left (`legacyPattern` in `data/format.json`). These are old NIPOST postcodes.
 3. `bad_character`: a character other than A to Z and 0 to 9 is left.
 4. `bad_length`: the length is not 11. With `allowPartial`, the lengths 2, 4, 7 and 9 also pass.
 5. `unknown_state`: the first two characters are not a code in `data/states.json`.
@@ -53,10 +55,10 @@ Input that is not well-formed Unicode is never a postcode. In a language whose s
 
 ## Suggestions
 
-For `unknown_state` and `bad_segment`, build one corrected code:
+For `unknown_state` and `bad_segment`, build one corrected code. `suggestions` in `data/format.json` holds the fixes:
 
-- In the letter segments, state and area, change 0 to O and 1 to I.
-- In the digit segments, LGA and unit, change O to 0, and change I and L to 1.
+- In the letter segments, state and area, change `0` to `O` and `1` to `I`.
+- In the digit segments, LGA and unit, change `O` to `0`, `I` to `1` and `L` to `1`.
 - Never change the district. NIPOST has not confirmed which characters it uses there.
 
 Parse the corrected code with the same options. If it parses, the suggestion is its canonical form. If it does not parse, or if no character changed, the suggestion is null. A suggestion is a hint only. `parse` never returns a corrected code as a success.
