@@ -110,6 +110,30 @@
       "expect": {
         "value": false
       }
+    },
+    {
+      "id": "contains-010",
+      "description": "rejects a code from another LGA",
+      "input": {
+        "prefix": "EK-02",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "contains-011",
+      "description": "rejects a code from another area",
+      "input": {
+        "prefix": "EK-01-A03-FA",
+        "code": "EK-01-A03-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
     }
   ]
 }

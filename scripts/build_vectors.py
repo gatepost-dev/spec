@@ -690,6 +690,13 @@ def contains_rows() -> list[Row]:
             {"prefix": "FC", "code": "EK-01-FC0-FK-01"},
             value(False),
         ),
+        # A check that skips one segment of the prefix finds these codes inside it.
+        row("rejects a code from another LGA", {"prefix": "EK-02", "code": full}, value(False)),
+        row(
+            "rejects a code from another area",
+            {"prefix": "EK-01-A03-FA", "code": full},
+            value(False),
+        ),
     ]
 
 
