@@ -10,6 +10,7 @@ import contract_files
 
 CODES = contract_files.error_codes()
 STANDARDS = contract_files.ROOT / "standards" / "CODING_STANDARDS.md"
+CLIENT = contract_files.CLIENT_DOC.read_text(encoding="utf-8")
 
 
 class ClientDocTest(unittest.TestCase):
@@ -43,3 +44,30 @@ class ClientDocTest(unittest.TestCase):
             path = Path(folder) / "client.md"
             path.write_text(text, encoding="utf-8")
             self.assertEqual(contract_files.error_codes(path), ["x_code"])
+
+
+class ClientInputAndUnknownValuesTest(unittest.TestCase):
+    def test_keeps_an_unknown_lookup_status_as_text(self) -> None:
+        self.assertNotIn("no `status`, or a value that this table does not list", CLIENT)
+        self.assertIn("any other value of `status` as it is", CLIENT)
+
+    def test_rejects_a_bad_level_coordinate_or_distance_before_a_request(self) -> None:
+        for rule in (
+            "A `level` that is not a whole number from 1 to 5",
+            "A `lat` that is not finite or is outside -90 to 90",
+            "A `lng` that is not finite or is outside -180 to 180",
+            "A `maxDistanceM` below 0 or above 250",
+        ):
+            self.assertIn(rule, CLIENT)
+
+    def test_writes_a_number_in_the_query_as_a_plain_decimal(self) -> None:
+        self.assertIn("plain decimal, with no exponent", CLIENT)
+
+    def test_ignores_unknown_fields_and_names_the_scenario(self) -> None:
+        self.assertIn("A client ignores a field that the tables above do not list", CLIENT)
+        self.assertIn("`unknown-fields`", CLIENT)
+
+    def test_leaves_the_core_only_rule_out_of_the_mock_server_exceptions(self) -> None:
+        path = contract_files.ROOT / "standards" / "languages" / "typescript.md"
+        section = path.read_text(encoding="utf-8").partition("## The mock server")[2]
+        self.assertNotIn("CS-2", section.partition("## Publishing")[0])

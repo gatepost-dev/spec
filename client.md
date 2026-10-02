@@ -28,9 +28,9 @@ Each call that sends a request is asynchronous, and the caller can cancel it (AP
 | `transport` | the HTTP transport, in the language's standard form | the platform's own |
 | `timeoutMs` | the longest wait for one attempt, in milliseconds | 8000 |
 | `maxRetries` | the most retries after the first attempt | 2 |
-| `cacheTtlMs` | how long the client keeps a result, in milliseconds | 0, which turns the cache off |
+| `cacheTtlMs` | how long the client keeps a result, in milliseconds | 0, which disables the cache |
 
-A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` or `cacheTtlMs`.
+A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` or `cacheTtlMs`. The default of 8000 is open: some `autocomplete` calls took 10 to 14 seconds, and a timed run must decide it.
 
 ### Lookup result
 
@@ -38,15 +38,15 @@ A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` 
 |---|---|
 | `postcode` | the postcode that the caller asked for, as the core parsed it |
 | `valid` | true when the gateway knows the postcode |
-| `status` | `valid`, `invalid`, `not_found`, `restricted`, or null |
+| `status` | text, or null. The known values are `valid`, `invalid`, `not_found` and `restricted` |
 | `levelRequested` | the lookup level that the caller asked for |
 | `levelReceived` | the lookup level of the data in the response |
-| `administrativeAddress` | the state name, the LGA name, the locality name and the zone, or null |
+| `administrativeAddress` | an object with `stateName`, `lgaName`, `localityName` and `zone`, or null |
 | `recentHouseAddress` | text, or null |
 | `buildingUseStatus` | text, or null |
 
 - The client never takes `postcode` from the response. The gateway echoes the caller's text there, also for text that is not a postcode.
-- `status` is null when the response has no `status`, or a value that this table does not list.
+- `status` is null when the response has no `status`. The client returns any other value of `status` as it is, also when this table does not list it, so that a new gateway status is not lost.
 - `levelReceived` comes from the fields of the response. It is 5 when `point_geometry` is present, 4 for `other_building_info`, 3 for `building_use_status`, and 2 for either address field. Otherwise it is 1.
 - `recentHouseAddress` is the text in `recent_house_address.recent`.
 - A response with `valid: false` is a result, not an error.
@@ -93,12 +93,20 @@ A suggestion has these fields:
 
 The gateway sends the value of one segment only. For the text `FC01Z`, the suggestion `Z99` gives the postcode `FC-01-Z99`. The client parses that text with partial postcodes allowed. When it does not parse, `postcode` is null.
 
+A client ignores a field that the tables above do not list, in a lookup, a reverse or an autocomplete response. Such a field never changes the result and never raises an error. The scenario `unknown-fields` tests this rule for each of the three calls.
+
 ## Requests
 
 - The client sends `X-API-Key` only when the caller gave a key.
-- `lookup` parses the code with the core first. A code that does not parse raises `invalid_input`, and no request goes out. Partial postcodes do not pass. The request sends the canonical form and the level: `code=FC-01-Z99-ZZ-01&level=1`.
+- `lookup` parses the code with the core first. A code that does not parse raises `invalid_input`, and the client sends no request. Partial postcodes do not pass. The request sends the canonical form and the level: `code=FC-01-Z99-ZZ-01&level=1`.
 - `reverse` sends `lat` and `lng`, and `max_distance_m` when the caller gave a radius.
-- `autocomplete` normalises its text with the core. Empty text, text of more than 11 characters, and text with a character other than A to Z and 0 to 9 raise `invalid_input`, and no request goes out. The gateway does not answer an empty `q`. The request sends the normalised text: `q=FC01Z`.
+- Each of these raises `invalid_input`, and the client sends no request:
+  - A `level` that is not a whole number from 1 to 5.
+  - A `lat` that is not finite or is outside -90 to 90.
+  - A `lng` that is not finite or is outside -180 to 180.
+  - A `maxDistanceM` below 0 or above 250. The OpenAPI file gives the range 0 to 250.
+- The client writes each number in the query as a plain decimal, with no exponent: `lat=9.0`, not `lat=9e0`. Languages print a number in different forms, such as `1e-7`. One plain form gives every client the same query for the same input, and the mock server can match it.
+- `autocomplete` normalises its text with the core. Empty text, text of more than 11 characters, and text with a character other than A to Z and 0 to 9 raise `invalid_input`, and the client sends no request. The gateway does not answer an empty `q`. The request sends the normalised text: `q=FC01Z`.
 
 ## Errors
 
@@ -115,7 +123,7 @@ The error code comes from the first row that matches.
 
 | Condition | Error code | Retried |
 |---|---|---|
-| the client's own check of the input fails | `invalid_input` | no request goes out |
+| the client's own check of the input fails | `invalid_input` | no request is sent |
 | status 401 | `unauthorized` | no |
 | status 402 | `insufficient_credits` | no |
 | status 403, with the API code `origin_not_allowed` | `origin_not_allowed` | no |
@@ -136,7 +144,7 @@ The error code comes from the first row that matches.
 
 - A client makes at most `1 + maxRetries` attempts for one call.
 - Before retry `n`, the first being 1, the client waits `500 x 2^(n - 1)` milliseconds, plus a random wait from 0 to 250 milliseconds. The first retry waits 500 to 750 ms, and the second waits 1000 to 1250 ms.
-- A 429 with `Retry-After` of 10 seconds or less: the client waits that long, with no random part, and tries again. `Retry-After` can hold seconds or an HTTP date.
+- A 429 with `Retry-After` of 10 seconds or less: the client waits that long, with no random part, and retries. `Retry-After` can hold seconds or an HTTP date.
 - A 429 with a longer `Retry-After`: the client raises `rate_limited` at once, and `retryAfterMs` holds the wait. A caller can then tell a user when to try again.
 - A 429 with no `Retry-After`: the client raises `rate_limited` at once. The gateway counts requests in each clock minute, so a retry after half a second would fail too.
 - The client does not retry a timeout of `autocomplete`. The next keystroke replaces the call.
@@ -145,7 +153,7 @@ The error code comes from the first row that matches.
 
 - Two calls of the same method with the same arguments share one request while the first one is in flight. Both callers get the same result or the same error.
 - A client sends at most 4 requests at a time. Further calls wait in a queue, in the order of the calls.
-- With `cacheTtlMs` above 0, the client keeps each result for that long. A call with the same method and the same arguments then gets the kept result, and no request goes out. Errors stay out of the cache. `clearCache()` removes every kept result.
+- With `cacheTtlMs` above 0, the client keeps each result for that long. A call with the same method and the same arguments then gets the kept result, and the client sends no request. Errors stay out of the cache. `clearCache()` removes every kept result.
 
 ## Rules that no scenario tests
 

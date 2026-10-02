@@ -149,7 +149,7 @@ packages/<name>/
 
 ## The mock server
 
-`packages/mock-server` is a private package that never goes to npm. It is a dev tool, not an SDK. These rules do not apply to it: API-1, CS-2, DOC-5, PERF-1, and the package checks with publint, attw, size-limit and API Extractor. It has no change files. The version in its `package.json` is the tag of its container image.
+`packages/mock-server` is a private package that never goes to npm. It is a dev tool, not an SDK. These rules do not apply to it: API-1, DOC-5, PERF-1, and the package checks with publint, attw, size-limit and API Extractor. It has no change files. The version in its `package.json` is the tag of its container image.
 
 - Node runs its TypeScript source directly, so it has no build. The source uses only syntax that Node can strip, which `erasableSyntaxOnly` checks, and each import names a `.ts` file.
 - It can use Node's modules. It does not call `console`, and it writes to `process.stdout` only from its command.
