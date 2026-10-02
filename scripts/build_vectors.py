@@ -404,6 +404,18 @@ def segment_rows() -> list[Row]:
         ),
         row("rejects an LGA of 00", "EK00A03FK01", failed("bad_segment", "lga")),
         row("rejects a unit of 00", "EK01A03FK00", failed("bad_segment", "unit")),
+        # A digit check that has no end anchor reads the first digit of the segment and accepts
+        # these codes. The letter X has no fix, so neither code gets a suggestion.
+        row(
+            "rejects a letter after a digit in the LGA",
+            "JI9XCHKLS18",
+            failed("bad_segment", "lga"),
+        ),
+        row(
+            "rejects a letter after a digit in the unit",
+            "JI99CHKLS1X",
+            failed("bad_segment", "unit"),
+        ),
         row(
             "suggests 0 for a letter O in the LGA",
             "EKO1A03FK01",

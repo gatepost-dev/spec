@@ -230,6 +230,22 @@ class BuildVectorsTest(unittest.TestCase):
         # A letter check that is anchored only at the end accepts such an area.
         self.assertTrue(rejected)
 
+    def test_parse_segments_rejects_a_letter_after_a_digit_in_the_lga_and_the_unit(self) -> None:
+        # A digit check that has no end anchor reads the first digit and accepts such a segment.
+        # A digit of 0 fails the minimum alone, so the digit here is 1 to 9.
+        for segment, start in (("lga", 2), ("unit", 9)):
+            with self.subTest(segment=segment):
+                rejected = [
+                    case
+                    for case in load("parse-segments")["cases"]
+                    if len(case["input"]) == 11
+                    and case["input"][start] in string.digits[1:]
+                    and case["input"][start + 1] in string.ascii_letters
+                    and case["expect"].get("error", {}).get("code") == "bad_segment"
+                    and case["expect"]["error"]["segment"] == segment
+                ]
+                self.assertTrue(rejected)
+
     def test_precision_for_accuracy_has_a_case_for_negative_zero(self) -> None:
         # The JSON literal -0 loads as the integer 0, so only -0.0 keeps the sign.
         negative_zero = [
