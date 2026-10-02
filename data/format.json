@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "maxInputCodePoints": 64,
   "segments": [
     { "name": "state", "length": 2, "characters": "letters" },
     { "name": "lga", "length": 2, "characters": "digits", "minimum": 1 },

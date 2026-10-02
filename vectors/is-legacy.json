@@ -83,6 +83,24 @@
       "expect": {
         "value": false
       }
+    },
+    {
+      "id": "is-legacy-010",
+      "description": "finds a legacy code padded to the input limit",
+      "input": "900108                                                          ",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-011",
+      "description": "rejects a legacy code over the input limit",
+      "input": "900108                                                           ",
+      "options": {},
+      "expect": {
+        "value": false
+      }
     }
   ]
 }

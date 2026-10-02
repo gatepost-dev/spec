@@ -46,6 +46,11 @@ WIDTHS = (("state", 2), ("lga", 2), ("district", 3), ("area", 2), ("unit", 2))
 PRECISION_BY_LENGTH = {2: "state", 4: "lga", 7: "district", 9: "area", 11: "unit"}
 PARTIAL = {"allowPartial": True}
 CODE = "EK01A03FK01"
+# Mathematical bold capitals start at U+1D400 and digits at U+1D7CE. Each one is 1 code point
+# and 2 UTF-16 units, and NFKC maps it to its ASCII form.
+MATH_BOLD_CODE = "".join(
+    chr(0x1D7CE + int(c)) if c.isdigit() else chr(0x1D400 + ord(c) - ord("A")) for c in CODE
+)
 
 Row = tuple[str, Any, dict[str, Any], dict[str, Any]]
 
@@ -110,10 +115,23 @@ def load_states() -> list[dict[str, str]]:
     return states
 
 
+def load_format() -> dict[str, Any]:
+    """Read data/format.json."""
+    postcode_format: dict[str, Any] = json.loads(
+        (ROOT / "data" / "format.json").read_text(encoding="utf-8")
+    )
+    return postcode_format
+
+
 def load_separators() -> list[int]:
     """Read data/format.json and return its separators as code points."""
-    postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
-    return [int(label.removeprefix("U+"), 16) for label in postcode_format["separators"]]
+    return [int(label.removeprefix("U+"), 16) for label in load_format()["separators"]]
+
+
+def load_input_limit() -> int:
+    """Read data/format.json and return the input limit in code points."""
+    limit: int = load_format()["maxInputCodePoints"]
+    return limit
 
 
 def normalize_rows() -> list[Row]:
@@ -166,6 +184,7 @@ def normalize_rows() -> list[Row]:
 
 def parse_rows() -> list[Row]:
     """Cases for forms, lengths, characters and legacy codes."""
+    limit = load_input_limit()
     return [
         row("parses the canonical form", "EK-01-A03-FK-01", ok(CODE)),
         row("parses the compact form", CODE, ok(CODE)),
@@ -262,6 +281,14 @@ def parse_rows() -> list[Row]:
             failed("bad_length"),
             PARTIAL,
         ),
+        row("parses a code padded to the input limit", CODE + " " * (limit - len(CODE)), ok(CODE)),
+        row(
+            "rejects input over the input limit",
+            CODE + " " * (limit - len(CODE) + 1),
+            failed("bad_length"),
+        ),
+        # 54 code points and 65 UTF-16 units. A runner that counts UTF-16 units rejects it.
+        row("counts code points, not UTF-16 units", MATH_BOLD_CODE + " " * 43, ok(CODE)),
     ]
 
 
@@ -402,6 +429,7 @@ def state_parse_rows() -> list[Row]:
 
 def legacy_rows() -> list[Row]:
     """Cases for isLegacy."""
+    limit = load_input_limit()
     return [
         row("accepts six digits", "900108", value(True)),
         row("accepts six digits with a space", "900 108", value(True)),
@@ -412,6 +440,16 @@ def legacy_rows() -> list[Row]:
         row("rejects empty input as a legacy code", "", value(False)),
         row("rejects a letter O among digits", "90O108", value(False)),
         row("rejects six Arabic-Indic digits as a legacy code", ARABIC_INDIC_LEGACY, value(False)),
+        row(
+            "finds a legacy code padded to the input limit",
+            "900108" + " " * (limit - 6),
+            value(True),
+        ),
+        row(
+            "rejects a legacy code over the input limit",
+            "900108" + " " * (limit - 5),
+            value(False),
+        ),
     ]
 
 

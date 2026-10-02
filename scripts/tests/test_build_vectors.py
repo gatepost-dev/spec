@@ -85,3 +85,17 @@ class BuildVectorsTest(unittest.TestCase):
                 self.assertIn((limit, precision), measured)
                 above = [expected for metres, expected in measured if limit < metres < ceiling]
                 self.assertIn(next_precision, above)
+
+    def test_the_input_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
+        postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
+        limit = postcode_format["maxInputCodePoints"]
+        parse_outcomes = [
+            (len(case["input"]), "ok" if case["expect"]["ok"] else case["expect"]["error"]["code"])
+            for case in load("parse")["cases"]
+        ]
+        legacy_outcomes = [
+            (len(case["input"]), case["expect"]["value"]) for case in load("is-legacy")["cases"]
+        ]
+        self.assertIn((limit, "ok"), parse_outcomes)
+        self.assertIn((limit + 1, "bad_length"), parse_outcomes)
+        self.assertIn((limit + 1, False), legacy_outcomes)

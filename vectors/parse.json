@@ -700,6 +700,60 @@
           "suggestion": null
         }
       }
+    },
+    {
+      "id": "parse-042",
+      "description": "parses a code padded to the input limit",
+      "input": "EK01A03FK01                                                     ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-043",
+      "description": "rejects input over the input limit",
+      "input": "EK01A03FK01                                                      ",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-044",
+      "description": "counts code points, not UTF-16 units",
+      "input": "\ud835\udc04\ud835\udc0a\ud835\udfce\ud835\udfcf\ud835\udc00\ud835\udfce\ud835\udfd1\ud835\udc05\ud835\udc0a\ud835\udfce\ud835\udfcf                                           ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
     }
   ]
 }

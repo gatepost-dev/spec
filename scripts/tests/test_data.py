@@ -55,3 +55,6 @@ class FormatTest(unittest.TestCase):
 
     def test_compiles_the_legacy_pattern(self) -> None:
         self.assertTrue(re.fullmatch(load("format.json")["legacyPattern"], "900108"))
+
+    def test_limits_the_input_to_64_code_points(self) -> None:
+        self.assertEqual(load("format.json")["maxInputCodePoints"], 64)
