@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Sample text, file names and messages that the check_tells tests share."""
 
+import string
+
 EMOJI = chr(0x1F600)
 NO_BREAK_SPACE = chr(0x00A0)
 E_ACUTE = chr(0x00E9)
@@ -117,6 +119,10 @@ SIGN_OFF_LINE = "Signed-off-by: Ada Bello <ada@example.org>"
 PLACEHOLDER_PARAGRAPH = (
     "Write two or three sentences of plain prose that say what this change does and why."
 )
+# The comment that Renovate adds at the very end of the body of its pull requests. The payload
+# holds each character of base64.
+BASE64 = string.ascii_letters + string.digits + "+/"
+RENOVATE_COMMENT = f"<!--renovate-debug:{BASE64}==-->"
 
 
 def squash(

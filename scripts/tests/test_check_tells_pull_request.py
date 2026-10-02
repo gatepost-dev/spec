@@ -2,14 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 """Tests for check_tells.message_checks: the sign-off, the template text and the templates."""
 
+import json
 import unittest
 from pathlib import Path
+from typing import Any
 
 import check_tells
 from check_tells import check_squash_message
 
 from tests.check_tells_driver import rules
-from tests.check_tells_samples import E_ACUTE, PLACEHOLDER_PARAGRAPH, squash
+from tests.check_tells_samples import E_ACUTE, PLACEHOLDER_PARAGRAPH, RENOVATE_COMMENT, squash
 
 
 class SignOffTest(unittest.TestCase):
@@ -200,3 +202,24 @@ class CommunityTemplatesTest(unittest.TestCase):
     def test_agents_names_the_interface_section_of_the_grammar(self) -> None:
         text = read_template("AGENTS.md")
         self.assertIn("grammar, with its Interface section, and the vectors", text)
+
+
+class RenovateConfigTest(unittest.TestCase):
+    # The hosted Renovate app commits as this author, so the body must be signed off as it.
+    HOSTED_APP = "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>"
+
+    def config(self) -> dict[str, Any]:
+        path = Path(__file__).resolve().parents[2] / "renovate.json"
+        config: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+        return config
+
+    def test_signs_off_each_commit_as_its_author(self) -> None:
+        self.assertEqual(self.config()["commitTrailers"], ["Signed-off-by: {{{gitAuthor}}}"])
+
+    def test_signs_off_the_body_as_the_hosted_app(self) -> None:
+        self.assertIn(self.HOSTED_APP, self.config()["prBodyNotes"])
+
+    def test_writes_a_body_that_passes_the_squash_check(self) -> None:
+        notes = "\n\n".join(self.config()["prBodyNotes"])
+        message = f"ci: update an action (#4)\n\n{notes}\n\n{RENOVATE_COMMENT}\n"
+        self.assertEqual(check_squash_message(message, no_scope=True), [])

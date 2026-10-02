@@ -41,7 +41,9 @@ PLACEHOLDER_ADDRESS = "you@example.com"
 # The start of the paragraph in that template that asks the author for prose.
 TEMPLATE_PARAGRAPH = "Write two or three sentences of plain prose"
 EMPTY_CLOSES_LINE = re.compile(r"closes #\s*", re.IGNORECASE)
-HTML_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+# Renovate adds this comment to the very end of each pull request body. The author did not
+# write it, and its payload is base64.
+RENOVATE_COMMENT = re.compile(r"\n?<!--renovate-debug:[A-Za-z0-9+/=]*-->\s*$")
 SQUASH_NOTE = " The subject is the title plus the ' (#N)' that the squash merge adds."
 
 
@@ -163,20 +165,16 @@ def check_commit_message(text: str) -> list[Violation]:
     return _check_message(_message_lines(text))
 
 
-def _blank_html_comments(body: str) -> str:
-    """Replace each HTML comment with spaces, and keep its line feeds, so that no place moves."""
-    return HTML_COMMENT.sub(lambda comment: re.sub(r"[^\n]", " ", comment[0]), body)
-
-
 def check_squash_message(text: str, *, no_scope: bool = False) -> list[Violation]:
     """Check the message that a squash merge puts on main: the pull request title and body.
 
-    The body is not a git message, so a line that starts with # is text and not a comment. No
-    reader sees an HTML comment, and Renovate ends each body with one, so the body check leaves
-    them out. The title is the first line, and no comment hides text there.
+    The body is not a git message, so a line that starts with # is text and not a comment. GitHub
+    keeps the raw body, so the text of an HTML comment reaches main like any other text. The
+    check leaves out only the comment that Renovate adds at the very end of its body.
     """
     subject, line_feed, body = text.partition("\n")
-    lines = list(enumerate(split_lines(subject + line_feed + _blank_html_comments(body)), start=1))
+    checked = subject + line_feed + RENOVATE_COMMENT.sub("", body)
+    lines = list(enumerate(split_lines(checked), start=1))
     return [
         *_check_message(lines, SQUASH_NOTE),
         *_check_subject_form(lines, no_scope=no_scope),

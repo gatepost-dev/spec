@@ -13,6 +13,7 @@ from tests.check_tells_samples import (
     EMOJI,
     LINE_SEPARATOR,
     PLACEHOLDER_PARAGRAPH,
+    RENOVATE_COMMENT,
     SIGN_OFF_LINE,
     squash,
 )
@@ -220,39 +221,63 @@ class SquashMessageTest(unittest.TestCase):
 
 
 class HtmlCommentTest(unittest.TestCase):
-    RENOVATE_COMMENT = "<!--renovate-debug:eyJjcmVhdGVkSW5WZXIiOiI0NC4xMzIuMiJ9-->"
-
     def test_leaves_out_the_comment_that_renovate_ends_a_body_with(self) -> None:
         message = squash("ci: update an action (#4)", body="Update a pinned tool or action.")
-        self.assertEqual(check_squash_message(message + self.RENOVATE_COMMENT + "\n"), [])
+        self.assertEqual(check_squash_message(message + RENOVATE_COMMENT + "\n"), [])
 
-    def test_leaves_out_the_text_that_a_comment_holds(self) -> None:
-        hidden = [
-            EMOJI,
-            f"a dash {EM_DASH} here",
-            "Closes #",
-            PLACEHOLDER_PARAGRAPH,
-            "Signed-off-by: Your Name <you@example.com>",
-        ]
-        for text in hidden:
+    def test_reads_the_comment_of_renovate_when_text_follows_it(self) -> None:
+        body = f"{RENOVATE_COMMENT} {EM_DASH} here."
+        found = check_squash_message(squash("ci: update an action (#4)", body=body))
+        self.assertEqual(
+            [(v.rule, v.line, v.column) for v in found],
+            [("TELL-14", 3, len(RENOVATE_COMMENT) + 2)],
+        )
+
+    def test_reads_a_comment_that_starts_like_the_one_of_renovate_but_holds_other_text(
+        self,
+    ) -> None:
+        payloads = ((EMOJI, EMOJI), (f"a dash {EM_DASH}", EM_DASH), (E_ACUTE, E_ACUTE))
+        for payload, character in payloads:
+            with self.subTest(payload=payload):
+                comment = f"<!--renovate-debug:{payload}-->"
+                message = squash("ci: update an action (#4)") + comment + "\n"
+                found = check_squash_message(message)
+                self.assertEqual(
+                    [(v.rule, v.line, v.column) for v in found],
+                    [("TELL-14", 6, comment.index(character) + 1)],
+                )
+
+    def test_leaves_out_the_comment_of_renovate_so_that_no_text_is_left(self) -> None:
+        # The title line is empty, so the first line with text would be the comment.
+        found = check_squash_message("\n" + RENOVATE_COMMENT + "\n")
+        self.assertEqual(found[0].message, "The message has no subject.")
+
+    def test_reads_the_text_that_a_comment_holds(self) -> None:
+        for text, character in ((EMOJI, EMOJI), (f"a dash {EM_DASH} here", EM_DASH)):
             with self.subTest(text=text):
-                body = f"Why the change is needed.\n\n<!-- {text} -->"
-                self.assertEqual(check_squash_message(squash("fix: a unit", body=body)), [])
+                comment = f"<!-- {text} -->"
+                body = f"Why the change is needed.\n\n{comment}"
+                found = check_squash_message(squash("fix: a unit", body=body))
+                self.assertEqual(
+                    [(v.rule, v.line, v.column) for v in found],
+                    [("TELL-14", 5, comment.index(character) + 1)],
+                )
 
-    def test_leaves_out_a_comment_that_spans_lines(self) -> None:
+    def test_reads_a_comment_that_spans_lines(self) -> None:
         body = f"Why the change is needed.\n\n<!--\nClose the issue.\n{EMOJI}\nCloses #\n-->"
-        self.assertEqual(check_squash_message(squash("fix: a unit", body=body)), [])
+        found = check_squash_message(squash("fix: a unit", body=body))
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 7), ("TELL-18", 8)])
 
     def test_keeps_the_place_of_the_text_around_a_comment(self) -> None:
         body = f"Use a dash <!-- a\nb --> {EM_DASH} here."
         found = check_squash_message(squash("fix: a unit", body=body))
         self.assertEqual([(v.rule, v.line, v.column) for v in found], [("TELL-14", 4, 7)])
 
-    def test_leaves_out_each_comment_of_a_line_and_not_the_text_between_them(self) -> None:
+    def test_reports_the_first_bad_character_of_a_line_with_comments(self) -> None:
         body = f"Fix <!-- {EMOJI} --> the {EM_DASH} unit <!-- {EMOJI} --> rule."
         found = check_squash_message(squash("fix: a unit", body=body))
         self.assertEqual(
-            [(v.rule, v.line, v.column) for v in found], [("TELL-14", 3, body.index(EM_DASH) + 1)]
+            [(v.rule, v.line, v.column) for v in found], [("TELL-14", 3, body.index(EMOJI) + 1)]
         )
 
     def test_does_not_count_a_sign_off_that_a_comment_holds(self) -> None:
@@ -273,7 +298,8 @@ class HtmlCommentTest(unittest.TestCase):
     def test_reads_a_comment_in_a_message_with_crlf(self) -> None:
         body = f"Why the change is needed.\n\n<!--\n{EMOJI}\n-->"
         message = squash("fix: a unit", body=body).replace("\n", "\r\n")
-        self.assertEqual(check_squash_message(message), [])
+        found = check_squash_message(message)
+        self.assertEqual([(v.rule, v.line, v.column) for v in found], [("TELL-14", 6, 1)])
 
     def test_leaves_out_nothing_in_a_commit_message_file(self) -> None:
         message = f"fix: a unit\n\n<!-- {EMOJI} -->\n"

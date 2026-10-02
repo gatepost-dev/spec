@@ -12,7 +12,7 @@
   "prBodyTemplate": "{{{notes}}}",
   "prBodyNotes": [
     "Update a pinned tool or action.",
-    "Signed-off-by: Renovate Bot <bot@renovateapp.com>"
+    "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>"
   ],
   "packageRules": [
     {
