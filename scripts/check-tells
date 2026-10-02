@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 The Gatepost authors
 # SPDX-License-Identifier: Apache-2.0
-"""Run check_tells.py. The rules are in that file."""
+"""Run the check_tells package. The rules are in that package."""
 
 import sys
 from pathlib import Path
