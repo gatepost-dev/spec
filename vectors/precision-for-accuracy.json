@@ -104,6 +104,15 @@
     },
     {
       "id": "precision-for-accuracy-012",
+      "description": "gives the unit for negative zero",
+      "input": -0.0,
+      "options": {},
+      "expect": {
+        "value": "unit"
+      }
+    },
+    {
+      "id": "precision-for-accuracy-013",
       "description": "gives the LGA for NaN",
       "input": "NaN",
       "options": {},
@@ -112,7 +121,7 @@
       }
     },
     {
-      "id": "precision-for-accuracy-013",
+      "id": "precision-for-accuracy-014",
       "description": "gives the LGA for infinity",
       "input": "Infinity",
       "options": {},
@@ -121,7 +130,7 @@
       }
     },
     {
-      "id": "precision-for-accuracy-014",
+      "id": "precision-for-accuracy-015",
       "description": "gives the LGA for negative infinity",
       "input": "-Infinity",
       "options": {},

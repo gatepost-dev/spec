@@ -8,6 +8,7 @@ import json
 import math
 import shutil
 import string
+import sys
 import tempfile
 import unicodedata
 import unittest
@@ -160,6 +161,61 @@ class BuildVectorsTest(unittest.TestCase):
             )
         ]
         self.assertEqual(outside, [])
+
+    def test_each_character_that_nfkc_changes_to_a_non_ascii_separator_has_a_normalize_case(
+        self,
+    ) -> None:
+        separators = separator_characters()
+        inputs = {character for case in load("normalize")["cases"] for character in case["input"]}
+        sources = {
+            character
+            for character in map(chr, range(sys.maxunicode + 1))
+            if character not in separators
+            and any(
+                not form.isascii() and form in separators
+                for form in unicodedata.normalize("NFKC", character)
+            )
+        }
+        # A table of ASCII forms only keeps these characters. Each separator has its own case.
+        self.assertTrue(sources)
+        self.assertEqual([f"U+{ord(c):04X}" for c in sorted(sources - inputs)], [])
+
+    def test_normalize_has_cases_for_letters_and_digits_above_u_ffff(self) -> None:
+        astral = {
+            character
+            for case in load("normalize")["cases"]
+            for character in case["input"]
+            if ord(character) > 0xFFFF
+        }
+        forms = [unicodedata.normalize("NFKC", character) for character in sorted(astral)]
+        # A table that skips each 4-byte entry passes every other normalize case.
+        with self.subTest("a letter"):
+            self.assertTrue(any(form.isascii() and form.isalpha() for form in forms))
+        with self.subTest("a digit"):
+            self.assertTrue(any(form.isascii() and form.isdigit() for form in forms))
+
+    def test_parse_segments_rejects_a_digit_before_a_letter_in_the_area(self) -> None:
+        rejected = [
+            case
+            for case in load("parse-segments")["cases"]
+            if len(case["input"]) == 11
+            and case["input"][7] in string.digits
+            and case["input"][8] in string.ascii_letters
+            and case["expect"].get("error", {}).get("segment") == "area"
+        ]
+        # A letter check that is anchored only at the end accepts such an area.
+        self.assertTrue(rejected)
+
+    def test_precision_for_accuracy_has_a_case_for_negative_zero(self) -> None:
+        # The JSON literal -0 loads as the integer 0, so only -0.0 keeps the sign.
+        negative_zero = [
+            case["expect"]
+            for case in load("precision-for-accuracy")["cases"]
+            if isinstance(case["input"], float)
+            and case["input"] == 0
+            and math.copysign(1.0, case["input"]) < 0
+        ]
+        self.assertEqual(negative_zero, [{"value": "unit"}])
 
     def test_each_normalize_case_holds_with_full_nfkc_and_with_a_table(self) -> None:
         separators = separator_characters()

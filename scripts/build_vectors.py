@@ -38,7 +38,6 @@ LEFT_TO_RIGHT_MARK = chr(0x200E)
 RIGHT_TO_LEFT_MARK = chr(0x200F)
 RIGHT_TO_LEFT_OVERRIDE = chr(0x202E)
 FULL_WIDTH_HYPHEN = chr(0xFF0D)
-SUPERSCRIPT_MINUS = chr(0x207B)
 COMBINING_ACUTE = chr(0x0301)
 HORIZONTAL_ELLIPSIS = chr(0x2026)
 ZERO_WIDTH_JOINER = chr(0x200D)
@@ -46,6 +45,16 @@ LONG_S = chr(0x017F)
 DOTLESS_I = chr(0x0131)
 ARABIC_INDIC_LEGACY = "".join(
     chr(code_point) for code_point in (0x0669, 0x0660, 0x0660, 0x0661, 0x0660, 0x0668)
+)
+
+# The characters, other than the separators themselves, whose NFKC form holds a separator that
+# is not ASCII. A table of ASCII forms only keeps them. A test computes the full set.
+NFKC_SEPARATOR_SOURCES = (
+    ("a superscript minus", chr(0x207B)),
+    ("a subscript minus", chr(0x208B)),
+    ("a vertical em dash", chr(0xFE31)),
+    ("a vertical en dash", chr(0xFE32)),
+    ("a small em dash", chr(0xFE58)),
 )
 
 WIDTHS = (("state", 2), ("lga", 2), ("district", 3), ("area", 2), ("unit", 2))
@@ -156,6 +165,10 @@ def normalize_rows() -> list[Row]:
         row(f"removes the separator U+{code_point:04X}", joined(chr(code_point)), want)
         for code_point in load_separators()
     ]
+    nfkc_separator_rows = [
+        row(f"removes {name}", "EK" + character + "01A03FK01", want)
+        for name, character in NFKC_SEPARATOR_SOURCES
+    ]
     return [
         row("removes hyphens", "EK-01-A03-FK-01", want),
         row("removes spaces and makes letters upper case", "ek 01 a03 fk 01", want),
@@ -176,6 +189,8 @@ def normalize_rows() -> list[Row]:
             value(RIGHT_TO_LEFT_OVERRIDE + CODE),
         ),
         row("changes full-width letters and digits to ASCII", full_width(CODE), want),
+        # Each character is above U+FFFF, so a table that skips the 4-byte entries keeps it.
+        row("changes mathematical bold letters and digits to ASCII", MATH_BOLD_CODE, want),
         # An SDK that makes ASCII letters upper case before NFKC leaves these in lower case.
         row(
             "changes full-width lower-case letters to ASCII upper case",
@@ -183,8 +198,7 @@ def normalize_rows() -> list[Row]:
             want,
         ),
         row("removes full-width hyphens", joined(FULL_WIDTH_HYPHEN), want),
-        # NFKC changes U+207B to the separator U+2212. A table of ASCII forms only would keep it.
-        row("removes a superscript minus", "EK" + SUPERSCRIPT_MINUS + "01A03FK01", want),
+        *nfkc_separator_rows,
         row("removes tabs and line feeds", "EK01" + TAB + "A03" + LINE_FEED + "FK01", want),
         row(
             "changes a ligature to its letters",
@@ -414,6 +428,12 @@ def segment_rows() -> list[Row]:
             "suggests O for a zero in the area",
             "EK01A03F001",
             failed("bad_segment", "area", "EK-01-A03-FO-01"),
+        ),
+        # A letter check that looks only at the last character of the area accepts this code.
+        row(
+            "rejects a digit before a letter in the area",
+            "EK01A031K01",
+            failed("bad_segment", "area", "EK-01-A03-IK-01"),
         ),
         row(
             "suggests 0 for a letter O in the unit",
@@ -703,6 +723,8 @@ def accuracy_rows() -> list[Row]:
         row("gives the LGA at 1000 m", 1000, value("lga")),
         row("gives the LGA when the accuracy is unknown", None, value("lga")),
         row("gives the LGA for a negative accuracy", -1, value("lga")),
+        # An accuracy of -0.0 is not negative. A sign test such as double.IsNegative says it is.
+        row("gives the unit for negative zero", -0.0, value("unit")),
         row("gives the LGA for NaN", "NaN", value("lga")),
         row("gives the LGA for infinity", "Infinity", value("lga")),
         row("gives the LGA for negative infinity", "-Infinity", value("lga")),

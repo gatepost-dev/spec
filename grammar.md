@@ -80,7 +80,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## GPS precision
 
-`precisionForAccuracy(metres)` returns the most precise segment that a GPS fix of that accuracy supports, from `data/precision.json`. An unknown, negative, infinite or NaN accuracy gives `lga`. A fix with an accuracy equal to a limit gets the precision of that limit.
+`precisionForAccuracy(metres)` returns the most precise segment that a GPS fix of that accuracy supports, from `data/precision.json`. An unknown, negative, infinite or NaN accuracy gives `lga`. The value -0 counts as 0, so it is not negative. A fix with an accuracy equal to a limit gets the precision of that limit.
 
 ## Versions
 

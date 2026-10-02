@@ -130,6 +130,7 @@ class Grammar:
 
     def precision_for_accuracy(self, metres: float | None) -> str:
         """Give the most precise segment that a GPS fix of this accuracy supports."""
+        # -0.0 is not below 0, so it counts as 0 here. Testing the sign bit would give lga.
         if metres is None or not math.isfinite(metres) or metres < 0:
             return self.fallback
         for limit, precision in self.limits:
@@ -242,7 +243,9 @@ def _postcode(grammar: Grammar, canonical: str) -> Postcode:
     """Read an input of a hierarchy vector. The runner rules say to parse it with allowPartial."""
     outcome = grammar.parse(canonical, allow_partial=True)
     if isinstance(outcome, Failure):
-        raise ValueError(f"The vector input {canonical!r} is not a postcode. Fix the vector.")
+        raise ValueError(
+            f"The vector input {canonical!r} does not parse. Check the vector and data/."
+        )
     return outcome
 
 
