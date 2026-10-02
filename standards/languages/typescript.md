@@ -79,7 +79,7 @@ tsdown builds the packages, so `tsc` only checks types. Each package's `tsconfig
 | `@typescript-eslint/explicit-module-boundary-types` | error in `packages/*/src` | TS-8 |
 | `@typescript-eslint/no-non-null-assertion` | off in `packages/*/test` | TS-4 |
 | `no-restricted-imports` for every Node built-in module, by bare name and as `node:*` | error in `packages/*/src` | CS-2 |
-| `no-restricted-globals` for `process`, `Buffer`, `__dirname`, `__filename` and `global` | error in `packages/*/src` | CS-2 |
+| `no-restricted-globals` for `process`, `Buffer`, `__dirname`, `__filename`, `global` and `require` | error in `packages/*/src` | CS-2 |
 | `max-depth` | 3 | TELL-2 |
 | `complexity` | 10 | TELL-2 |
 | `max-params` | 4 | TELL-3 |
