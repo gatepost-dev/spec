@@ -216,10 +216,14 @@ class RenovateConfigTest(unittest.TestCase):
     def test_signs_off_each_commit_as_its_author(self) -> None:
         self.assertEqual(self.config()["commitTrailers"], ["Signed-off-by: {{{gitAuthor}}}"])
 
-    def test_signs_off_the_body_as_the_hosted_app(self) -> None:
-        self.assertIn(self.HOSTED_APP, self.config()["prBodyNotes"])
+    def body(self) -> str:
+        config = self.config()
+        body: str = config["prBodyTemplate"].replace("{{{header}}}", config["prHeader"])
+        return body
+
+    def test_ends_the_body_with_a_sign_off_as_the_hosted_app(self) -> None:
+        self.assertTrue(self.body().endswith(self.HOSTED_APP))
 
     def test_writes_a_body_that_passes_the_squash_check(self) -> None:
-        notes = "\n\n".join(self.config()["prBodyNotes"])
-        message = f"ci: update an action (#4)\n\n{notes}\n\n{RENOVATE_COMMENT}\n"
+        message = f"ci: update an action (#4)\n\n{self.body()}\n\n{RENOVATE_COMMENT}\n"
         self.assertEqual(check_squash_message(message, no_scope=True), [])

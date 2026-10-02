@@ -1,5 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Each pull request body ends with the sign-off line that the pull request job needs.",
+    "prHeader holds the line because a JSON string cannot wrap, and the template ends with it."
+  ],
   "extends": [
     "config:recommended",
     "helpers:pinGitHubActionDigests",
@@ -9,11 +13,8 @@
   "semanticCommits": "enabled",
   "semanticCommitScope": "",
   "commitTrailers": ["Signed-off-by: {{{gitAuthor}}}"],
-  "prBodyTemplate": "{{{notes}}}",
-  "prBodyNotes": [
-    "Update a pinned tool or action.",
-    "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>"
-  ],
+  "prHeader": "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>",
+  "prBodyTemplate": "Update a pinned tool or action.\n\n{{{header}}}",
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
