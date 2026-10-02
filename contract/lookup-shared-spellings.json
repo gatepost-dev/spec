@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "id": "lookup-shared-spellings",
+  "description": "Two spellings of one postcode share one request while it is in flight.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "order": "parallel",
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "fc01z99zz01",
+      "level": 1
+    },
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 1
+    }
+  ],
+  "responses": [
+    {
+      "fixture": "lookup/valid-level-1",
+      "delayMs": 100
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

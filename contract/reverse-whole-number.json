@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "reverse-whole-number",
+  "description": "The client writes a whole number with no trailing zero, so 9.0 becomes 9.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "reverse",
+      "lat": 9.0,
+      "lng": 7.0
+    }
+  ],
+  "responses": [
+    {
+      "fixture": "reverse/not-found"
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/search/reverse",
+      "query": {
+        "lat": "9",
+        "lng": "7"
+      },
+      "apiKey": "nipost_test_mock_l3"
+    },
+    "outcomes": [
+      {
+        "result": {
+          "found": false,
+          "radiusM": 25,
+          "unit": null,
+          "area": null,
+          "district": null,
+          "state": null
+        }
+      }
+    ]
+  }
+}

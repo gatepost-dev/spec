@@ -58,6 +58,15 @@ REQUIRED_SCENARIOS = (
     "reverse-invalid-lng",
     "reverse-invalid-max-distance",
     "reverse-plain-decimal",
+    "reverse-whole-number",
+    "lookup-deadline",
+    "lookup-retry-after-503",
+    "lookup-retry-after-invalid",
+    "lookup-shared-spellings",
+    "lookup-missing-valid",
+    "lookup-status-not-text",
+    "reverse-missing-found",
+    "autocomplete-suggestions-not-list",
 )
 
 

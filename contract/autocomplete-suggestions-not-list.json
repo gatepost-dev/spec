@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "id": "autocomplete-suggestions-not-list",
+  "description": "A 200 whose suggestions are not a list gives unexpected_response.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "autocomplete",
+      "q": "f"
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "segment": "state",
+          "suggestions": "FC"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "unexpected_response",
+          "status": 200,
+          "apiCode": null,
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

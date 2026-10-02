@@ -221,3 +221,11 @@ class ErrorTableReaderTest(unittest.TestCase):
             path.write_text("# Client\n\n## Requests\n\n| a | `x` | no |\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 contract_files.error_codes(path)
+
+
+class ScenarioNamesTest(unittest.TestCase):
+    def test_each_scenario_that_client_md_names_exists(self) -> None:
+        scenarios = contract_files.load_scenarios()
+        names = set(re.findall(r"`((?:lookup|reverse|autocomplete)-[a-z0-9-]+)`", CLIENT))
+        self.assertGreaterEqual(len(names), 19)
+        self.assertEqual(sorted(names - set(scenarios)), [])
