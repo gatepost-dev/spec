@@ -13,6 +13,7 @@ from typing import Any
 import build_vectors
 
 ROOT = Path(__file__).resolve().parents[2]
+ZERO_WIDTH_JOINER = chr(0x200D)
 
 
 def load(stem: str) -> dict[str, Any]:
@@ -23,7 +24,7 @@ def load(stem: str) -> dict[str, Any]:
 
 
 def utf16_units(text: str) -> int:
-    return len(text.encode("utf-16-le")) // 2
+    return len(text.encode("utf-16-le", errors="surrogatepass")) // 2
 
 
 class BuildVectorsTest(unittest.TestCase):
@@ -91,17 +92,16 @@ class BuildVectorsTest(unittest.TestCase):
                 above = [expected for metres, expected in measured if limit < metres < ceiling]
                 self.assertIn(next_precision, above)
 
-    def test_the_input_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
+    def test_the_input_limit_has_cases_on_both_sides_and_for_each_counting_mistake(self) -> None:
         postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
         limit = postcode_format["maxInputCodePoints"]
         parsed = [
             (case["input"], "ok" if case["expect"]["ok"] else case["expect"]["error"]["code"])
             for case in load("parse")["cases"]
         ]
+        legacy = [(case["input"], case["expect"]["value"]) for case in load("is-legacy")["cases"]]
         parse_outcomes = [(len(text), outcome) for text, outcome in parsed]
-        legacy_outcomes = [
-            (len(case["input"]), case["expect"]["value"]) for case in load("is-legacy")["cases"]
-        ]
+        legacy_outcomes = [(len(text), outcome) for text, outcome in legacy]
         self.assertIn((limit, "ok"), parse_outcomes)
         self.assertIn((limit + 1, "bad_length"), parse_outcomes)
         self.assertIn((limit + 1, False), legacy_outcomes)
@@ -109,6 +109,12 @@ class BuildVectorsTest(unittest.TestCase):
         accepted = [text for text, outcome in parsed if outcome == "ok" and len(text) <= limit]
         rejected = [
             text for text, outcome in parsed if outcome == "bad_length" and len(text) > limit
+        ]
+        legacy_accepted = [
+            text for text, outcome in legacy if outcome is True and len(text) <= limit
+        ]
+        legacy_rejected = [
+            text for text, outcome in legacy if outcome is False and len(text) > limit
         ]
         pins = {
             "a success with more UTF-16 units than the limit": [
@@ -125,7 +131,25 @@ class BuildVectorsTest(unittest.TestCase):
             "a rejection over the limit that ends in a line feed": [
                 text for text in rejected if text.endswith("\n")
             ],
+            "an accepted legacy code that grows past the limit under NFKC": [
+                text for text in legacy_accepted if len(unicodedata.normalize("NFKC", text)) > limit
+            ],
+            "a rejected legacy code that is within the limit without its zero-width joiners": [
+                text
+                for text in legacy_rejected
+                if len(text.replace(ZERO_WIDTH_JOINER, "")) <= limit
+            ],
+            "a rejected legacy code over the limit that ends in a line feed": [
+                text for text in legacy_rejected if text.endswith("\n")
+            ],
         }
         for requirement, texts in pins.items():
             with self.subTest(requirement):
                 self.assertTrue(texts)
+        # A check that ends in $ instead of \z skips a final line feed. Only an input with
+        # exactly one code point over the limit shows it.
+        line_feed_lengths = {
+            len(text) for text in [*rejected, *legacy_rejected] if text.endswith("\n")
+        }
+        with self.subTest("each rejection that ends in a line feed is one code point over"):
+            self.assertEqual(line_feed_lengths, {limit + 1})

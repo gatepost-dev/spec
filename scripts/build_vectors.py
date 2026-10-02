@@ -40,6 +40,9 @@ RIGHT_TO_LEFT_OVERRIDE = chr(0x202E)
 FULL_WIDTH_HYPHEN = chr(0xFF0D)
 COMBINING_ACUTE = chr(0x0301)
 HORIZONTAL_ELLIPSIS = chr(0x2026)
+ZERO_WIDTH_JOINER = chr(0x200D)
+LONG_S = chr(0x017F)
+DOTLESS_I = chr(0x0131)
 ARABIC_INDIC_LEGACY = "".join(
     chr(code_point) for code_point in (0x0669, 0x0660, 0x0660, 0x0661, 0x0660, 0x0668)
 )
@@ -163,6 +166,12 @@ def normalize_rows() -> list[Row]:
             value(RIGHT_TO_LEFT_OVERRIDE + CODE),
         ),
         row("changes full-width letters and digits to ASCII", full_width(CODE), want),
+        # An SDK that makes ASCII letters upper case before NFKC leaves these in lower case.
+        row(
+            "changes full-width lower-case letters to ASCII upper case",
+            full_width("ek01a03fk01"),
+            want,
+        ),
         row("removes full-width hyphens", joined(FULL_WIDTH_HYPHEN), want),
         row("removes tabs and line feeds", "EK01" + TAB + "A03" + LINE_FEED + "FK01", want),
         row(
@@ -177,6 +186,12 @@ def normalize_rows() -> list[Row]:
             "makes only ASCII letters upper case",
             "ek01a03f" + SMALL_E_ACUTE + "01",
             value("EK01A03F" + SMALL_E_ACUTE + "01"),
+        ),
+        # Unicode upper case changes U+0131 to I, and NFKC leaves it alone.
+        row(
+            "keeps a dotless i",
+            "EK01A03F" + DOTLESS_I + "01",
+            value("EK01A03F" + DOTLESS_I + "01"),
         ),
         row("returns an empty string for empty input", "", value("")),
         row("returns an empty string for separators only", " - . ", value("")),
@@ -238,6 +253,10 @@ def parse_rows() -> list[Row]:
         row("rejects a unit that lost its zero", "EK-01-A03-FK-1", failed("bad_length")),
         row("rejects a state alone by default", "EK", failed("bad_length")),
         row("rejects a district code by default", "EK01A03", failed("bad_length")),
+        # The length check comes before the state and segment checks and before suggestions.
+        row("checks the length before the state", "XX", failed("bad_length")),
+        row("checks the length before the segments", "EK00", failed("bad_length")),
+        row("checks the length before a fixable segment", "EKO1A03FK1", failed("bad_length")),
         row("parses a state when partial codes are allowed", "EK", ok("EK"), PARTIAL),
         row("parses an LGA code when partial codes are allowed", "EK01", ok("EK01"), PARTIAL),
         row(
@@ -293,6 +312,12 @@ def parse_rows() -> list[Row]:
         row(
             "counts code points, not UTF-16 units",
             MATH_BOLD_CODE + " " * (limit - 2 * len(CODE) + 1),
+            ok(CODE),
+        ),
+        # 64 code points and 75 UTF-16 units. A runner that counts UTF-16 units rejects it.
+        row(
+            "parses an astral code padded to the input limit",
+            MATH_BOLD_CODE + " " * (limit - len(CODE)),
             ok(CODE),
         ),
         # 65 code points, but 1 grapheme cluster and 64 code points after NFKC.
@@ -420,6 +445,30 @@ def segment_rows() -> list[Row]:
             PARTIAL,
         ),
         row(
+            "rejects an unknown state when partial codes are allowed",
+            "XX",
+            failed("unknown_state", "state"),
+            PARTIAL,
+        ),
+        row(
+            "suggests a state for a partial code",
+            "0G",
+            failed("unknown_state", "state", "OG"),
+            PARTIAL,
+        ),
+        row(
+            "suggests an LGA fix for a district code",
+            "EKO1A03",
+            failed("bad_segment", "lga", "EK-01-A03"),
+            PARTIAL,
+        ),
+        row(
+            "rejects an LGA of 00 in a district code",
+            "EK00A03",
+            failed("bad_segment", "lga"),
+            PARTIAL,
+        ),
+        row(
             "keeps a letter O in the district when it fixes the LGA",
             "EKO1AO3FK01",
             failed("bad_segment", "lga", "EK-01-AO3-FK-01"),
@@ -468,6 +517,26 @@ def legacy_rows() -> list[Row]:
         row(
             "rejects a legacy code over the input limit",
             "900108" + " " * (limit - 5),
+            value(False),
+        ),
+        # 65 code points, but 6 grapheme clusters. A grapheme counter gives true, because
+        # normalize removes the joiners.
+        row(
+            "counts zero-width joiners as code points for legacy codes",
+            "900108" + ZERO_WIDTH_JOINER * (limit - 5),
+            value(False),
+        ),
+        # 26 code points, but 66 after NFKC, which changes U+2026 to 3 full stops. A count
+        # after NFKC gives false.
+        row(
+            "counts the input before it normalises for legacy codes",
+            "900108" + HORIZONTAL_ELLIPSIS * 20,
+            value(True),
+        ),
+        # 65 code points. In many regex engines, $ also matches before a final line feed.
+        row(
+            "rejects a legacy code over the limit that ends in a line feed",
+            "900108" + " " * (limit - 6) + LINE_FEED,
             value(False),
         ),
     ]
@@ -581,6 +650,12 @@ def state_name_rows() -> list[Row]:
         row("returns nothing for empty input", "", value(None)),
         row("returns nothing for three letters", "EKI", value(None)),
         row("returns nothing for a code with spaces", " EK ", value(None)),
+        row("returns nothing for a code with a leading space", " EK", value(None)),
+        row("returns nothing for a code with a trailing space", "EK ", value(None)),
+        row("returns nothing for full-width letters", full_width("EK"), value(None)),
+        # Python's upper() changes U+017F to S and U+0131 to I. These two would give Osun and Imo.
+        row("returns nothing for a long s", "O" + LONG_S, value(None)),
+        row("returns nothing for a dotless i", DOTLESS_I + "M", value(None)),
     ]
 
 

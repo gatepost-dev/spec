@@ -389,6 +389,51 @@
       "expect": {
         "value": null
       }
+    },
+    {
+      "id": "state-name-044",
+      "description": "returns nothing for a code with a leading space",
+      "input": " EK",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-045",
+      "description": "returns nothing for a code with a trailing space",
+      "input": "EK ",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-046",
+      "description": "returns nothing for full-width letters",
+      "input": "\uff25\uff2b",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-047",
+      "description": "returns nothing for a long s",
+      "input": "O\u017f",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-048",
+      "description": "returns nothing for a dotless i",
+      "input": "\u0131M",
+      "options": {},
+      "expect": {
+        "value": null
+      }
     }
   ]
 }

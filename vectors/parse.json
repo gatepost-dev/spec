@@ -513,6 +513,48 @@
     },
     {
       "id": "parse-032",
+      "description": "checks the length before the state",
+      "input": "XX",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-033",
+      "description": "checks the length before the segments",
+      "input": "EK00",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-034",
+      "description": "checks the length before a fixable segment",
+      "input": "EKO1A03FK1",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-035",
       "description": "parses a state when partial codes are allowed",
       "input": "EK",
       "options": {
@@ -534,7 +576,7 @@
       }
     },
     {
-      "id": "parse-033",
+      "id": "parse-036",
       "description": "parses an LGA code when partial codes are allowed",
       "input": "EK01",
       "options": {
@@ -556,7 +598,7 @@
       }
     },
     {
-      "id": "parse-034",
+      "id": "parse-037",
       "description": "parses a district code when partial codes are allowed",
       "input": "ek-01-a03",
       "options": {
@@ -578,7 +620,7 @@
       }
     },
     {
-      "id": "parse-035",
+      "id": "parse-038",
       "description": "parses an area code when partial codes are allowed",
       "input": "EK01A03FK",
       "options": {
@@ -600,7 +642,7 @@
       }
     },
     {
-      "id": "parse-036",
+      "id": "parse-039",
       "description": "parses a full code when partial codes are allowed",
       "input": "EK01A03FK01",
       "options": {
@@ -622,7 +664,7 @@
       }
     },
     {
-      "id": "parse-037",
+      "id": "parse-040",
       "description": "rejects 3 characters when partial codes are allowed",
       "input": "EK0",
       "options": {
@@ -638,7 +680,7 @@
       }
     },
     {
-      "id": "parse-038",
+      "id": "parse-041",
       "description": "rejects 5 characters when partial codes are allowed",
       "input": "EK01A",
       "options": {
@@ -654,7 +696,7 @@
       }
     },
     {
-      "id": "parse-039",
+      "id": "parse-042",
       "description": "rejects 6 characters when partial codes are allowed",
       "input": "EK01A0",
       "options": {
@@ -670,7 +712,7 @@
       }
     },
     {
-      "id": "parse-040",
+      "id": "parse-043",
       "description": "rejects 8 characters when partial codes are allowed",
       "input": "EK01A03F",
       "options": {
@@ -686,7 +728,7 @@
       }
     },
     {
-      "id": "parse-041",
+      "id": "parse-044",
       "description": "rejects 10 characters when partial codes are allowed",
       "input": "EK01A03FK0",
       "options": {
@@ -702,7 +744,7 @@
       }
     },
     {
-      "id": "parse-042",
+      "id": "parse-045",
       "description": "parses a code padded to the input limit",
       "input": "EK01A03FK01                                                     ",
       "options": {},
@@ -722,7 +764,7 @@
       }
     },
     {
-      "id": "parse-043",
+      "id": "parse-046",
       "description": "rejects input over the input limit",
       "input": "EK01A03FK01                                                      ",
       "options": {},
@@ -736,7 +778,7 @@
       }
     },
     {
-      "id": "parse-044",
+      "id": "parse-047",
       "description": "counts code points, not UTF-16 units",
       "input": "\ud835\udc04\ud835\udc0a\ud835\udfce\ud835\udfcf\ud835\udc00\ud835\udfce\ud835\udfd1\ud835\udc05\ud835\udc0a\ud835\udfce\ud835\udfcf                                           ",
       "options": {},
@@ -756,7 +798,27 @@
       }
     },
     {
-      "id": "parse-045",
+      "id": "parse-048",
+      "description": "parses an astral code padded to the input limit",
+      "input": "\ud835\udc04\ud835\udc0a\ud835\udfce\ud835\udfcf\ud835\udc00\ud835\udfce\ud835\udfd1\ud835\udc05\ud835\udc0a\ud835\udfce\ud835\udfcf                                                     ",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-049",
       "description": "counts combining marks as code points",
       "input": "E\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301",
       "options": {},
@@ -770,7 +832,7 @@
       }
     },
     {
-      "id": "parse-046",
+      "id": "parse-050",
       "description": "counts the input before it normalises",
       "input": "EK01A03FK01\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026",
       "options": {},
@@ -790,7 +852,7 @@
       }
     },
     {
-      "id": "parse-047",
+      "id": "parse-051",
       "description": "rejects input over the limit that ends in a line feed",
       "input": "EK01A03FK01                                                     \n",
       "options": {},

@@ -361,6 +361,70 @@
     },
     {
       "id": "parse-segments-026",
+      "description": "rejects an unknown state when partial codes are allowed",
+      "input": "XX",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-027",
+      "description": "suggests a state for a partial code",
+      "input": "0G",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": "OG"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-028",
+      "description": "suggests an LGA fix for a district code",
+      "input": "EKO1A03",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": "EK-01-A03"
+        }
+      }
+    },
+    {
+      "id": "parse-segments-029",
+      "description": "rejects an LGA of 00 in a district code",
+      "input": "EK00A03",
+      "options": {
+        "allowPartial": true
+      },
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_segment",
+          "segment": "lga",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-030",
       "description": "keeps a letter O in the district when it fixes the LGA",
       "input": "EKO1AO3FK01",
       "options": {},
@@ -374,7 +438,7 @@
       }
     },
     {
-      "id": "parse-segments-027",
+      "id": "parse-segments-031",
       "description": "keeps letters I and L in the district when it fixes the LGA",
       "input": "EKO1AILFK01",
       "options": {},
@@ -388,7 +452,7 @@
       }
     },
     {
-      "id": "parse-segments-028",
+      "id": "parse-segments-032",
       "description": "accepts letters and digits in any district position",
       "input": "EK01A0OFK01",
       "options": {},

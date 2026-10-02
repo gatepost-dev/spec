@@ -101,6 +101,33 @@
       "expect": {
         "value": false
       }
+    },
+    {
+      "id": "is-legacy-012",
+      "description": "counts zero-width joiners as code points for legacy codes",
+      "input": "900108\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d\u200d",
+      "options": {},
+      "expect": {
+        "value": false
+      }
+    },
+    {
+      "id": "is-legacy-013",
+      "description": "counts the input before it normalises for legacy codes",
+      "input": "900108\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026",
+      "options": {},
+      "expect": {
+        "value": true
+      }
+    },
+    {
+      "id": "is-legacy-014",
+      "description": "rejects a legacy code over the limit that ends in a line feed",
+      "input": "900108                                                          \n",
+      "options": {},
+      "expect": {
+        "value": false
+      }
     }
   ]
 }
