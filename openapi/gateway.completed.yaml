@@ -1,0 +1,447 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+openapi: 3.1.0
+info:
+  title: NIPOST postcode gateway, completed by Gatepost
+  version: 0.1.0-gatepost.1
+  summary: Unofficial. Not made or endorsed by NIPOST.
+  description: >-
+    Gatepost wrote this description of NIPOST's public postcode gateway. It adds the responses,
+    error codes and headers that NIPOST's OpenAPI file 0.1.0 leaves out. Each response carries
+    x-gatepost-evidence. "observed" means that Gatepost saw the shape in its own calls on
+    2 Oct 2026. "documented" means that NIPOST's docs describe it, but no call showed it.
+    "assumed" means that neither source shows it, and Gatepost's mock server chose it.
+    Gatepost's calls used a key with lookup level 1 only, so every lookup body above level 1
+    is documented, not observed.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: https://api.postcode.gov.ng
+    description: NIPOST's gateway
+security:
+  - ApiKey: []
+paths:
+  /healthz:
+    get:
+      operationId: health
+      summary: Tell whether the gateway runs
+      security: []
+      responses:
+        "200":
+          description: The gateway runs.
+          x-gatepost-evidence: documented
+  /v1/lookup:
+    get:
+      operationId: lookup
+      summary: Look up one postcode at a lookup level
+      description: >-
+        A client sends a whole number from 1 to 5. The levels add fields. Level 1 gives
+        validity. Level 2 adds the administrative address
+        and the recent house address. Level 3 adds the building use status. Level 4 adds other
+        building information, and level 5 adds point geometry. A key holds at most level 3.
+        A request above the key's level gets 403 level_not_granted. NIPOST's docs say that the
+        gateway lowers the level instead, but no call showed that.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: The postcode, in any form. The gateway ignores spaces, hyphens and case.
+          schema: { type: string }
+        - name: level
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 5, default: 1 }
+      responses:
+        "200":
+          description: >-
+            The lookup result. An unknown or malformed postcode also gets 200, with valid set
+            to false.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LookupEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /v1/search/reverse:
+    get:
+      operationId: reverse
+      summary: Find the nearest unit to a coordinate
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: The latitude in degrees. A client rejects a value outside this range.
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          required: true
+          description: The longitude in degrees. A client rejects a value outside this range.
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: max_distance_m
+          in: query
+          required: false
+          description: >-
+            The search radius in metres. The gateway lowers a radius above 250 m to 250 m.
+            A client rejects a value outside 0 to 250 and sends no request.
+          schema: { type: number, minimum: 0, maximum: 250, default: 25 }
+      responses:
+        "200":
+          description: The nearest unit or area, or found set to false.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReverseEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /v1/search/nearby:
+    get:
+      operationId: nearby
+      summary: List the units within a radius
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          description: The latitude in degrees. A client rejects a value outside this range.
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          required: true
+          description: The longitude in degrees. A client rejects a value outside this range.
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: radius
+          in: query
+          required: false
+          schema: { type: number, default: 300 }
+      responses:
+        "200":
+          description: >-
+            A list of units. The only call so far returned an empty list, so the fields of a
+            unit are not known.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NearbyEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /v1/search/autocomplete:
+    get:
+      operationId: autocomplete
+      summary: Suggest values for the segment that a user types
+      description: >-
+        The gateway did not answer an empty q within 20 seconds. A client must not send one.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The start of a postcode, for example FC01Z.
+          schema: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: The values of the active segment.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AutocompleteEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /v1/assembly/assemble:
+    post:
+      operationId: assemble
+      summary: Build a postcode from its segments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Segments" }
+      responses:
+        "200":
+          description: The postcode in three forms. Letters become upper case, numbers get a zero.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssembleEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /v1/assembly/disassemble:
+    get:
+      operationId: disassemble
+      summary: Split a postcode into its segments
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The five segments.
+          x-gatepost-evidence: observed
+          headers:
+            X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+            X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisassembleEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: >-
+        A secret key starts with nipost_test_ or nipost_live_. A publishable key starts with
+        nipost_pk_test_ or nipost_pk_live_, and a browser can use it only from the origins on
+        its list.
+  headers:
+    RateLimitLimit:
+      description: The requests that one key can make in each clock minute.
+      schema: { type: integer, examples: [600] }
+    RateLimitRemaining:
+      description: The requests that the key has left in this clock minute.
+      schema: { type: integer, minimum: 0 }
+    RetryAfter:
+      description: The seconds to wait before the next request.
+      schema: { type: integer, minimum: 0 }
+  responses:
+    BadRequest:
+      description: The request has a missing or malformed parameter.
+      x-gatepost-evidence: assumed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Unauthorized:
+      description: >-
+        No key (auth_required, observed), or a key that the gateway does not know
+        (invalid_api_key, observed on 1 Oct 2026). Neither response has rate-limit headers.
+      x-gatepost-evidence: observed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    PaymentRequired:
+      description: The organisation has no credits for a lookup above level 1.
+      x-gatepost-evidence: documented
+      headers:
+        X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+        X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Forbidden:
+      description: >-
+        A lookup above the key's level (level_not_granted, observed), a key without the scope
+        (code assumed), or a publishable key from an origin that is not on its list
+        (origin_not_allowed, documented).
+      x-gatepost-evidence: observed
+      headers:
+        X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+        X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    TooManyRequests:
+      description: >-
+        The key used up its requests for this clock minute. NIPOST's docs give the status, but
+        no call reached it, so the error code and Retry-After are assumed.
+      x-gatepost-evidence: documented
+      headers:
+        X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+        X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+        Retry-After: { $ref: "#/components/headers/RetryAfter" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, examples: [auth_required, level_not_granted] }
+            message: { type: string }
+    Segments:
+      type: object
+      required: [state, lga, district, area, unit]
+      properties:
+        state: { type: string, examples: [FC] }
+        lga: { type: string, examples: ["01"] }
+        district: { type: string, examples: [Z99] }
+        area: { type: string, examples: [ZZ] }
+        unit: { type: string, examples: ["01"] }
+    LookupEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/Lookup" }
+    Lookup:
+      type: object
+      required: [postcode, valid]
+      properties:
+        postcode:
+          type: string
+          description: The caller's text in upper case. It is not always a postcode.
+        valid: { type: boolean }
+        status:
+          type: string
+          description: >-
+            Observed at level 1. The widget's lookup also names restricted. NIPOST's example
+            bodies above level 1 have no status. A client keeps any other value as text.
+          examples: [valid, invalid, not_found, restricted]
+        verified:
+          type: boolean
+          description: Observed at level 1, and false in every call. NIPOST does not define it.
+        administrative_address: { $ref: "#/components/schemas/AdministrativeAddress" }
+        recent_house_address: { $ref: "#/components/schemas/RecentHouseAddress" }
+        building_use_status:
+          type: string
+          description: Level 3 and above. Documented, not observed.
+          examples: [residential]
+        other_building_info:
+          type: object
+          description: Level 4 and above. NIPOST gives no fields.
+        point_geometry:
+          type: object
+          description: Level 5. NIPOST gives no fields.
+    AdministrativeAddress:
+      type: object
+      description: Level 2 and above. Documented, not observed.
+      required: [state_name, lga_name, locality_name, zone]
+      properties:
+        state_name: { type: string }
+        lga_name: { type: string }
+        locality_name: { type: string }
+        zone: { type: string }
+    RecentHouseAddress:
+      type: object
+      description: Level 2 and above. Documented, not observed.
+      required: [recent]
+      properties:
+        recent: { type: string }
+    ReverseEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/Reverse" }
+    Reverse:
+      type: object
+      required: [found, coordinate, radius_m]
+      properties:
+        found: { type: boolean }
+        coordinate:
+          type: array
+          description: The request's coordinate as [lng, lat].
+          items: { type: number }
+          minItems: 2
+          maxItems: 2
+        unit: { $ref: "#/components/schemas/ReverseUnit" }
+        area: { type: string, examples: [FC-01-Z99-ZZ] }
+        district: { type: string, examples: [FC-01-Z99] }
+        state: { type: string, examples: [FC] }
+        depth:
+          type: string
+          description: The most precise segment found. Observed values are area and unit.
+        message:
+          type: string
+          description: Set when found is false.
+        radius_m:
+          type: number
+          description: The radius that the gateway applied. Calls showed whole numbers only.
+    ReverseUnit:
+      type: object
+      description: >-
+        Absent when found is false, and also when the gateway found an area but no unit within
+        the radius.
+      required: [postcode, display, distance_m, confidence]
+      properties:
+        postcode: { type: string, examples: [FC-01-Z99-ZZ-01] }
+        display: { type: string, examples: [FC 01 Z99 ZZ 01] }
+        distance_m: { type: number }
+        confidence:
+          type: string
+          enum: [high, medium, low]
+          description: Calls showed low only. NIPOST's file names all three.
+        state_name: { type: string, description: Level 2 and above. Documented. }
+        lga_name: { type: string, description: Level 2 and above. Documented. }
+        locality_name: { type: string, description: Level 2 and above. Documented. }
+        address: { type: string, description: Level 2 and above. Documented. }
+    NearbyEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          description: The units in the radius. No call has returned a unit yet.
+    AutocompleteEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/Autocomplete" }
+    Autocomplete:
+      type: object
+      required: [segment, suggestions]
+      properties:
+        segment:
+          type: string
+          enum: [state, lga, district, area, unit]
+          description: The segment of the last character in q. Unit is documented only.
+        suggestions:
+          type: array
+          description: In ascending order. One call returned 20 items, which can be a limit.
+          items:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                description: The value of the active segment only, for example 01 for EK01.
+              label:
+                type: string
+                description: NIPOST's file names it, but no suggestion in any call had one.
+    AssembleEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [compact, display, postcode]
+          properties:
+            compact: { type: string, examples: [FC01Z99ZZ01] }
+            display: { type: string, examples: [FC 01 Z99 ZZ 01] }
+            postcode: { type: string, examples: [FC-01-Z99-ZZ-01] }
+    DisassembleEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: "#/components/schemas/Segments" }
