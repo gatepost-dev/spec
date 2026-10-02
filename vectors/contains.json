@@ -98,6 +98,18 @@
       "expect": {
         "value": false
       }
+    },
+    {
+      "id": "contains-009",
+      "description": "rejects a code that holds the prefix after its start",
+      "input": {
+        "prefix": "FC",
+        "code": "EK-01-FC0-FK-01"
+      },
+      "options": {},
+      "expect": {
+        "value": false
+      }
     }
   ]
 }

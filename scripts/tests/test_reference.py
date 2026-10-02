@@ -8,6 +8,7 @@ import unittest
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 import reference
 
@@ -83,6 +84,23 @@ def vector_documents() -> list[tuple[str, dict[str, Any]]]:
     return [(path.name, json.loads(path.read_text(encoding="utf-8"))) for path in paths]
 
 
+def failing_cases(function: str, grammar: reference.Grammar) -> list[str]:
+    """Run the vectors of one function through a reading, and list the ids that it fails."""
+    reader = reference.READERS[function]
+    failing: list[str] = []
+    for _, document in vector_documents():
+        if document["function"] != function:
+            continue
+        for case in document["cases"]:
+            try:
+                answer = reader(grammar, case)
+            except ValueError:
+                answer = {"raised": True}
+            if answer != case["expect"]:
+                failing.append(case["id"])
+    return failing
+
+
 def load_with(edits: dict[str, Edit]) -> reference.Grammar:
     """Load the data files from a temporary folder, after the edits to the named files."""
     with tempfile.TemporaryDirectory() as folder:
@@ -132,6 +150,44 @@ class ReferenceDataTest(unittest.TestCase):
     def test_truncate_rejects_a_precision_that_the_code_lacks(self) -> None:
         with self.assertRaises(ValueError):
             reference.load().truncate(("EK", "01", "A03"), "area")
+
+
+class ReadingMistakeTest(unittest.TestCase):
+    """Each test makes one mistake in the reading, and a vector must catch it."""
+
+    def test_a_normalize_that_refuses_input_over_the_input_limit_fails_a_vector(self) -> None:
+        original = reference.Grammar.normalize
+
+        def refuse(grammar: reference.Grammar, text: str) -> str:
+            if len(text) > grammar.input_limit:
+                raise ValueError("The input is too long.")
+            return original(grammar, text)
+
+        with mock.patch.object(reference.Grammar, "normalize", refuse):
+            self.assertNotEqual(failing_cases("normalize", reference.load()), [])
+
+    def test_a_normalize_that_cuts_input_at_the_input_limit_fails_a_vector(self) -> None:
+        original = reference.Grammar.normalize
+
+        def cut(grammar: reference.Grammar, text: str) -> str:
+            return original(grammar, text[: grammar.input_limit])
+
+        with mock.patch.object(reference.Grammar, "normalize", cut):
+            self.assertNotEqual(failing_cases("normalize", reference.load()), [])
+
+    def test_a_contains_that_looks_for_the_prefix_anywhere_fails_a_vector(self) -> None:
+        def look_anywhere(
+            grammar: reference.Grammar, prefix: reference.Postcode, code: reference.Postcode
+        ) -> bool:
+            return "-".join(prefix) in "-".join(code)
+
+        with mock.patch.object(reference.Grammar, "contains", look_anywhere):
+            self.assertNotEqual(failing_cases("contains", reference.load()), [])
+
+    def test_the_reading_without_a_mistake_fails_no_vector(self) -> None:
+        for function in ("normalize", "contains"):
+            with self.subTest(function):
+                self.assertEqual(failing_cases(function, reference.load()), [])
 
 
 class InterfaceTest(unittest.TestCase):

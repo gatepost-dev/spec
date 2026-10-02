@@ -160,6 +160,7 @@ def load_input_limit() -> int:
 
 def normalize_rows() -> list[Row]:
     """Cases for normalize."""
+    limit = load_input_limit()
     want = value(CODE)
     separator_rows = [
         row(f"removes the separator U+{code_point:04X}", joined(chr(code_point)), want)
@@ -222,6 +223,11 @@ def normalize_rows() -> list[Row]:
         row("returns an empty string for empty input", "", value("")),
         row("returns an empty string for separators only", " - . ", value("")),
         *separator_rows,
+        # normalize has no input limit. The code starts after the first `limit` code points, so a
+        # reading that refuses the input, or that cuts it at the limit, fails here.
+        row(
+            "removes spaces from input over the input limit", " " * limit + CODE + " " * limit, want
+        ),
     ]
 
 
@@ -677,6 +683,13 @@ def contains_rows() -> list[Row]:
             value(False),
         ),
         row("rejects a different unit", {"prefix": full, "code": "EK-01-A03-FK-02"}, value(False)),
+        # The district FC0 holds the text FC. A check that looks for the prefix anywhere in the
+        # code finds it there.
+        row(
+            "rejects a code that holds the prefix after its start",
+            {"prefix": "FC", "code": "EK-01-FC0-FK-01"},
+            value(False),
+        ),
     ]
 
 

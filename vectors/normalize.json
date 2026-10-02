@@ -668,6 +668,15 @@
       "expect": {
         "value": "EK01A03FK01"
       }
+    },
+    {
+      "id": "normalize-075",
+      "description": "removes spaces from input over the input limit",
+      "input": "                                                                EK01A03FK01                                                                ",
+      "options": {},
+      "expect": {
+        "value": "EK01A03FK01"
+      }
     }
   ]
 }

@@ -5,7 +5,6 @@ Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Ni
 No shared vector tests these rules. Each SDK tests them itself.
 
 - The Unicode version of NFKC (see Normalise).
-- That `normalize` accepts input of any length (see Normalise).
 - Text that is not well-formed (see Parse). JSON cannot carry invalid UTF-8, and PHP rejects an escape for a lone surrogate.
 - That `truncate` fails for a value that is not a precision (see Hierarchy).
 - That each SDK exposes `SPEC_VERSION` (see Versions).
