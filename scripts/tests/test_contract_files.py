@@ -35,6 +35,7 @@ class ClientDocTest(unittest.TestCase):
                 "forbidden",
                 "rate_limited",
                 "server_error",
+                "unexpected_response",
                 "network_error",
                 "timeout",
             ],

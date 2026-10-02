@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "lookup-malformed-body",
-  "description": "A 200 whose body is not JSON gives server_error, with no retry.",
+  "description": "A 200 whose body is not JSON gives unexpected_response, with no retry.",
   "client": {"apiKey": "nipost_test_mock_l3"},
   "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
   "responses": [
@@ -14,7 +14,14 @@
   "expect": {
     "attempts": 1,
     "outcomes": [
-      {"error": {"code": "server_error", "status": 200, "apiCode": null, "retryAfterMs": null}}
+      {
+        "error": {
+          "code": "unexpected_response",
+          "status": 200,
+          "apiCode": null,
+          "retryAfterMs": null
+        }
+      }
     ]
   }
 }

@@ -26,11 +26,11 @@ Each call that sends a request is asynchronous, and the caller can cancel it (AP
 | `apiKey` | the key for the `X-API-Key` header | none, so the client sends no key |
 | `baseUrl` | the gateway's address | `https://api.postcode.gov.ng` |
 | `transport` | the HTTP transport, in the language's standard form | the platform's own |
-| `timeoutMs` | the longest wait for one attempt, in milliseconds | 8000 |
+| `timeoutMs` | the longest wait for one attempt, in milliseconds | 8000, and 15000 for `autocomplete` |
 | `maxRetries` | the most retries after the first attempt | 2 |
 | `cacheTtlMs` | how long the client keeps a result, in milliseconds | 0, which disables the cache |
 
-A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` or `cacheTtlMs`. The default of 8000 is open: some `autocomplete` calls took 10 to 14 seconds, and a timed run must decide it.
+A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` or `cacheTtlMs`.
 
 ### Lookup result
 
@@ -49,6 +49,7 @@ A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` 
 - `status` is null when the response has no `status`. The client returns any other value of `status` as it is, also when this table does not list it, so that a new gateway status is not lost.
 - `levelReceived` comes from the fields of the response. It is 5 when `point_geometry` is present, 4 for `other_building_info`, 3 for `building_use_status`, and 2 for either address field. Otherwise it is 1.
 - `recentHouseAddress` is the text in `recent_house_address.recent`.
+- A `status` that is present, not null and not text raises `unexpected_response`.
 - A response with `valid: false` is a result, not an error.
 
 ### Reverse result
@@ -93,7 +94,7 @@ A suggestion has these fields:
 
 The gateway sends the value of one segment only. For the text `FC01Z`, the suggestion `Z99` gives the postcode `FC-01-Z99`. The client parses that text with partial postcodes allowed. When it does not parse, `postcode` is null.
 
-A client ignores a field that the tables above do not list, in a lookup, a reverse or an autocomplete response. Such a field never changes the result and never raises an error. The scenario `unknown-fields` tests this rule for each of the three calls.
+A client ignores a field that this contract does not use, in a lookup, a reverse or an autocomplete response. Such a field never changes the result and never raises an error. The scenarios `lookup-unknown-fields`, `reverse-unknown-fields` and `autocomplete-unknown-fields` test this rule, one for each call. The scenario `lookup-unknown-status` tests that an unknown `status` stays text.
 
 ## Requests
 
@@ -101,11 +102,11 @@ A client ignores a field that the tables above do not list, in a lookup, a rever
 - `lookup` parses the code with the core first. A code that does not parse raises `invalid_input`, and the client sends no request. Partial postcodes do not pass. The request sends the canonical form and the level: `code=FC-01-Z99-ZZ-01&level=1`.
 - `reverse` sends `lat` and `lng`, and `max_distance_m` when the caller gave a radius.
 - Each of these raises `invalid_input`, and the client sends no request:
-  - A `level` that is not a whole number from 1 to 5.
-  - A `lat` that is not finite or is outside -90 to 90.
-  - A `lng` that is not finite or is outside -180 to 180.
-  - A `maxDistanceM` below 0 or above 250. The OpenAPI file gives the range 0 to 250.
-- The client writes each number in the query as a plain decimal, with no exponent: `lat=9.0`, not `lat=9e0`. Languages print a number in different forms, such as `1e-7`. One plain form gives every client the same query for the same input, and the mock server can match it.
+  - A `level` that is not a whole number from 1 to 5. The scenario `lookup-invalid-level` tests it.
+  - A `lat` that is not finite or is outside -90 to 90. The scenario `reverse-invalid-lat` tests it.
+  - A `lng` that is not finite or is outside -180 to 180. The scenario `reverse-invalid-lng` tests it.
+  - A `maxDistanceM` below 0 or above 250. The OpenAPI file gives the range 0 to 250. The gateway cuts a larger value to 250 without a sign, so the client rejects it. It does not return a result for another radius. The scenario `reverse-invalid-max-distance` tests it.
+- The client writes each number in the query in its shortest decimal form, with no exponent and no trailing zero: `lat=9`, not `lat=9.0` and not `lat=9e0`. A negative zero is written `0`. A small value is written in full: `0.0000001`, not `1e-7`. Languages print numbers in different forms, so one fixed form gives every client the same query for the same input. The mock server compares numbers by value, so it also accepts `9.0`. The scenarios `reverse-plain-decimal` and `reverse-whole-number` test this rule.
 - `autocomplete` normalises its text with the core. Empty text, text of more than 11 characters, and text with a character other than A to Z and 0 to 9 raise `invalid_input`, and the client sends no request. The gateway does not answer an empty `q`. The request sends the normalised text: `q=FC01Z`.
 
 ## Errors
@@ -132,11 +133,12 @@ The error code comes from the first row that matches.
 | status 502, 503 or 504 | `server_error` | yes |
 | any other status from 400 to 499 | `invalid_input` | no |
 | any other status that is not 200 | `server_error` | no |
-| status 200, with a body that is not a JSON object with a `data` field | `server_error` | no |
+| status 200, with a body that is not a JSON object with a `data` field, or with a part that this contract uses missing or of the wrong type | `unexpected_response` | no |
 | no response, because the connection failed | `network_error` | yes |
 | no response within `timeoutMs` | `timeout` | yes, except for `autocomplete` |
 
 - `apiCode` is set when the body is a JSON object whose `error.code` is text. The client never raises an error for an unexpected error body.
+- A part that is missing or has the wrong type gives `unexpected_response`. These parts are: `valid` of a lookup, `found` of a reverse, `suggestions` of an autocomplete, a `status` that is present, not null and not text, and a postcode of a reverse result that the core cannot parse. The client never returns a guessed empty value in their place. The scenarios `lookup-malformed-body`, `lookup-missing-valid`, `lookup-status-not-text`, `reverse-missing-found` and `autocomplete-suggestions-not-list` test this rule.
 - A cancelled call ends with the platform's own cancellation error, not with `PostcodeError` (API-11).
 - No error message holds the API key (ERR-3).
 
@@ -146,12 +148,16 @@ The error code comes from the first row that matches.
 - Before retry `n`, the first being 1, the client waits `500 x 2^(n - 1)` milliseconds, plus a random wait from 0 to 250 milliseconds. The first retry waits 500 to 750 ms, and the second waits 1000 to 1250 ms.
 - A 429 with `Retry-After` of 10 seconds or less: the client waits that long, with no random part, and retries. `Retry-After` can hold seconds or an HTTP date.
 - A 429 with a longer `Retry-After`: the client raises `rate_limited` at once, and `retryAfterMs` holds the wait. A caller can then tell a user when to try again.
-- A 429 with no `Retry-After`: the client raises `rate_limited` at once. The gateway counts requests in each clock minute, so a retry after half a second would fail too.
+- A 429 with no `Retry-After`, or with an invalid one: the client raises `rate_limited` at once. The gateway counts requests in each clock minute, so a retry after half a second would fail too.
+- A 502, 503 or 504 with a valid `Retry-After` of 10 seconds or less: the client waits that long, with no random part, as for a 429. A valid `Retry-After` is a whole number of seconds from 0 up, or an HTTP date that is not in the past. With any other value, or with no header, the client uses its own wait. `retryAfterMs` holds a valid value. The scenarios `lookup-retry-after-503` and `lookup-retry-after-invalid` test this rule.
+- A call has a total deadline. It starts when the client sends the first attempt. It lasts `(1 + maxRetries) x timeoutMs`, plus `500 x 2^(n - 1) + 250` milliseconds for each retry `n`. With the defaults for `lookup`, that is 26 seconds. When the next wait would end after the deadline, the client raises the error of the last attempt at once. The scenario `lookup-deadline` tests this rule.
 - The client does not retry a timeout of `autocomplete`. The next keystroke replaces the call.
 
 ## Sharing, queue and cache
 
 - Two calls of the same method with the same arguments share one request while the first one is in flight. Both callers get the same result or the same error.
+- The key of a shared request and of a cache entry is the method with the canonical form of the arguments. So `lookup("fc01z99zz01")` and `lookup("FC-01-Z99-ZZ-01")` share one request and one cache entry. The scenario `lookup-shared-spellings` tests the request.
+- A shared request stops only when every caller that shares it cancels. A cancelled call frees its place among the 4 at once.
 - A client sends at most 4 requests at a time. Further calls wait in a queue, in the order of the calls.
 - With `cacheTtlMs` above 0, the client keeps each result for that long. A call with the same method and the same arguments then gets the kept result, and the client sends no request. Errors stay out of the cache. `clearCache()` removes every kept result.
 
@@ -162,5 +168,7 @@ Each client tests these rules itself.
 - The programmer errors in the client options.
 - Cancellation (API-11), because each language cancels in its own way.
 - That no error message holds the API key.
+- The cancellation rules of sharing and the queue: a shared request stops only when every caller cancels, and a cancelled call frees its place among the 4.
+- The default `timeoutMs` of 15 seconds for `autocomplete`, because a scenario would wait that long.
 - The random part of each wait, beyond its bounds.
 - A `Retry-After` that holds an HTTP date. A scenario cannot hold a date that is a few seconds ahead.

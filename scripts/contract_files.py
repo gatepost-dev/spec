@@ -64,6 +64,8 @@ REQUIRED_SCENARIOS = (
 def error_codes(path: Path = CLIENT_DOC) -> list[str]:
     """Return the error codes in the table of the Errors section of client.md, in order."""
     section = path.read_text(encoding="utf-8").partition("\n## Errors\n")[2].partition("\n## ")[0]
+    if not section.strip():
+        raise ValueError(f"{path} has no Errors section.")
     codes = re.findall(r"^\| [^|]+ \| `([a-z_]+)` \|", section, flags=re.MULTILINE)
     return list(dict.fromkeys(codes))
 
