@@ -38,6 +38,8 @@ LEFT_TO_RIGHT_MARK = chr(0x200E)
 RIGHT_TO_LEFT_MARK = chr(0x200F)
 RIGHT_TO_LEFT_OVERRIDE = chr(0x202E)
 FULL_WIDTH_HYPHEN = chr(0xFF0D)
+COMBINING_ACUTE = chr(0x0301)
+HORIZONTAL_ELLIPSIS = chr(0x2026)
 ARABIC_INDIC_LEGACY = "".join(
     chr(code_point) for code_point in (0x0669, 0x0660, 0x0660, 0x0661, 0x0660, 0x0668)
 )
@@ -288,7 +290,25 @@ def parse_rows() -> list[Row]:
             failed("bad_length"),
         ),
         # 54 code points and 65 UTF-16 units. A runner that counts UTF-16 units rejects it.
-        row("counts code points, not UTF-16 units", MATH_BOLD_CODE + " " * 43, ok(CODE)),
+        row(
+            "counts code points, not UTF-16 units",
+            MATH_BOLD_CODE + " " * (limit - 2 * len(CODE) + 1),
+            ok(CODE),
+        ),
+        # 65 code points, but 1 grapheme cluster and 64 code points after NFKC.
+        row(
+            "counts combining marks as code points",
+            "E" + COMBINING_ACUTE * limit,
+            failed("bad_length"),
+        ),
+        # 33 code points, but 77 after NFKC, because NFKC changes U+2026 to 3 full stops.
+        row("counts the input before it normalises", CODE + HORIZONTAL_ELLIPSIS * 22, ok(CODE)),
+        # 65 code points. In many regex engines, $ also matches before a final line feed.
+        row(
+            "rejects input over the limit that ends in a line feed",
+            CODE + " " * (limit - len(CODE)) + LINE_FEED,
+            failed("bad_length"),
+        ),
     ]
 
 

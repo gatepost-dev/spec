@@ -754,6 +754,54 @@
           "unit": "01"
         }
       }
+    },
+    {
+      "id": "parse-045",
+      "description": "counts combining marks as code points",
+      "input": "E\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301\u0301",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-046",
+      "description": "counts the input before it normalises",
+      "input": "EK01A03FK01\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026\u2026",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "EK01A03FK01",
+        "canonical": "EK-01-A03-FK-01",
+        "display": "EK 01 A03 FK 01",
+        "precision": "unit",
+        "segments": {
+          "state": "EK",
+          "lga": "01",
+          "district": "A03",
+          "area": "FK",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-047",
+      "description": "rejects input over the limit that ends in a line feed",
+      "input": "EK01A03FK01                                                     \n",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "bad_length",
+          "segment": null,
+          "suggestion": null
+        }
+      }
     }
   ]
 }

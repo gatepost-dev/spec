@@ -30,9 +30,11 @@ A partial postcode stops after the state, LGA, district or area segment. Its len
 
 A format character that is not in the list stays. For example, the right-to-left override U+202E can change the order in which a code shows on screen, so `parse` gives `bad_character` for it.
 
+`normalize` has no length limit. Bound untrusted text before you call it, or call `parse`, which checks the limit first.
+
 ## Parse
 
-First count the Unicode code points of the input. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
+First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
 
 1. `empty`: no character is left.
 2. `legacy_code`: exactly 6 ASCII digits are left. These are old NIPOST postcodes.
