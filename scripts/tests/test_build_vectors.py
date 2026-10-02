@@ -54,6 +54,19 @@ class BuildVectorsTest(unittest.TestCase):
         self.assertEqual(parsed, codes)
         self.assertLessEqual(codes, named)
 
+    def test_each_separator_has_a_normalize_case(self) -> None:
+        postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))
+        expected = {"value": "EK01A03FK01"}
+        inputs = {
+            case["input"] for case in load("normalize")["cases"] if case["expect"] == expected
+        }
+        missing: list[str] = []
+        for label in postcode_format["separators"]:
+            separator = chr(int(label.removeprefix("U+"), 16))
+            if separator.join(("EK", "01", "A03", "FK", "01")) not in inputs:
+                missing.append(label)
+        self.assertEqual(missing, [])
+
     def test_each_gps_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
         rules = json.loads((ROOT / "data" / "precision.json").read_text(encoding="utf-8"))
         limits = [threshold["maxAccuracyM"] for threshold in rules["thresholds"]]
@@ -70,5 +83,5 @@ class BuildVectorsTest(unittest.TestCase):
         ):
             with self.subTest(limit=limit):
                 self.assertIn((limit, precision), measured)
-                above = [expected for metres, expected in measured if limit < metres <= ceiling]
+                above = [expected for metres, expected in measured if limit < metres < ceiling]
                 self.assertIn(next_precision, above)

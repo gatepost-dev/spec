@@ -522,6 +522,7 @@ def state_name_rows() -> list[Row]:
         row("returns nothing for an unknown code", "XX", value(None)),
         row("returns nothing for empty input", "", value(None)),
         row("returns nothing for three letters", "EKI", value(None)),
+        row("returns nothing for a code with spaces", " EK ", value(None)),
     ]
 
 

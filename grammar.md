@@ -35,7 +35,7 @@ A format character that is not in the list stays. For example, the right-to-left
 Normalise the input. Then apply these checks in order. The first check that fails gives the error code.
 
 1. `empty`: no character is left.
-2. `legacy_code`: exactly 6 digits are left. These are old NIPOST postcodes.
+2. `legacy_code`: exactly 6 ASCII digits are left. These are old NIPOST postcodes.
 3. `bad_character`: a character other than A to Z and 0 to 9 is left.
 4. `bad_length`: the length is not 11. With `allowPartial`, the lengths 2, 4, 7 and 9 also pass.
 5. `unknown_state`: the first two characters are not a code in `data/states.json`.
@@ -55,7 +55,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## Legacy codes
 
-`isLegacy` is true when the normalised input is exactly 6 digits.
+`isLegacy` is true when the normalised input is exactly 6 ASCII digits.
 
 ## Hierarchy
 
@@ -66,7 +66,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## State names
 
-`stateName(code)` returns the name in `data/states.json`, and it ignores letter case. An unknown code gives null. The codes follow ISO 3166-2:NG. All 11 state codes in NIPOST's published examples match it. A keyed autocomplete call must confirm the full list.
+`stateName(code)` returns the name in `data/states.json`, and it ignores letter case. It does not remove spaces or other characters. An unknown code gives null. The codes follow ISO 3166-2:NG. All 11 state codes in NIPOST's published examples match it. A keyed autocomplete call must confirm the full list.
 
 ## GPS precision
 

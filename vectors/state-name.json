@@ -380,6 +380,15 @@
       "expect": {
         "value": null
       }
+    },
+    {
+      "id": "state-name-043",
+      "description": "returns nothing for a code with spaces",
+      "input": " EK ",
+      "options": {},
+      "expect": {
+        "value": null
+      }
     }
   ]
 }
