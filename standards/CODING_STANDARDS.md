@@ -115,6 +115,8 @@ It covers the tool rules that no language tool covers:
 - **TELL-13.** It rejects the debug calls that the language file lists. It skips test files, comment lines and, in Python, doctest lines that start with `>>>` or `...`.
 - **TELL-14.** It rejects emojis in every file, including Markdown, message catalogues and lockfiles. It rejects other non-ASCII characters in code files, config files and commit messages. It also rejects a code or config file that is not valid UTF-8, because it cannot read the file. It skips any other file that is not valid UTF-8, because the file can be an image. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because translations and contributors' names can need any script. A message catalogue is a data file: a file that is not code in a folder named `locales`, `i18n`, `l10n` or `messages`, a `.po`, `.arb`, `.xlf`, `.xliff`, `.strings` or `.stringsdict` file, or an Android `strings.xml`. A code file in such a folder is code, so translations live in data files.
 - **TELL-18.** With `--commit-msg <file>`, it checks the length of a commit subject. Repos without commitlint use this mode.
+- **GIT-1.** With `--squash-msg <file>`, it checks the message that a squash merge puts on `main`. That message is the pull request title, then ` (#N)`, then the pull request body. The subject must start with a type from the Conventional Commits list, then a colon and a space. TELL-14 and TELL-18 apply to the same message, and the ` (#N)` counts towards the 72 characters. The tool leaves out the HTML comments of the body, which no reader sees. Renovate ends each body with one. With `--no-scope`, the subject must also have no scope, as GIT-1 asks of a repo without packages.
+- **GIT-2.** The squash message must have a line `Signed-off-by: Name <address>`, and the address must not be the placeholder of the pull request template. The message must not hold the placeholder paragraph or the line `Closes #` of that template. With `--signed-off <range>`, the tool checks that each commit in a git revision range has a `Signed-off-by` line. It skips merge commits, and it applies no other message rule to a commit, because only the squash message reaches `main`.
 
 A line in a code or config file can skip one check with a comment that names the rule and gives a reason, for example `check-tells: allow TELL-1 because the regex cannot be split`. Reviewers check each skip.
 
@@ -181,7 +183,7 @@ The command exits with 0 when all files pass, with 1 when a rule is broken, and 
 - **GIT-3 MUST.** Commits do not carry co-author lines for AI tools. The person who opens the pull request owns the change.
 - **GIT-4 MUST.** Nobody force-pushes to `main` or to a shared branch.
 - **GIT-5 SHOULD.** A pull request changes at most about 400 lines. Tests, vectors and generated files do not count.
-- **GIT-6 MUST.** A pull request needs one approval and green CI. Merges use squash.
+- **GIT-6 MUST.** A pull request needs one approval and green CI. Merges use squash. The title of the pull request becomes the subject of the commit on `main`, and its body becomes the body, so both follow GIT-1, GIT-2 and TELL-18.
 - **GIT-7 MUST.** A pull request that changes the public interface also updates the API report, the docs and a change file. **(tool)**
 - **GIT-8 MUST.** Each package exposes a `SPEC_VERSION` constant. It names the spec version that the package implements.
 

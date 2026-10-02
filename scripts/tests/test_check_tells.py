@@ -5,6 +5,7 @@
 import contextlib
 import io
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -13,7 +14,14 @@ from pathlib import Path
 from unittest import mock
 
 import check_tells
-from check_tells import Violation, check_commit_message, check_text, classify
+from check_tells import (
+    Violation,
+    check_commit_message,
+    check_signed_off,
+    check_squash_message,
+    check_text,
+    classify,
+)
 
 EMOJI = chr(0x1F600)
 NO_BREAK_SPACE = chr(0x00A0)
@@ -288,6 +296,34 @@ LANGUAGE_BY_PATH = {
 }
 
 
+SIGN_OFF_LINE = "Signed-off-by: Ada Bello <ada@example.org>"
+PLACEHOLDER_PARAGRAPH = (
+    "Write two or three sentences of plain prose that say what this change does and why."
+)
+COMMIT_TYPES = (
+    "build",
+    "chore",
+    "ci",
+    "docs",
+    "feat",
+    "fix",
+    "perf",
+    "refactor",
+    "revert",
+    "style",
+    "test",
+)
+# A host with a signing key in its git config must not sign the commits of these tests.
+GIT_ENVIRONMENT = {
+    "GIT_CONFIG_GLOBAL": os.devnull,
+    "GIT_CONFIG_SYSTEM": os.devnull,
+    "GIT_AUTHOR_NAME": "Ada Bello",
+    "GIT_AUTHOR_EMAIL": "ada@example.org",
+    "GIT_COMMITTER_NAME": "Ada Bello",
+    "GIT_COMMITTER_EMAIL": "ada@example.org",
+}
+
+
 def rules(violations: list[Violation]) -> list[str]:
     return [violation.rule for violation in violations]
 
@@ -299,6 +335,31 @@ def git_repo() -> Iterator[Path]:
         root = Path(folder).resolve()
         subprocess.run(["git", "init", "-q", str(root)], check=True)
         yield root
+
+
+def git(root: Path, *args: str) -> str:
+    """Run git in a test repo and give its standard output."""
+    run = subprocess.run(
+        ["git", "-C", str(root), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        env={**os.environ, **GIT_ENVIRONMENT},
+    )
+    return run.stdout.strip()
+
+
+def commit(root: Path, message: str) -> str:
+    """Make an empty commit and give its hash."""
+    git(root, "-c", "commit.gpgsign=false", "commit", "--allow-empty", "-q", "-m", message)
+    return git(root, "rev-parse", "HEAD")
+
+
+def squash(
+    subject: str, body: str = "Why the change is needed.", sign_off: str = SIGN_OFF_LINE
+) -> str:
+    """Build a squash merge message from a title with its suffix, a body and a sign-off."""
+    return f"{subject}\n\n{body}\n\n{sign_off}\n"
 
 
 def run_main(*args: str) -> tuple[int, str, str]:
@@ -1081,3 +1142,452 @@ class BadInputTest(unittest.TestCase):
         self.assertEqual(run.stdout, "")
         self.assertNotIn("Traceback", run.stderr)
         self.assertEqual(len(run.stderr.splitlines()), 1)
+
+
+class ConventionalSubjectTest(unittest.TestCase):
+    def test_accepts_each_commit_type(self) -> None:
+        for kind in COMMIT_TYPES:
+            with self.subTest(kind=kind):
+                self.assertEqual(check_squash_message(squash(f"{kind}: reject a unit")), [])
+
+    def test_accepts_a_mark_for_a_breaking_change(self) -> None:
+        self.assertEqual(check_squash_message(squash("feat!: drop the old name (#4)")), [])
+
+    def test_rejects_a_subject_that_does_not_follow_the_form(self) -> None:
+        subjects = [
+            "Foundation: standards and grammar (#1)",
+            "Fix: reject a unit",
+            "fix:reject a unit",
+            "fix : reject a unit",
+            "fix(): reject a unit",
+            "fix",
+            "fix: ",
+            "Update files",
+            ": reject a unit",
+            "fix(core:) reject a unit",
+        ]
+        for subject in subjects:
+            with self.subTest(subject=subject):
+                found = check_squash_message(squash(subject))
+                self.assertEqual(rules(found), ["GIT-1"])
+                self.assertEqual((found[0].line, found[0].column), (1, 1))
+                self.assertIn("does not follow Conventional Commits", found[0].message)
+
+    def test_rejects_a_type_that_conventional_commits_does_not_list(self) -> None:
+        for kind in ("update", "feature", "bugfix", "wip", "chores"):
+            with self.subTest(kind=kind):
+                found = check_squash_message(squash(f"{kind}: reject a unit"))
+                self.assertEqual(rules(found), ["GIT-1"])
+                self.assertIn(f"'{kind}' is not a Conventional Commits type", found[0].message)
+
+    def test_names_each_type_that_it_accepts(self) -> None:
+        found = check_squash_message(squash("update: reject a unit"))
+        self.assertIn(
+            "build, chore, ci, docs, feat, fix, perf, refactor, revert, style or test",
+            found[0].message,
+        )
+
+    def test_accepts_a_scope_unless_the_repo_has_none(self) -> None:
+        self.assertEqual(check_squash_message(squash("fix(core): reject a unit")), [])
+        self.assertEqual(check_squash_message(squash("fix(core)!: reject a unit")), [])
+
+    def test_rejects_a_scope_in_a_repo_that_has_none(self) -> None:
+        for subject in ("fix(core): reject a unit", "feat(deps)!: drop a name"):
+            with self.subTest(subject=subject):
+                found = check_squash_message(squash(subject), no_scope=True)
+                self.assertEqual(rules(found), ["GIT-1"])
+                self.assertEqual((found[0].line, found[0].column), (1, subject.index("(") + 1))
+                self.assertIn("Remove the scope", found[0].message)
+
+    def test_accepts_a_subject_without_a_scope_in_a_repo_that_has_none(self) -> None:
+        self.assertEqual(check_squash_message(squash("fix: reject a unit"), no_scope=True), [])
+
+    def test_rejects_a_message_that_has_no_subject(self) -> None:
+        found = check_squash_message("\n  \n")
+        self.assertEqual(sorted(rules(found)), ["GIT-1", "GIT-2"])
+        self.assertEqual(found[0].message, "The message has no subject.")
+
+    def test_rejects_the_default_squash_subject_of_a_pull_request_with_no_type(self) -> None:
+        title = "Foundation: standards, grammar, data, shared vectors and check-tells (#1)"
+        found = check_squash_message(squash(title), no_scope=True)
+        self.assertEqual(sorted(rules(found)), ["GIT-1", "TELL-18"])
+
+    def test_reads_the_first_line_that_has_text_as_the_subject(self) -> None:
+        found = check_squash_message("\n\nupdate: x\n\nbody\n\n" + SIGN_OFF_LINE)
+        self.assertEqual([(v.rule, v.line) for v in found], [("GIT-1", 3)])
+
+
+class SquashMessageTest(unittest.TestCase):
+    def test_accepts_a_good_message(self) -> None:
+        message = (
+            "fix: reject a unit of 00 (#7)\n\n"
+            "The parser accepted a unit of 00. It now returns bad_segment.\n\n"
+            "Closes #5\n\n" + SIGN_OFF_LINE + "\n"
+        )
+        self.assertEqual(check_squash_message(message, no_scope=True), [])
+
+    def test_counts_the_suffix_that_the_merge_adds_to_the_title(self) -> None:
+        self.assertEqual(check_squash_message(squash("fix: " + "a" * 62 + " (#7)")), [])
+        found = check_squash_message(squash("fix: " + "a" * 63 + " (#7)"))
+        self.assertEqual(rules(found), ["TELL-18"])
+        self.assertEqual(found[0].column, 73)
+        self.assertIn("The subject has 73 characters. Use 72 or fewer.", found[0].message)
+        self.assertIn("(#N)", found[0].message)
+
+    def test_reads_a_line_that_starts_with_a_hash_as_text(self) -> None:
+        body = f"## Notes {EMOJI}\n# {EM_DASH} here"
+        found = check_squash_message(squash("fix: reject a unit", body=body))
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 3), ("TELL-14", 4)])
+
+    def test_reads_a_line_that_starts_with_a_hash_as_a_comment_in_a_commit_file(self) -> None:
+        message = f"fix: reject a unit\n\n## Notes {EMOJI}\n"
+        self.assertEqual(check_commit_message(message), [])
+
+    def test_rejects_non_ascii_in_the_body_but_not_in_a_sign_off(self) -> None:
+        found = check_squash_message(squash("fix: a unit", body=f"Use a dash {EM_DASH} here."))
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 3)])
+        sign_off = f"Signed-off-by: Ad{E_ACUTE} Bello <ada@example.org>"
+        self.assertEqual(check_squash_message(squash("fix: a unit", sign_off=sign_off)), [])
+
+    def test_treats_crlf_like_lf(self) -> None:
+        message = squash("fix: reject a unit (#7)", body="Closes #5").replace("\n", "\r\n")
+        self.assertEqual(check_squash_message(message), [])
+
+    def test_reports_every_problem_once(self) -> None:
+        message = "Update files\n\n" + PLACEHOLDER_PARAGRAPH + "\n\nCloses #\n"
+        found = check_squash_message(message)
+        self.assertEqual(sorted(rules(found)), ["GIT-1", "GIT-2", "TELL-18", "TELL-18"])
+
+
+class HtmlCommentTest(unittest.TestCase):
+    RENOVATE_COMMENT = "<!--renovate-debug:eyJjcmVhdGVkSW5WZXIiOiI0NC4xMzIuMiJ9-->"
+
+    def test_leaves_out_the_comment_that_renovate_ends_a_body_with(self) -> None:
+        message = squash("ci: update an action (#4)", body="Update a pinned tool or action.")
+        self.assertEqual(check_squash_message(message + self.RENOVATE_COMMENT + "\n"), [])
+
+    def test_leaves_out_the_text_that_a_comment_holds(self) -> None:
+        hidden = [
+            EMOJI,
+            f"a dash {EM_DASH} here",
+            "Closes #",
+            PLACEHOLDER_PARAGRAPH,
+            "Signed-off-by: Your Name <you@example.com>",
+        ]
+        for text in hidden:
+            with self.subTest(text=text):
+                body = f"Why the change is needed.\n\n<!-- {text} -->"
+                self.assertEqual(check_squash_message(squash("fix: a unit", body=body)), [])
+
+    def test_leaves_out_a_comment_that_spans_lines(self) -> None:
+        body = f"Why the change is needed.\n\n<!--\nClose the issue.\n{EMOJI}\nCloses #\n-->"
+        self.assertEqual(check_squash_message(squash("fix: a unit", body=body)), [])
+
+    def test_keeps_the_place_of_the_text_around_a_comment(self) -> None:
+        body = f"Use a dash <!-- a\nb --> {EM_DASH} here."
+        found = check_squash_message(squash("fix: a unit", body=body))
+        self.assertEqual([(v.rule, v.line, v.column) for v in found], [("TELL-14", 4, 7)])
+
+    def test_leaves_out_each_comment_of_a_line_and_not_the_text_between_them(self) -> None:
+        body = f"Fix <!-- {EMOJI} --> the {EM_DASH} unit <!-- {EMOJI} --> rule."
+        found = check_squash_message(squash("fix: a unit", body=body))
+        self.assertEqual(
+            [(v.rule, v.line, v.column) for v in found], [("TELL-14", 3, body.index(EM_DASH) + 1)]
+        )
+
+    def test_does_not_count_a_sign_off_that_a_comment_holds(self) -> None:
+        body = f"Why the change is needed.\n\n<!-- {SIGN_OFF_LINE} -->"
+        found = check_squash_message(f"fix: a unit\n\n{body}\n")
+        self.assertEqual(rules(found), ["GIT-2"])
+        self.assertIn("The message has no Signed-off-by line.", found[0].message)
+
+    def test_reads_a_comment_that_does_not_end_as_text(self) -> None:
+        body = f"Why the change is needed.\n\n<!-- {EMOJI}"
+        found = check_squash_message(squash("fix: a unit", body=body))
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 5)])
+
+    def test_reads_a_comment_in_the_title_as_text(self) -> None:
+        found = check_squash_message(squash(f"fix: a unit <!-- {EMOJI} -->"))
+        self.assertEqual([(v.rule, v.line) for v in found], [("TELL-14", 1)])
+
+    def test_reads_a_comment_in_a_message_with_crlf(self) -> None:
+        body = f"Why the change is needed.\n\n<!--\n{EMOJI}\n-->"
+        message = squash("fix: a unit", body=body).replace("\n", "\r\n")
+        self.assertEqual(check_squash_message(message), [])
+
+    def test_leaves_out_nothing_in_a_commit_message_file(self) -> None:
+        message = f"fix: a unit\n\n<!-- {EMOJI} -->\n"
+        self.assertEqual(rules(check_commit_message(message)), ["TELL-14"])
+
+
+class SignOffTest(unittest.TestCase):
+    def test_requires_a_sign_off(self) -> None:
+        found = check_squash_message("fix: reject a unit\n\nWhy the change is needed.\n")
+        self.assertEqual(rules(found), ["GIT-2"])
+        self.assertEqual((found[0].line, found[0].column), (1, 1))
+        self.assertIn("The message has no Signed-off-by line.", found[0].message)
+
+    def test_reads_each_form_of_a_sign_off(self) -> None:
+        forms = [
+            "Signed-off-by: Ada Bello <ada@example.org>",
+            "signed-off-by: Ada Bello <ada@example.org>",
+            "SIGNED-OFF-BY: Ada Bello <ada@example.org>",
+            "Signed-off-by:  Ada Bello  <ada@example.org>  ",
+            "Signed-off-by: A <a@b.c>",
+            f"Signed-off-by: Ad{E_ACUTE} Bello <ada@example.org>",
+            "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>",
+        ]
+        for form in forms:
+            with self.subTest(form=form):
+                self.assertEqual(check_squash_message(squash("fix: a unit", sign_off=form)), [])
+
+    def test_rejects_each_line_that_only_looks_like_a_sign_off(self) -> None:
+        forms = [
+            "Signed-off-by:",
+            "Signed-off-by: Ada Bello",
+            "Signed-off-by: <ada@example.org>",
+            "Signed-off-by: Ada Bello <ada>",
+            "Signed-off-by: Ada Bello ada@example.org",
+            "Signed-off-by Ada Bello <ada@example.org>",
+            "Reviewed-by: Ada Bello <ada@example.org>",
+            "Co-authored-by: Ada Bello <ada@example.org>",
+            "- Signed-off-by: Ada Bello <ada@example.org>",
+            "Signed-off-by: Ada <Bello> <ada@example.org>",
+        ]
+        for form in forms:
+            with self.subTest(form=form):
+                found = check_squash_message(squash("fix: a unit", sign_off=form))
+                self.assertEqual(rules(found), ["GIT-2"])
+
+    def test_rejects_the_placeholder_address_of_the_template(self) -> None:
+        sign_off = "Signed-off-by: Your Name <you@example.com>"
+        found = check_squash_message(squash("fix: a unit", sign_off=sign_off))
+        self.assertEqual(rules(found), ["GIT-2"])
+        self.assertEqual((found[0].line, found[0].column), (5, 1))
+        self.assertIn("placeholder address", found[0].message)
+
+    def test_rejects_the_placeholder_address_in_any_letter_case(self) -> None:
+        sign_off = "Signed-off-by: Ada Bello <You@Example.com>"
+        found = check_squash_message(squash("fix: a unit", sign_off=sign_off))
+        self.assertEqual(rules(found), ["GIT-2"])
+
+    def test_rejects_the_placeholder_address_next_to_a_real_sign_off(self) -> None:
+        body = "Signed-off-by: Your Name <you@example.com>"
+        found = check_squash_message(squash("fix: a unit", body=body))
+        self.assertEqual([(v.rule, v.line) for v in found], [("GIT-2", 3)])
+
+    def test_accepts_the_placeholder_address_in_prose(self) -> None:
+        body = "The template shows you@example.com in its sign-off line."
+        self.assertEqual(check_squash_message(squash("docs: fix a template", body=body)), [])
+
+
+class TemplateTextTest(unittest.TestCase):
+    def test_rejects_the_placeholder_paragraph_of_the_template(self) -> None:
+        found = check_squash_message(squash("fix: a unit", body=PLACEHOLDER_PARAGRAPH))
+        self.assertEqual(rules(found), ["TELL-18"])
+        self.assertEqual((found[0].line, found[0].column), (3, 1))
+        self.assertIn("placeholder paragraph", found[0].message)
+
+    def test_rejects_the_paragraph_after_an_edit_of_its_end_or_its_layout(self) -> None:
+        bodies = [
+            PLACEHOLDER_PARAGRAPH + " This change fixes a unit.",
+            "  " + PLACEHOLDER_PARAGRAPH,
+            PLACEHOLDER_PARAGRAPH.removesuffix("."),
+            "Write two or three sentences of plain prose\nthat say what this change does.",
+        ]
+        for body in bodies:
+            with self.subTest(body=body):
+                found = check_squash_message(squash("fix: a unit", body=body))
+                self.assertEqual(rules(found), ["TELL-18"])
+
+    def test_accepts_a_body_that_only_mentions_the_words(self) -> None:
+        bodies = [
+            "The template asks the author to write two or three sentences of plain prose.",
+            "The template says: Write two or three sentences of plain prose.",
+        ]
+        for body in bodies:
+            with self.subTest(body=body):
+                found = check_squash_message(squash("docs: fix a template", body=body))
+                self.assertEqual(found, [])
+
+    def test_rejects_an_empty_closes_line(self) -> None:
+        for body in ("Closes #", "closes #", "Closes #   ", "  Closes #"):
+            with self.subTest(body=body):
+                found = check_squash_message(squash("fix: a unit", body=body))
+                self.assertEqual(rules(found), ["TELL-18"])
+                self.assertEqual(found[0].line, 3)
+                self.assertIn("Closes #", found[0].message)
+
+    def test_accepts_a_closes_line_with_an_issue(self) -> None:
+        for body in ("Closes #5", "Closes #5, closes #6", "Fixes #12"):
+            with self.subTest(body=body):
+                self.assertEqual(check_squash_message(squash("fix: a unit", body=body)), [])
+
+
+class SignedOffRangeTest(unittest.TestCase):
+    def test_reports_each_commit_without_a_sign_off(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            signed = commit(root, "feat: a\n\n" + SIGN_OFF_LINE)
+            unsigned = commit(root, "fix: b")
+            found = check_signed_off(root, f"{base}..HEAD")
+        self.assertEqual([(v.path, v.rule) for v in found], [(f"commit {unsigned[:12]}", "GIT-2")])
+        self.assertNotIn(signed[:12], str(found))
+
+    def test_accepts_a_range_where_each_commit_has_a_sign_off(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            commit(root, "feat: a\n\n" + SIGN_OFF_LINE)
+            commit(root, "fix: b\n\nWhy.\n\n" + SIGN_OFF_LINE)
+            self.assertEqual(check_signed_off(root, f"{base}..HEAD"), [])
+
+    def test_ignores_the_commits_before_the_range(self) -> None:
+        with git_repo() as root:
+            commit(root, "chore: start")
+            base = commit(root, "chore: second")
+            commit(root, "feat: a\n\n" + SIGN_OFF_LINE)
+            self.assertEqual(check_signed_off(root, f"{base}..HEAD"), [])
+
+    def test_skips_a_merge_commit(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            branch = git(root, "rev-parse", "--abbrev-ref", "HEAD")
+            git(root, "checkout", "-q", "-b", "topic")
+            commit(root, "feat: a\n\n" + SIGN_OFF_LINE)
+            git(root, "checkout", "-q", branch)
+            commit(root, "fix: b\n\n" + SIGN_OFF_LINE)
+            git(
+                root, "-c", "commit.gpgsign=false", "merge", "--no-ff", "-q", "-m", "Merge", "topic"
+            )
+            self.assertEqual(check_signed_off(root, f"{base}..HEAD"), [])
+
+    def test_reads_a_line_that_starts_with_a_hash_as_text(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            commit(root, "fix: b\n\n# Signed-off-by: Ada Bello <ada@example.org>")
+            self.assertEqual(rules(check_signed_off(root, f"{base}..HEAD")), ["GIT-2"])
+
+    @unittest.skipUnless(shutil.which("ssh-keygen"), "ssh-keygen makes the signing key")
+    def test_gives_the_hash_of_a_signed_commit_when_git_shows_signatures(self) -> None:
+        with git_repo() as root, tempfile.TemporaryDirectory() as keys:
+            key = Path(keys) / "key"
+            subprocess.run(
+                ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(key)], check=True
+            )
+            allowed = Path(keys) / "allowed"
+            allowed.write_text(f"ada@example.org {key.with_suffix('.pub').read_text()}")
+            settings = {
+                "gpg.format": "ssh",
+                "user.signingkey": str(key),
+                "gpg.ssh.allowedSignersFile": str(allowed),
+                "log.showSignature": "true",
+            }
+            for name, value in settings.items():
+                git(root, "config", name, value)
+            base = commit(root, "chore: start")
+            git(root, "commit", "--allow-empty", "-q", "-S", "-m", "fix: b")
+            signed = git(root, "rev-parse", "HEAD")
+            found = check_signed_off(root, f"{base}..HEAD")
+        self.assertEqual([violation.path for violation in found], [f"commit {signed[:12]}"])
+
+    def test_does_not_reject_non_ascii_in_a_commit_message(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            commit(root, f"fix: caf{E_ACUTE}\n\n" + SIGN_OFF_LINE)
+            self.assertEqual(check_signed_off(root, f"{base}..HEAD"), [])
+
+    def test_does_not_run_the_other_message_rules_on_a_commit(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            commit(root, "Update files " + EMOJI + "\n\n" + SIGN_OFF_LINE)
+            self.assertEqual(check_signed_off(root, f"{base}..HEAD"), [])
+
+    def test_reads_the_range_from_the_command_line(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            unsigned = commit(root, "fix: b")
+            status, output, errors = run_main("--root", str(root), "--signed-off", f"{base}..HEAD")
+        self.assertEqual((status, errors), (1, ""))
+        self.assertEqual(len(output.splitlines()), 1)
+        self.assertTrue(output.startswith(f"commit {unsigned[:12]}:1:1: GIT-2 "), output)
+
+    def test_exits_with_0_when_each_commit_has_a_sign_off(self) -> None:
+        with git_repo() as root:
+            base = commit(root, "chore: start")
+            commit(root, "fix: b\n\n" + SIGN_OFF_LINE)
+            result = run_main("--root", str(root), "--signed-off", f"{base}..HEAD")
+        self.assertEqual(result, (0, "", ""))
+
+    def test_reports_a_range_that_git_cannot_read(self) -> None:
+        with git_repo() as root:
+            commit(root, "chore: start")
+            status, output, errors = run_main("--root", str(root), "--signed-off", "nope..HEAD")
+        self.assertEqual((status, output), (2, ""))
+        self.assertEqual(len(errors.splitlines()), 1, errors)
+        self.assertIn("nope..HEAD", errors)
+
+    def test_does_not_read_a_range_as_an_option(self) -> None:
+        with git_repo() as root:
+            commit(root, "chore: start")
+            status, output, errors = run_main("--root", str(root), "--signed-off=--all")
+        self.assertEqual((status, output), (2, ""))
+        self.assertEqual(len(errors.splitlines()), 1, errors)
+
+
+class SquashCommandTest(unittest.TestCase):
+    def run_with_message(self, text: str, *options: str) -> tuple[int, str, str]:
+        with tempfile.TemporaryDirectory() as folder:
+            message = Path(folder) / "message"
+            message.write_text(text, encoding="utf-8")
+            return run_main("--squash-msg", str(message), *options)
+
+    def test_exits_with_0_for_a_good_message(self) -> None:
+        result = self.run_with_message(squash("fix: reject a unit (#7)"), "--no-scope")
+        self.assertEqual(result, (0, "", ""))
+
+    def test_exits_with_1_and_prints_each_problem(self) -> None:
+        status, output, errors = self.run_with_message("Update files\n\nBody\n")
+        self.assertEqual((status, errors), (1, ""))
+        self.assertEqual(
+            [line.split(" ")[:3] for line in output.splitlines()],
+            [["commit", "message:1:1:", "GIT-1"], ["commit", "message:1:1:", "GIT-2"]],
+        )
+
+    def test_rejects_a_scope_only_with_the_no_scope_option(self) -> None:
+        message = squash("fix(core): reject a unit (#7)")
+        self.assertEqual(self.run_with_message(message), (0, "", ""))
+        status, output, _ = self.run_with_message(message, "--no-scope")
+        self.assertEqual(status, 1)
+        self.assertIn("commit message:1:4: GIT-1 Remove the scope (core).", output)
+
+    def test_reads_a_squash_message_that_is_not_utf_8(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            message = Path(folder) / "message"
+            message.write_bytes(b"fix: parse caf\xe9\n\n" + SIGN_OFF_LINE.encode() + b"\n")
+            status, output, _ = run_main("--squash-msg", str(message))
+        self.assertEqual(status, 1)
+        self.assertIn("commit message:1:15: TELL-14 Byte 0xE9 is not valid UTF-8.", output)
+
+    def test_reports_a_squash_message_file_that_does_not_exist(self) -> None:
+        status, output, errors = run_main("--squash-msg", "no-such-file")
+        self.assertEqual((status, output), (2, ""))
+        self.assertEqual(len(errors.splitlines()), 1)
+
+    def test_asks_for_a_squash_message_when_it_gets_the_no_scope_option(self) -> None:
+        errors = io.StringIO()
+        with self.assertRaises(SystemExit) as caught, contextlib.redirect_stderr(errors):
+            check_tells.main(["--no-scope"])
+        self.assertEqual(caught.exception.code, 2)
+        self.assertIn("--no-scope needs --squash-msg", errors.getvalue())
+
+    def test_reads_one_kind_of_message_at_a_time(self) -> None:
+        for options in (
+            ["--commit-msg", "a", "--squash-msg", "b"],
+            ["--commit-msg", "a", "--signed-off", "b..c"],
+            ["--squash-msg", "a", "--signed-off", "b..c"],
+        ):
+            with self.subTest(options=options):
+                errors = io.StringIO()
+                with self.assertRaises(SystemExit) as caught, contextlib.redirect_stderr(errors):
+                    check_tells.main(options)
+                self.assertEqual(caught.exception.code, 2)

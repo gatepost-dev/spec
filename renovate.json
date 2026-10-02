@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "customManagers:makefileVersions",
+    "schedule:weekly"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitScope": "",
+  "commitTrailers": ["Signed-off-by: {{{gitAuthor}}}"],
+  "prBodyTemplate": "{{{notes}}}",
+  "prBodyNotes": [
+    "Update a pinned tool or action.",
+    "Signed-off-by: Renovate Bot <bot@renovateapp.com>"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "ci"
+    }
+  ]
+}

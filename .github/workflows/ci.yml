@@ -12,8 +12,11 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
+      # A failure on one Python version must not hide the result on the other.
+      fail-fast: false
       matrix:
         # The oldest Python that the scripts support, and the newest release.
         python-version: ["3.11", "3.x"]
@@ -31,7 +34,8 @@ jobs:
       - run: make check
 
   secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
