@@ -7,7 +7,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 ## Versions
 
 - Published packages run on Node 22 or later. Node 22 reaches end of life on 30 Apr 2027. Raise the floor to Node 24 before then (VER-2).
-- The development tools need Node 22.22.2 or later, or Node 24.15 or later. CI runs the tests on Node 22 and Node 24, and the other tools on Node 24.
+- The development tools need Node 22.22.2 or a later 22.x release, or Node 24.15 or later. CI runs the tests on Node 22 and Node 24, and the other tools on Node 24.
 - TypeScript 6.0. typescript-eslint supports only TypeScript versions below 6.1, so TypeScript 7 waits until typescript-eslint supports it. This was checked on 1 Oct 2026.
 - React 18 and React 19, for `@gatepost/react`.
 - Current evergreen browsers and Safari 16.4 or later, for browser code.
@@ -31,7 +31,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 | publint and `@arethetypeswrong/cli` | package checks | every published package |
 | API Extractor | API report | `etc/<package>.api.md`, checked in CI |
 | Changesets | versions and changelogs | one change file per user-visible change |
-| commitlint | commit messages | `@commitlint/config-conventional`, scopes from package names |
+| commitlint | commit messages | `@commitlint/config-conventional`, scopes from package names, and `scope-empty` set to `never`, so each commit needs a scope (GIT-1) |
 | REUSE | licence headers | `reuse lint` |
 | gitleaks | secret scan | each pull request and each push to `main` |
 | `spec/scripts/check-tells` | agent tells | line length 100, file names, TODO form, debug calls, emojis and non-ASCII |
@@ -73,9 +73,13 @@ tsdown builds the packages, so `tsc` only checks types. Each package's `tsconfig
 | `no-restricted-exports` with `restrictDefaultExports` | error | TS-1 |
 | `no-console` | error in packages | TS-12 |
 | `@eslint-community/eslint-comments/require-description` | error | TS-13 |
+| `eslint --max-warnings 0` | a warning fails the check, such as an unused `eslint-disable` comment | TS-13 |
 | `jsdoc/require-jsdoc` with `publicOnly: true`, and `jsdoc/require-example` for exported functions, with `exemptedBy: ['internal']` | error in packages | TS-9 |
 | `jsdoc/tag-lines` with `startLines: 1` | error in packages | one blank line between a description and its tags |
-| `no-restricted-imports` for `node:*` | error in `packages/*/src` | CS-2 |
+| `@typescript-eslint/explicit-module-boundary-types` | error in `packages/*/src` | TS-8 |
+| `@typescript-eslint/no-non-null-assertion` | off in `packages/*/test` | TS-4 |
+| `no-restricted-imports` for every Node built-in module, by bare name and as `node:*` | error in `packages/*/src` | CS-2 |
+| `no-restricted-globals` for `process`, `Buffer`, `__dirname`, `__filename` and `global` | error in `packages/*/src` | CS-2 |
 | `max-depth` | 3 | TELL-2 |
 | `complexity` | 10 | TELL-2 |
 | `max-params` | 4 | TELL-3 |
@@ -95,10 +99,11 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 - **TS-3 MUST.** Do not use `any`. Narrow `unknown` instead. **(tool)**
 - **TS-4 MUST.** Do not use non-null assertions outside tests. **(tool)**
 - **TS-5 MUST.** Do not use `enum` or `namespace`. Use string literal unions and modules. **(tool)**
-- **TS-6 MUST.** Public types use `readonly` properties and `ReadonlyArray`.
+- **TS-6 MUST.** Public types use `readonly` properties and `readonly` arrays, written `readonly T[]`.
 - **TS-7 MUST.** A result type is a discriminated union with an `ok` field.
 - **TS-8 MUST.** Each exported function and method declares its return type. **(tool)**
 - **TS-9 MUST.** Each exported function has a TSDoc comment with `@example`. Each exported type and constant has a TSDoc comment. A helper that other modules use, but that `src/index.ts` does not export, carries the tag `@internal`. **(tool)**
+- **TS-22 MUST.** Write an options object type inline as `Readonly<{ name?: Type }>`, and document it with one `@param options` line. The literal `readonly` form fails `eslint-plugin-jsdoc`, and a dotted `@param` name fails the TSDoc parser that API Extractor uses.
 - **TS-10 MUST.** An error class extends `Error`, sets `name` and passes `cause`.
 - **TS-11 MUST.** A `catch` block treats its value as `unknown` and narrows it. **(tool)**
 - **TS-12 MUST.** Packages do not call `console`. **(tool)**

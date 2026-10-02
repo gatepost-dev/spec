@@ -41,6 +41,7 @@ _Avoid_: building number, house number, delivery unit
 **Partial postcode**:
 A postcode that stops after the state, LGA, district or area segment.
 _Avoid_: prefix, incomplete code
+Exception: `prefix` is the name of the first parameter of `contains`.
 
 **Precision**:
 The most specific segment that a postcode or a result contains.
@@ -59,6 +60,10 @@ _Avoid_: formatted, standard form
 **Display form**:
 The postcode with spaces between segments, for example `EK 01 A03 FK 01`.
 _Avoid_: pretty, human form
+
+**Normalise**:
+To change input in three steps, in this order: apply NFKC, remove the separators, and change the ASCII letters to upper case. `grammar.md` defines the steps.
+_Avoid_: sanitise, canonicalise
 
 ### NIPOST's API
 
@@ -135,3 +140,15 @@ _Avoid_: verify, validate (for this step)
 **Tell**:
 A habit that makes code look machine-written, such as very long lines.
 _Avoid_: smell (smells are design problems), anti-pattern
+
+**Code point**:
+One Unicode code point. It is not a UTF-16 unit, a byte or a grapheme cluster. For example, U+1D404 is one code point and two UTF-16 units.
+_Avoid_: character (when you count input), char
+
+**Input limit**:
+The most code points that `parse` and `isLegacy` read. It is `maxInputCodePoints` in `data/format.json`. Over the limit, `parse` gives `bad_length` and `isLegacy` gives false. Both functions apply the limit before they normalise.
+_Avoid_: max length, length limit, size limit
+
+**Suggestion**:
+The canonical code that `parse` offers with `unknown_state` or `bad_segment`, when a fix of look-alike characters makes the code parse. It is a hint, never a success.
+_Avoid_: correction, autocorrect

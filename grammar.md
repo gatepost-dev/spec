@@ -55,14 +55,14 @@ For `unknown_state` and `bad_segment`, build one corrected code:
 
 Parse the corrected code with the same options. If it parses, the suggestion is its canonical form. If it does not parse, or if no character changed, the suggestion is null. A suggestion is a hint only. `parse` never returns a corrected code as a success.
 
-## Legacy codes
+## Legacy postcodes
 
 `isLegacy` is false for input with more than `maxInputCodePoints` code points, and it does not normalise such input. Otherwise, it is true when the normalised input is exactly 6 ASCII digits.
 
 ## Hierarchy
 
 - `truncate(code, to)` keeps the segments up to `to`. It fails when `to` is more precise than the code. Each language uses its standard error for a programmer mistake, for example `RangeError` in TypeScript.
-- `parent(code)` returns the code with one segment fewer. A state code has no parent.
+- `parent(code)` returns the code with one segment fewer. A postcode with only the state segment has no parent, so `parent` returns null for it.
 - `contains(prefix, code)` is true when the code has every segment of the prefix, in the same places.
 - `redact(code)` replaces the unit with `**` in the canonical form. A code without a unit stays the same.
 
