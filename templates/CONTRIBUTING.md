@@ -2,7 +2,7 @@
 
 Thank you for your interest in Gatepost. This guide explains how to make a change that we can merge.
 
-Gatepost is unofficial. For problems with NIPOST's own app, data or API, contact NIPOST at postcode@nipost.gov.ng.
+Gatepost is unofficial. For problems with NIPOST's own app, data or API, contact NIPOST through the contact details on its official website.
 
 ## Before you start
 

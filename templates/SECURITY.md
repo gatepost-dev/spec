@@ -23,4 +23,4 @@ You can also email {{SECURITY_EMAIL}}.
 
 ## Problems in NIPOST's systems
 
-This policy covers Gatepost code only. Report a problem in NIPOST's systems to security@nipost.gov.ng. Do not test NIPOST's systems. NIPOST's acceptable use policy forbids probing them.
+This policy covers Gatepost code only. Report a problem in NIPOST's systems to NIPOST, through the contact details on its official website. Do not test NIPOST's systems. NIPOST's acceptable use policy forbids probing them.
