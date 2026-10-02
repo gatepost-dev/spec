@@ -122,8 +122,20 @@ _Avoid_: using this word for a Gatepost component
 ### Gatepost
 
 **Spec**:
-The `spec` repo. It holds the grammar, the data, the vectors and the standards. The API fixtures and the completed OpenAPI file come later.
+The `spec` repo. It holds the grammar, the client contract, the data, the vectors, the fixtures, the completed OpenAPI file and the standards.
 _Avoid_: schema, contract (for the repo)
+
+**Contract scenario**:
+One shared test case in `spec/contract/`. It names the calls, the mock server's responses and the outcome that every client must reach.
+_Avoid_: contract test (for the file), vector, fixture
+
+**Attempt**:
+One request that a client sends for one call. A retry is the second or third attempt.
+_Avoid_: try, request (when you count them)
+
+**Evidence**:
+How Gatepost knows the shape of a gateway response: `observed` in its own calls, `documented` by NIPOST only, or `assumed` by the mock server.
+_Avoid_: source, confidence, proof
 
 **Vector**:
 One shared test case in `spec/vectors/` that every SDK must pass.
