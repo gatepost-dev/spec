@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "lookup-insufficient-credits",
+  "description": "A 402 gives insufficient_credits, with no retry.",
+  "client": {"apiKey": "nipost_test_mock_no_credits"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 2}],
+  "responses": [{"fixture": "errors/insufficient-credits"}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "insufficient_credits",
+          "status": 402,
+          "apiCode": "insufficient_credits",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

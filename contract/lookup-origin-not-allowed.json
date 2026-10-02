@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "lookup-origin-not-allowed",
+  "description": "A 403 with the API code origin_not_allowed has its own error code.",
+  "client": {"apiKey": "nipost_pk_test_mock"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"fixture": "errors/origin-not-allowed"}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "origin_not_allowed",
+          "status": 403,
+          "apiCode": "origin_not_allowed",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "id": "reverse-unknown-fields",
+  "description": "The client ignores unknown fields, and maps an unknown confidence to low.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "reverse", "lat": 9, "lng": 7}],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "found": true,
+          "coordinate": [7, 9],
+          "unit": {
+            "postcode": "FC-01-Z99-ZZ-01",
+            "display": "FC 01 Z99 ZZ 01",
+            "distance_m": 4.2,
+            "confidence": "very_high",
+            "floor": 2
+          },
+          "area": "FC-01-Z99-ZZ",
+          "district": "FC-01-Z99",
+          "state": "FC",
+          "depth": "unit",
+          "radius_m": 25,
+          "source": "new"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "found": true,
+          "radiusM": 25,
+          "unit": {
+            "postcode": "FC-01-Z99-ZZ-01",
+            "distanceM": 4.2,
+            "confidence": "low",
+            "stateName": null,
+            "lgaName": null,
+            "localityName": null,
+            "address": null
+          },
+          "area": "FC-01-Z99-ZZ",
+          "district": "FC-01-Z99",
+          "state": "FC"
+        }
+      }
+    ]
+  }
+}

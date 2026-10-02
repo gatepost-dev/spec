@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "lookup-rate-limited",
+  "description": "A 429 with no Retry-After gives rate_limited at once.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"fixture": "errors/rate-limited"}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "rate_limited",
+          "status": 429,
+          "apiCode": "rate_limited",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "autocomplete-state",
+  "description": "A suggestion holds a segment value, and the client adds the partial postcode.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "autocomplete", "q": "f"}],
+  "responses": [
+    {"status": 200, "body": {"data": {"segment": "state", "suggestions": [{"code": "FC"}]}}}
+  ],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/search/autocomplete",
+      "query": {"q": "F"},
+      "apiKey": "nipost_test_mock_l3"
+    },
+    "outcomes": [
+      {
+        "result": {
+          "segment": "state",
+          "suggestions": [{"code": "FC", "label": null, "postcode": "FC"}]
+        }
+      }
+    ]
+  }
+}

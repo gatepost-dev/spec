@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "lookup-level-not-granted",
+  "description": "A level above the key's level gives forbidden. The client keeps the level.",
+  "client": {"apiKey": "nipost_test_mock_l1"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 2}],
+  "responses": [{"fixture": "errors/level-not-granted-1"}],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/lookup",
+      "query": {"code": "FC-01-Z99-ZZ-01", "level": "2"},
+      "apiKey": "nipost_test_mock_l1"
+    },
+    "outcomes": [
+      {
+        "error": {
+          "code": "forbidden",
+          "status": 403,
+          "apiCode": "level_not_granted",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

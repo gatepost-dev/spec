@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "reverse-invalid-max-distance",
+  "description": "A radius above 250 metres sends no request.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "reverse", "lat": 9, "lng": 7, "maxDistanceM": 251}],
+  "responses": [],
+  "expect": {
+    "attempts": 0,
+    "outcomes": [
+      {"error": {"code": "invalid_input", "status": null, "apiCode": null, "retryAfterMs": null}}
+    ]
+  }
+}

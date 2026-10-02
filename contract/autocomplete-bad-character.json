@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "autocomplete-bad-character",
+  "description": "Text with a character other than A to Z and 0 to 9 sends no request.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "autocomplete", "q": "FC!"}],
+  "responses": [],
+  "expect": {
+    "attempts": 0,
+    "outcomes": [
+      {"error": {"code": "invalid_input", "status": null, "apiCode": null, "retryAfterMs": null}}
+    ]
+  }
+}

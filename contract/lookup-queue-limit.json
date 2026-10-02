@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "id": "lookup-queue-limit",
+  "description": "Six calls at once send at most four requests at a time.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "order": "parallel",
+  "calls": [
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-02", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-03", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-04", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-05", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-06", "level": 1}
+  ],
+  "responses": [{"fixture": "lookup/not-found", "delayMs": 100}],
+  "expect": {
+    "attempts": 6,
+    "maxInFlight": 4,
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-02",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-03",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-04",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-05",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-06",
+          "valid": false,
+          "status": "not_found",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

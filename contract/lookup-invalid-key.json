@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "lookup-invalid-key",
+  "description": "A key that the gateway does not know gives unauthorized, with no retry.",
+  "client": {"apiKey": "nipost_test_mock_unknown"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"fixture": "errors/invalid-api-key"}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "unauthorized",
+          "status": 401,
+          "apiCode": "invalid_api_key",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

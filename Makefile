@@ -43,6 +43,7 @@ vectors:
 
 contract:
 	uvx openapi-spec-validator@$(OPENAPI_SPEC_VALIDATOR_VERSION) openapi/gateway.completed.yaml
+	$(PYTHON) scripts/contract_files.py
 
 tells:
 	python3 scripts/check-tells
