@@ -28,6 +28,8 @@ A partial postcode stops after the state, LGA, district or area segment. Its len
 2. Remove each separator in `data/format.json`: white space, hyphens and dashes, the full stop, and zero-width characters.
 3. Change the ASCII letters a to z to upper case. Keep every other character as it is.
 
+An SDK without a full NFKC can apply NFKC only to the characters whose NFKC form holds only ASCII characters and separators. Its `parse` and `isLegacy` must then give the same results as with full NFKC, for every input. Its `normalize` can keep a character that full NFKC changes, such as U+00B5, in text that holds no postcode. Each `normalize` vector gives the same result either way.
+
 A format character that is not in the list stays. For example, the right-to-left override U+202E can change the order in which a code shows on screen, so `parse` gives `bad_character` for it.
 
 `normalize` has no length limit. Bound untrusted text before you call it, or call `parse`, which checks the limit first.
@@ -35,6 +37,8 @@ A format character that is not in the list stays. For example, the right-to-left
 ## Parse
 
 First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
+
+Input that is not well-formed Unicode is never a postcode. This covers bytes that are not valid UTF-8, in a language whose strings hold bytes, and a lone surrogate, in a language whose strings can hold one. Such input gives `bad_length` when it is over the input limit, and `bad_character` otherwise. An SDK whose strings hold bytes can treat input of more than 4 x `maxInputCodePoints` bytes as over the limit without decoding it, because a code point takes at most 4 bytes in UTF-8. `isLegacy` gives false for such input. `normalize` keeps each unit that is not well-formed. No function throws for such input.
 
 1. `empty`: no character is left.
 2. `legacy_code`: exactly 6 ASCII digits are left. These are old NIPOST postcodes.

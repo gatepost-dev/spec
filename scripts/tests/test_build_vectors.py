@@ -4,6 +4,7 @@
 
 import json
 import math
+import string
 import unicodedata
 import unittest
 from collections import Counter
@@ -14,6 +15,7 @@ import build_vectors
 
 ROOT = Path(__file__).resolve().parents[2]
 ZERO_WIDTH_JOINER = chr(0x200D)
+ASCII_UPPER_CASE = str.maketrans(string.ascii_lowercase, string.ascii_uppercase)
 
 
 def load(stem: str) -> dict[str, Any]:
@@ -25,6 +27,25 @@ def load(stem: str) -> dict[str, Any]:
 
 def utf16_units(text: str) -> int:
     return len(text.encode("utf-16-le", errors="surrogatepass")) // 2
+
+
+def table_form(character: str, separators: frozenset[str]) -> str:
+    """Return the NFKC form of a character if the form holds only ASCII characters and separators.
+
+    An SDK that applies NFKC through a table has entries for such characters only. It keeps
+    every other character as it is.
+    """
+    form = unicodedata.normalize("NFKC", character)
+    if all(part.isascii() or part in separators for part in form):
+        return form
+    return character
+
+
+def reduced_normalize(text: str, separators: frozenset[str]) -> str:
+    """Normalise as an SDK without a full NFKC does (grammar.md, section Normalise)."""
+    mapped = "".join(table_form(character, separators) for character in text)
+    kept = "".join(character for character in mapped if character not in separators)
+    return kept.translate(ASCII_UPPER_CASE)
 
 
 class BuildVectorsTest(unittest.TestCase):
@@ -100,6 +121,16 @@ class BuildVectorsTest(unittest.TestCase):
             if separator.join(("EK", "01", "A03", "FK", "01")) not in inputs:
                 missing.append(label)
         self.assertEqual(missing, [])
+
+    def test_each_normalize_case_gives_the_same_result_with_nfkc_through_a_table(self) -> None:
+        separators = frozenset(chr(code_point) for code_point in build_vectors.load_separators())
+        for case in load("normalize")["cases"]:
+            with self.subTest(case["id"]):
+                # ASCII forms keep a failure readable: U+00B5 and U+03BC look alike.
+                self.assertEqual(
+                    ascii(reduced_normalize(case["input"], separators)),
+                    ascii(case["expect"]["value"]),
+                )
 
     def test_each_gps_limit_has_a_case_at_the_limit_and_a_case_above_it(self) -> None:
         rules = json.loads((ROOT / "data" / "precision.json").read_text(encoding="utf-8"))

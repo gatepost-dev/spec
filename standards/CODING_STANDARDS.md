@@ -168,7 +168,7 @@ A line in a code or config file can skip one check with a comment that names the
 
 ## Git, pull requests and releases
 
-- **GIT-1 MUST.** Commits follow Conventional Commits. The scope is the package name. **(tool)**
+- **GIT-1 MUST.** Commits follow Conventional Commits. The scope names the package, or is repo, deps or release for a change outside a package. **(tool)**
 - **GIT-2 MUST.** Each commit has a DCO sign-off: `git commit -s`. **(tool)**
 - **GIT-3 MUST.** Commits do not carry co-author lines for AI tools. The person who opens the pull request owns the change.
 - **GIT-4 MUST.** Nobody force-pushes to `main` or to a shared branch.
