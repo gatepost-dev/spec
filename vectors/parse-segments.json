@@ -33,6 +33,20 @@
     },
     {
       "id": "parse-segments-003",
+      "description": "rejects the ISO code of a state that NIPOST does not use",
+      "input": "BO01Z99ZZ01",
+      "options": {},
+      "expect": {
+        "ok": false,
+        "error": {
+          "code": "unknown_state",
+          "segment": "state",
+          "suggestion": null
+        }
+      }
+    },
+    {
+      "id": "parse-segments-004",
       "description": "suggests O for a zero in the state",
       "input": "0G01A03FK01",
       "options": {},
@@ -46,7 +60,7 @@
       }
     },
     {
-      "id": "parse-segments-004",
+      "id": "parse-segments-005",
       "description": "suggests I for a one in the state",
       "input": "1M01A03FK01",
       "options": {},
@@ -60,7 +74,7 @@
       }
     },
     {
-      "id": "parse-segments-005",
+      "id": "parse-segments-006",
       "description": "gives no suggestion when the fixed state is unknown",
       "input": "E101A03FK01",
       "options": {},
@@ -74,7 +88,7 @@
       }
     },
     {
-      "id": "parse-segments-006",
+      "id": "parse-segments-007",
       "description": "gives no suggestion when the state cannot be fixed",
       "input": "XXO1A03FK01",
       "options": {},
@@ -88,7 +102,7 @@
       }
     },
     {
-      "id": "parse-segments-007",
+      "id": "parse-segments-008",
       "description": "fixes later segments in a state suggestion",
       "input": "0GO1A03FK01",
       "options": {},
@@ -102,7 +116,7 @@
       }
     },
     {
-      "id": "parse-segments-008",
+      "id": "parse-segments-009",
       "description": "rejects an LGA of 00",
       "input": "EK00A03FK01",
       "options": {},
@@ -116,7 +130,7 @@
       }
     },
     {
-      "id": "parse-segments-009",
+      "id": "parse-segments-010",
       "description": "rejects a unit of 00",
       "input": "EK01A03FK00",
       "options": {},
@@ -130,7 +144,7 @@
       }
     },
     {
-      "id": "parse-segments-010",
+      "id": "parse-segments-011",
       "description": "suggests 0 for a letter O in the LGA",
       "input": "EKO1A03FK01",
       "options": {},
@@ -144,7 +158,7 @@
       }
     },
     {
-      "id": "parse-segments-011",
+      "id": "parse-segments-012",
       "description": "suggests 1 for a letter I in the LGA",
       "input": "EKI1A03FK01",
       "options": {},
@@ -158,7 +172,7 @@
       }
     },
     {
-      "id": "parse-segments-012",
+      "id": "parse-segments-013",
       "description": "suggests 1 for a letter L in the LGA",
       "input": "EKL1A03FK01",
       "options": {},
@@ -172,7 +186,7 @@
       }
     },
     {
-      "id": "parse-segments-013",
+      "id": "parse-segments-014",
       "description": "suggests I for a one in the area",
       "input": "EK01A03F101",
       "options": {},
@@ -186,7 +200,7 @@
       }
     },
     {
-      "id": "parse-segments-014",
+      "id": "parse-segments-015",
       "description": "suggests O for a zero in the area",
       "input": "EK01A03F001",
       "options": {},
@@ -200,7 +214,7 @@
       }
     },
     {
-      "id": "parse-segments-015",
+      "id": "parse-segments-016",
       "description": "suggests 0 for a letter O in the unit",
       "input": "EK01A03FKO1",
       "options": {},
@@ -214,7 +228,7 @@
       }
     },
     {
-      "id": "parse-segments-016",
+      "id": "parse-segments-017",
       "description": "suggests 1 for a letter I in the unit",
       "input": "EK01A03FKI2",
       "options": {},
@@ -228,7 +242,7 @@
       }
     },
     {
-      "id": "parse-segments-017",
+      "id": "parse-segments-018",
       "description": "suggests 1 for a letter L in the unit",
       "input": "EK01A03FKL1",
       "options": {},
@@ -242,7 +256,7 @@
       }
     },
     {
-      "id": "parse-segments-018",
+      "id": "parse-segments-019",
       "description": "suggests 1 for a letter I after a zero in the unit",
       "input": "EK01A03FK0I",
       "options": {},
@@ -256,7 +270,7 @@
       }
     },
     {
-      "id": "parse-segments-019",
+      "id": "parse-segments-020",
       "description": "gives no suggestion when the fix makes a unit of 00",
       "input": "EK01A03FK0O",
       "options": {},
@@ -270,7 +284,7 @@
       }
     },
     {
-      "id": "parse-segments-020",
+      "id": "parse-segments-021",
       "description": "gives no suggestion when a segment cannot be fixed",
       "input": "EK01A03F2O1",
       "options": {},
@@ -284,7 +298,7 @@
       }
     },
     {
-      "id": "parse-segments-021",
+      "id": "parse-segments-022",
       "description": "reports the first bad segment and fixes them all",
       "input": "EKO1A03F1O1",
       "options": {},
@@ -298,7 +312,7 @@
       }
     },
     {
-      "id": "parse-segments-022",
+      "id": "parse-segments-023",
       "description": "suggests a fix after making letters upper case",
       "input": "eko1a03fk01",
       "options": {},
@@ -312,7 +326,7 @@
       }
     },
     {
-      "id": "parse-segments-023",
+      "id": "parse-segments-024",
       "description": "rejects an LGA of 00 in a partial code",
       "input": "EK00",
       "options": {
@@ -328,7 +342,7 @@
       }
     },
     {
-      "id": "parse-segments-024",
+      "id": "parse-segments-025",
       "description": "suggests a partial code",
       "input": "EKO1",
       "options": {
@@ -344,7 +358,7 @@
       }
     },
     {
-      "id": "parse-segments-025",
+      "id": "parse-segments-026",
       "description": "suggests a partial area code",
       "input": "EK01A03F1",
       "options": {
@@ -360,7 +374,7 @@
       }
     },
     {
-      "id": "parse-segments-026",
+      "id": "parse-segments-027",
       "description": "rejects an unknown state when partial codes are allowed",
       "input": "XX",
       "options": {
@@ -376,7 +390,7 @@
       }
     },
     {
-      "id": "parse-segments-027",
+      "id": "parse-segments-028",
       "description": "suggests a state for a partial code",
       "input": "0G",
       "options": {
@@ -392,7 +406,7 @@
       }
     },
     {
-      "id": "parse-segments-028",
+      "id": "parse-segments-029",
       "description": "suggests an LGA fix for a district code",
       "input": "EKO1A03",
       "options": {
@@ -408,7 +422,7 @@
       }
     },
     {
-      "id": "parse-segments-029",
+      "id": "parse-segments-030",
       "description": "rejects an LGA of 00 in a district code",
       "input": "EK00A03",
       "options": {
@@ -424,7 +438,7 @@
       }
     },
     {
-      "id": "parse-segments-030",
+      "id": "parse-segments-031",
       "description": "keeps a letter O in the district when it fixes the LGA",
       "input": "EKO1AO3FK01",
       "options": {},
@@ -438,7 +452,7 @@
       }
     },
     {
-      "id": "parse-segments-031",
+      "id": "parse-segments-032",
       "description": "keeps letters I and L in the district when it fixes the LGA",
       "input": "EKO1AILFK01",
       "options": {},
@@ -452,7 +466,7 @@
       }
     },
     {
-      "id": "parse-segments-032",
+      "id": "parse-segments-033",
       "description": "accepts letters and digits in any district position",
       "input": "EK01A0OFK01",
       "options": {},

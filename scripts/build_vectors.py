@@ -343,6 +343,11 @@ def segment_rows() -> list[Row]:
         row("rejects an unknown state", "XX01A03FK01", failed("unknown_state", "state")),
         row("rejects the synthetic state ZZ", "ZZ01Z99ZZ01", failed("unknown_state", "state")),
         row(
+            "rejects the ISO code of a state that NIPOST does not use",
+            "BO01Z99ZZ01",
+            failed("unknown_state", "state"),
+        ),
+        row(
             "suggests O for a zero in the state",
             "0G01A03FK01",
             failed("unknown_state", "state", "OG-01-A03-FK-01"),
@@ -656,6 +661,12 @@ def state_name_rows() -> list[Row]:
         # Python's upper() changes U+017F to S and U+0131 to I. These two would give Osun and Imo.
         row("returns nothing for a long s", "O" + LONG_S, value(None)),
         row("returns nothing for a dotless i", DOTLESS_I + "M", value(None)),
+        # NIPOST uses BR, GM, KG, SK and YB for these five states, so ISO's codes are unknown.
+        row("returns nothing for BO, the ISO code of Borno", "BO", value(None)),
+        row("returns nothing for GO, the ISO code of Gombe", "GO", value(None)),
+        row("returns nothing for KO, the ISO code of Kogi", "KO", value(None)),
+        row("returns nothing for SO, the ISO code of Sokoto", "SO", value(None)),
+        row("returns nothing for YO, the ISO code of Yobe", "YO", value(None)),
     ]
 
 

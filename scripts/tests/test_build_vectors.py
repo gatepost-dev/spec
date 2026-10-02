@@ -14,6 +14,9 @@ import build_vectors
 
 ROOT = Path(__file__).resolve().parents[2]
 ZERO_WIDTH_JOINER = chr(0x200D)
+# The ISO 3166-2:NG codes that NIPOST does not use. Its codes for the same five states are
+# BR, GM, KG, SK and YB.
+UNUSED_ISO_CODES = ("BO", "GO", "KO", "SO", "YO")
 
 
 def load(stem: str) -> dict[str, Any]:
@@ -59,6 +62,12 @@ class BuildVectorsTest(unittest.TestCase):
         named = {case["input"] for case in load("state-name")["cases"]}
         self.assertEqual(parsed, codes)
         self.assertLessEqual(codes, named)
+
+    def test_each_unused_iso_code_has_a_state_name_case_that_returns_nothing(self) -> None:
+        names = [(case["input"], case["expect"]["value"]) for case in load("state-name")["cases"]]
+        for iso_code in UNUSED_ISO_CODES:
+            with self.subTest(iso_code):
+                self.assertIn((iso_code, None), names)
 
     def test_each_separator_has_a_normalize_case(self) -> None:
         postcode_format = json.loads((ROOT / "data" / "format.json").read_text(encoding="utf-8"))

@@ -434,6 +434,51 @@
       "expect": {
         "value": null
       }
+    },
+    {
+      "id": "state-name-049",
+      "description": "returns nothing for BO, the ISO code of Borno",
+      "input": "BO",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-050",
+      "description": "returns nothing for GO, the ISO code of Gombe",
+      "input": "GO",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-051",
+      "description": "returns nothing for KO, the ISO code of Kogi",
+      "input": "KO",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-052",
+      "description": "returns nothing for SO, the ISO code of Sokoto",
+      "input": "SO",
+      "options": {},
+      "expect": {
+        "value": null
+      }
+    },
+    {
+      "id": "state-name-053",
+      "description": "returns nothing for YO, the ISO code of Yobe",
+      "input": "YO",
+      "options": {},
+      "expect": {
+        "value": null
+      }
     }
   ]
 }
