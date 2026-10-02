@@ -38,8 +38,6 @@ A format character that is not in the list stays. For example, the right-to-left
 
 First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
 
-Input that is not well-formed Unicode is never a postcode. This covers bytes that are not valid UTF-8, in a language whose strings hold bytes, and a lone surrogate, in a language whose strings can hold one. Such input gives `bad_length` when it is over the input limit, and `bad_character` otherwise. An SDK whose strings hold bytes can treat input of more than 4 x `maxInputCodePoints` bytes as over the limit without decoding it, because a code point takes at most 4 bytes in UTF-8. `isLegacy` gives false for such input. `normalize` keeps each unit that is not well-formed. No function throws for such input.
-
 1. `empty`: no character is left.
 2. `legacy_code`: exactly 6 ASCII digits are left. These are old NIPOST postcodes.
 3. `bad_character`: a character other than A to Z and 0 to 9 is left.
@@ -48,6 +46,8 @@ Input that is not well-formed Unicode is never a postcode. This covers bytes tha
 6. `bad_segment`: a segment breaks its rule in the table above. Check the segments in order, and report the first one that fails.
 
 For `unknown_state` and `bad_segment`, the error names the segment. For the other codes, the segment is null.
+
+Input that is not well-formed Unicode is never a postcode. This covers bytes that are not valid UTF-8, in a language whose strings hold bytes, and a lone surrogate, in a language whose strings can hold one. Such input gives `bad_length` when it is over the input limit, and `bad_character` otherwise. An SDK whose strings hold bytes can treat input of more than 4 x `maxInputCodePoints` bytes as over the limit without decoding it, because a code point takes at most 4 bytes in UTF-8. `isLegacy` gives false for such input. `normalize` keeps each unit that is not well-formed. No function throws for such input.
 
 ## Suggestions
 
