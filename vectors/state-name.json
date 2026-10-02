@@ -59,8 +59,8 @@
     },
     {
       "id": "state-name-007",
-      "description": "names BO",
-      "input": "BO",
+      "description": "names BR",
+      "input": "BR",
       "options": {},
       "expect": {
         "value": "Borno"
@@ -140,8 +140,8 @@
     },
     {
       "id": "state-name-016",
-      "description": "names GO",
-      "input": "GO",
+      "description": "names GM",
+      "input": "GM",
       "options": {},
       "expect": {
         "value": "Gombe"
@@ -185,20 +185,20 @@
     },
     {
       "id": "state-name-021",
+      "description": "names KG",
+      "input": "KG",
+      "options": {},
+      "expect": {
+        "value": "Kogi"
+      }
+    },
+    {
+      "id": "state-name-022",
       "description": "names KN",
       "input": "KN",
       "options": {},
       "expect": {
         "value": "Kano"
-      }
-    },
-    {
-      "id": "state-name-022",
-      "description": "names KO",
-      "input": "KO",
-      "options": {},
-      "expect": {
-        "value": "Kogi"
       }
     },
     {
@@ -302,8 +302,8 @@
     },
     {
       "id": "state-name-034",
-      "description": "names SO",
-      "input": "SO",
+      "description": "names SK",
+      "input": "SK",
       "options": {},
       "expect": {
         "value": "Sokoto"
@@ -320,8 +320,8 @@
     },
     {
       "id": "state-name-036",
-      "description": "names YO",
-      "input": "YO",
+      "description": "names YB",
+      "input": "YB",
       "options": {},
       "expect": {
         "value": "Yobe"

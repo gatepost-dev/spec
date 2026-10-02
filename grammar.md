@@ -68,7 +68,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## State names
 
-`stateName(code)` returns the name in `data/states.json`, and it ignores letter case. It does not remove spaces or other characters. An unknown code gives null. The codes follow ISO 3166-2:NG. All 11 state codes in NIPOST's published examples match it. A keyed autocomplete call must confirm the full list.
+`stateName(code)` returns the name in `data/states.json`, and it ignores letter case. It does not remove spaces or other characters. An unknown code gives null. The codes are NIPOST's. They equal ISO 3166-2:NG, except BR, GM, KG, SK and YB, where ISO uses BO, GO, KO, SO and YO. Each state in `data/states.json` also keeps its ISO code in the `iso` field.
 
 ## GPS precision
 

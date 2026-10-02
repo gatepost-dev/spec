@@ -126,16 +126,16 @@
     {
       "id": "parse-states-007",
       "description": "parses a code in Borno",
-      "input": "BO-01-Z99-ZZ-01",
+      "input": "BR-01-Z99-ZZ-01",
       "options": {},
       "expect": {
         "ok": true,
-        "compact": "BO01Z99ZZ01",
-        "canonical": "BO-01-Z99-ZZ-01",
-        "display": "BO 01 Z99 ZZ 01",
+        "compact": "BR01Z99ZZ01",
+        "canonical": "BR-01-Z99-ZZ-01",
+        "display": "BR 01 Z99 ZZ 01",
         "precision": "unit",
         "segments": {
-          "state": "BO",
+          "state": "BR",
           "lga": "01",
           "district": "Z99",
           "area": "ZZ",
@@ -306,16 +306,16 @@
     {
       "id": "parse-states-016",
       "description": "parses a code in Gombe",
-      "input": "GO-01-Z99-ZZ-01",
+      "input": "GM-01-Z99-ZZ-01",
       "options": {},
       "expect": {
         "ok": true,
-        "compact": "GO01Z99ZZ01",
-        "canonical": "GO-01-Z99-ZZ-01",
-        "display": "GO 01 Z99 ZZ 01",
+        "compact": "GM01Z99ZZ01",
+        "canonical": "GM-01-Z99-ZZ-01",
+        "display": "GM 01 Z99 ZZ 01",
         "precision": "unit",
         "segments": {
-          "state": "GO",
+          "state": "GM",
           "lga": "01",
           "district": "Z99",
           "area": "ZZ",
@@ -405,6 +405,26 @@
     },
     {
       "id": "parse-states-021",
+      "description": "parses a code in Kogi",
+      "input": "KG-01-Z99-ZZ-01",
+      "options": {},
+      "expect": {
+        "ok": true,
+        "compact": "KG01Z99ZZ01",
+        "canonical": "KG-01-Z99-ZZ-01",
+        "display": "KG 01 Z99 ZZ 01",
+        "precision": "unit",
+        "segments": {
+          "state": "KG",
+          "lga": "01",
+          "district": "Z99",
+          "area": "ZZ",
+          "unit": "01"
+        }
+      }
+    },
+    {
+      "id": "parse-states-022",
       "description": "parses a code in Kano",
       "input": "KN-01-Z99-ZZ-01",
       "options": {},
@@ -416,26 +436,6 @@
         "precision": "unit",
         "segments": {
           "state": "KN",
-          "lga": "01",
-          "district": "Z99",
-          "area": "ZZ",
-          "unit": "01"
-        }
-      }
-    },
-    {
-      "id": "parse-states-022",
-      "description": "parses a code in Kogi",
-      "input": "KO-01-Z99-ZZ-01",
-      "options": {},
-      "expect": {
-        "ok": true,
-        "compact": "KO01Z99ZZ01",
-        "canonical": "KO-01-Z99-ZZ-01",
-        "display": "KO 01 Z99 ZZ 01",
-        "precision": "unit",
-        "segments": {
-          "state": "KO",
           "lga": "01",
           "district": "Z99",
           "area": "ZZ",
@@ -666,16 +666,16 @@
     {
       "id": "parse-states-034",
       "description": "parses a code in Sokoto",
-      "input": "SO-01-Z99-ZZ-01",
+      "input": "SK-01-Z99-ZZ-01",
       "options": {},
       "expect": {
         "ok": true,
-        "compact": "SO01Z99ZZ01",
-        "canonical": "SO-01-Z99-ZZ-01",
-        "display": "SO 01 Z99 ZZ 01",
+        "compact": "SK01Z99ZZ01",
+        "canonical": "SK-01-Z99-ZZ-01",
+        "display": "SK 01 Z99 ZZ 01",
         "precision": "unit",
         "segments": {
-          "state": "SO",
+          "state": "SK",
           "lga": "01",
           "district": "Z99",
           "area": "ZZ",
@@ -706,16 +706,16 @@
     {
       "id": "parse-states-036",
       "description": "parses a code in Yobe",
-      "input": "YO-01-Z99-ZZ-01",
+      "input": "YB-01-Z99-ZZ-01",
       "options": {},
       "expect": {
         "ok": true,
-        "compact": "YO01Z99ZZ01",
-        "canonical": "YO-01-Z99-ZZ-01",
-        "display": "YO 01 Z99 ZZ 01",
+        "compact": "YB01Z99ZZ01",
+        "canonical": "YB-01-Z99-ZZ-01",
+        "display": "YB 01 Z99 ZZ 01",
         "precision": "unit",
         "segments": {
-          "state": "YO",
+          "state": "YB",
           "lga": "01",
           "district": "Z99",
           "area": "ZZ",

@@ -10,6 +10,14 @@ from typing import Any
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 SEGMENT_NAMES = ["state", "lga", "district", "area", "unit"]
+# The states where NIPOST's code is not the ISO 3166-2:NG code. Name: (code, iso).
+NIPOST_CODES_OFF_ISO = {
+    "Borno": ("BR", "NG-BO"),
+    "Gombe": ("GM", "NG-GO"),
+    "Kogi": ("KG", "NG-KO"),
+    "Sokoto": ("SK", "NG-SO"),
+    "Yobe": ("YB", "NG-YO"),
+}
 
 
 def load(name: str) -> dict[str, Any]:
@@ -30,6 +38,17 @@ class StatesTest(unittest.TestCase):
             with self.subTest(code=state["code"]):
                 self.assertRegex(state["code"], r"^[A-Z]{2}$")
                 self.assertTrue(state["name"].isascii() and state["name"].strip())
+
+    def test_keeps_the_iso_code_of_each_state_beside_the_nipost_code(self) -> None:
+        for state in load("states.json")["states"]:
+            with self.subTest(name=state["name"]):
+                self.assertRegex(state["iso"], r"^NG-[A-Z]{2}$")
+                if state["name"] in NIPOST_CODES_OFF_ISO:
+                    self.assertEqual(
+                        (state["code"], state["iso"]), NIPOST_CODES_OFF_ISO[state["name"]]
+                    )
+                else:
+                    self.assertEqual(state["iso"], "NG-" + state["code"])
 
 
 class PrecisionTest(unittest.TestCase):
