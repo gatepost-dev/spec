@@ -25,7 +25,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Dart
 | dart_apitool | API check against the last release | `diff`, with `--old` set to the last release and `--new` set to the working copy |
 | pana | pub.dev score | 160 of 160 points |
 | changie | change files and changelog | one change file per user-visible change |
-| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in source, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
+| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in code, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
 | REUSE | licence headers | `reuse lint` |
 | gitleaks | secret scan | each pull request and each push to `main` |
 

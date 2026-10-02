@@ -30,7 +30,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for C# c
 | Stryker.NET | mutation tests | core types, weekly scheduled job |
 | SourceLink, deterministic builds and symbol packages | debugging support | `ContinuousIntegrationBuild` in CI, `.snupkg` files |
 | changie | change files and changelog | one change file per user-visible change |
-| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in source, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
+| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in code, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
 | REUSE | licence headers | `reuse lint` |
 | gitleaks | secret scan | each pull request and each push to `main` |
 

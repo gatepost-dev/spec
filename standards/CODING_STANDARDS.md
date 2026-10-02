@@ -39,7 +39,7 @@ The rules come from these seven principles. If no rule covers a case, apply the 
 - **API-9 MUST.** There is no global state. Two clients with different options can run in the same process.
 - **API-10 MUST.** The caller can inject the HTTP transport. Tests replace the clock with the language's standard test tools, such as fake timers, or with an internal seam. The clock is not a public option.
 - **API-11 MUST.** Each async operation supports cancellation in the language's standard way. A cancelled call ends with the platform's own cancellation error, not with a Gatepost error.
-- **API-12 SHOULD.** Keep the interface small. Before you add a public symbol, apply the deletion test from the `codebase-design` skill.
+- **API-12 SHOULD.** Keep the interface small. Before you add a public symbol, imagine that you delete it. If the complexity disappears, the symbol only passes calls through, so leave it out. If the complexity moves into each caller, the symbol earns its place.
 - **API-13 MUST.** Releases follow semantic versioning. Mark a symbol deprecated for at least one minor release before you remove it.
 - **API-14 MUST.** A client ignores unknown fields in a response. It maps an unknown value of a known field to a defined fallback. NIPOST's API is at version 0.1, so new fields will appear. A contract scenario tests this.
 
@@ -91,7 +91,7 @@ Coding agents repeat some habits so often that readers spot them at once. Each r
 | TELL-11 MUST | Let errors reach the caller. Use a default value only where the spec defines one. | Fallbacks such as `?? ''` or `catch { return [] }` that hide failures | review |
 | TELL-12 MUST | Commit only finished code. | `TODO: implement`, "not implemented" errors, stub functions, placeholder data | tool for TODOs, review for the rest |
 | TELL-13 MUST | Remove debug output before you commit. | `console.log`, `print`, `var_dump`, `dd()` | tool |
-| TELL-14 MUST | Use ASCII in code, comments, logs and commit messages. Write other characters as escape sequences, such as `\u00A0`. Message catalogues and docs prose can use any script, without emojis. | Emojis, invisible spaces and curly quotes in code | tool |
+| TELL-14 MUST | Use ASCII in code, comments, logs and commit messages. Write other characters as escape sequences, such as `\u00A0`. [Message catalogues](#the-check-tells-script) and docs prose can use any script, without emojis. | Emojis, invisible spaces and curly quotes in code | tool |
 | TELL-15 MUST | Change only the lines that the task needs. | Diffs that reformat, rename or move unrelated code | review |
 | TELL-16 MUST | Mark a function `async` only when it awaits. Send every gateway call through the client, which limits how many run at once. | `async` without `await`, hundreds of gateway calls started at once | tool for `async`, review for calls |
 | TELL-17 MUST | Give each ternary one condition. Use `if` or `switch` for more. | Nested ternaries | tool where available |
@@ -103,9 +103,9 @@ Coding agents repeat some habits so often that readers spot them at once. Each r
 
 `spec/scripts/check-tells` runs in the CI of every repo. It sorts each file into a kind, and the kind decides which rules apply:
 
-- **Code files** are source files (`.ts`, `.js`, `.php`, `.py`, `.go`, `.kt`, `.java`, `.cs`, `.dart`, `.swift` and their variants), SQL and shell scripts, files with no extension that start with `#!`, and `.css`, `.scss`, `.html`, `.astro`, `.vue` and `.svelte` files.
+- **Code files** are files in a programming language (`.ts`, `.js`, `.php`, `.py`, `.go`, `.kt`, `.java`, `.cs`, `.dart`, `.swift` and their variants), SQL and shell scripts, files with no extension that start with `#!`, and `.css`, `.scss`, `.html`, `.astro`, `.vue` and `.svelte` files.
 - **Config files** are `.json`, `.json5`, `.jsonc`, `.yml`, `.yaml`, `.toml`, `.xml`, `.ini`, `.cfg`, `.properties`, `.gradle` and `.neon` files, and files such as `Makefile` and `Dockerfile`. A `.dist` file counts as the file that it copies, so `phpunit.xml.dist` is a config file.
-- **Other files** can use any script: Markdown prose, message catalogues, lockfiles, data files, images and file types that no rule names.
+- **Other files** can use any script: Markdown prose, message catalogues, lockfiles, data files, images and file types that no rule names. A **message catalogue** is a data file that holds translated strings. It is a file that is not code in a folder named `locales`, `i18n`, `l10n` or `messages`, a `.po`, `.arb`, `.xlf`, `.xliff`, `.strings` or `.stringsdict` file, or an Android `strings.xml`. Such a file is not a config file, even when its extension is a config extension, such as `src/locales/en.json`. A code file in such a folder is code, so translations live in data files.
 
 It covers the tool rules that no language tool covers:
 
@@ -113,7 +113,7 @@ It covers the tool rules that no language tool covers:
 - **TELL-7.** It rejects files named `utils`, `helpers`, `common` or `misc`, with any extension.
 - **TELL-12 and CS-6.** It rejects each `TODO` and `FIXME`, in any letter case, in code and config files, unless it has the form `TODO(#123)` or `FIXME(#123)`.
 - **TELL-13.** It rejects the debug calls that the language file lists. It skips test files, comment lines and, in Python, doctest lines that start with `>>>` or `...`.
-- **TELL-14.** It rejects emojis in every file, including Markdown, message catalogues and lockfiles. It rejects other non-ASCII characters in code files, config files and commit messages. It also rejects a code or config file that is not valid UTF-8, because it cannot read the file. It skips any other file that is not valid UTF-8, because the file can be an image. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because translations and contributors' names can need any script. A message catalogue is a data file: a file that is not code in a folder named `locales`, `i18n`, `l10n` or `messages`, a `.po`, `.arb`, `.xlf`, `.xliff`, `.strings` or `.stringsdict` file, or an Android `strings.xml`. A code file in such a folder is code, so translations live in data files.
+- **TELL-14.** It rejects emojis in every file, including Markdown, message catalogues and lockfiles. It rejects other non-ASCII characters in code files, config files and commit messages. It also rejects a code or config file that is not valid UTF-8, because it cannot read the file. It skips any other file that is not valid UTF-8, because the file can be an image. Message catalogues, docs prose and the sign-off lines of commit messages are exempt from the non-ASCII check, because translations and contributors' names can need any script.
 - **TELL-18.** With `--commit-msg <file>`, it checks the length of a commit subject. Repos without commitlint use this mode.
 - **GIT-1.** With `--squash-msg <file>`, it checks the message that a squash merge puts on `main`. That message is the pull request title, then ` (#N)`, then the pull request body. The subject must start with a type from the Conventional Commits list, then a colon and a space. TELL-14 and TELL-18 apply to the same message, and the ` (#N)` counts towards the 72 characters. The tool leaves out the HTML comments of the body, which no reader sees. Renovate ends each body with one. With `--no-scope`, the subject must also have no scope, as GIT-1 asks of a repo without packages.
 - **GIT-2.** The squash message must have a line `Signed-off-by: Name <address>`, and the address must not be the placeholder of the pull request template. The message must not hold the placeholder paragraph or the line `Closes #` of that template. With `--signed-off <range>`, the tool checks that each commit in a git revision range has a `Signed-off-by` line. It skips merge commits, and it applies no other message rule to a commit, because only the squash message reaches `main`.
@@ -171,9 +171,9 @@ The command exits with 0 when all files pass, with 1 when a rule is broken, and 
 - **DOC-1 MUST.** Each public symbol has a doc comment. It gives a one-line summary, each parameter, each error and one example.
 - **DOC-2 MUST.** Each README follows `templates/README.md`.
 - **DOC-3 MUST.** Each code example in a README or on the docs site runs in CI.
-- **DOC-4 MUST.** Prose uses plain English: short sentences, active voice, one idea per sentence and British spelling. Run the `asd-ste100` and `unslop` skills on new prose.
-- **DOC-5 MUST.** Each package has a changelog in the Keep a Changelog format. Change files generate it.
-- **DOC-6 SHOULD.** Record a decision as an ADR when it is hard to reverse, surprising, and the result of a real trade-off. The `domain-modeling` skill gives the format.
+- **DOC-4 MUST.** Prose uses plain English. Write sentences of 25 words or fewer, with one idea in each. Use the active voice, and name who does the action. Use the plainest word, and use one word for one meaning. Keep every article and connector. Write a verb, not a noun that is made from it, and do not put more than three nouns in a row. Do not use phrasal verbs, semicolons, stacked hedges, em dashes or marketing words such as "powerful" and "seamless". Do not open with filler or close with a summary. Use British spelling.
+- **DOC-5 MUST.** Each package has a changelog that change files generate. It follows the Keep a Changelog format, unless the release tool writes its own format. Changesets, the tool for npm packages, writes its own format.
+- **DOC-6 SHOULD.** Record a decision as an ADR when it is hard to reverse, surprising, and the result of a real trade-off. An ADR is a short file in `docs/adr/` that gives the context, the decision and the reason.
 - **DOC-7 MUST.** A new domain term goes into `CONTEXT.md` before it goes into code.
 
 ## Git, pull requests and releases
@@ -192,10 +192,10 @@ The command exits with 0 when all files pass, with 1 when a rule is broken, and 
 These rules apply to the field, the docs site and every app screen.
 
 - **UI-1 MUST.** Meet WCAG 2.2 AA.
-- **UI-2 MUST.** Each string comes from a message catalogue. Do not build sentences by joining strings. A UI shows the catalogue string for an error code, not the library's error message.
+- **UI-2 MUST.** Each string comes from a [message catalogue](#the-check-tells-script), which is a data file. A code module of strings is code, so it uses ASCII (TELL-14). Do not build sentences by joining strings. A UI shows the catalogue string for an error code, not the library's error message.
 - **UI-3 MUST.** Colours, radii and fonts come from theme tokens. Components contain no fixed colours.
 - **UI-4 MUST.** Respect the user's reduced-motion setting and text size.
-- **UI-5 SHOULD.** Use the `frontend-design` skill for each new screen.
+- **UI-5 SHOULD.** Design each new screen on purpose. Choose its layout, type and colour for the task, with the theme tokens of UI-3, and do not keep the defaults of a UI kit or a template.
 
 ## Performance
 
@@ -205,9 +205,7 @@ These rules apply to the field, the docs site and every app screen.
 
 ## Licence and notices
 
-<!-- REUSE-IgnoreStart -->
-- **LIC-1 MUST.** Each file has licence information that `reuse lint` accepts. Where the file format allows comments, the file starts with `SPDX-License-Identifier: Apache-2.0`. Other files, such as JSON, get an entry in `REUSE.toml`. **(tool)**
-<!-- REUSE-IgnoreEnd -->
+- **LIC-1 MUST.** Each file has licence information that `reuse lint` accepts. A file whose format has comments starts with two SPDX lines, one for the copyright and one for the licence `Apache-2.0`, unless `REUSE.toml` covers it. `REUSE.toml` covers Markdown, JSON and YAML files, and a few plain files such as `NOTICE`. **(tool)**
 - **LIC-2 MUST.** Each repo has `LICENSE` and `NOTICE`.
 - **LIC-3 MUST.** Each README and each package description says "Unofficial. Not made or endorsed by NIPOST."
 
@@ -230,7 +228,7 @@ A new package can publish its first release only when all of these are true:
 - **NPG-5.** The repo holds the API report or API dump.
 - **NPG-6.** The README quickstart runs in CI.
 - **NPG-7.** The coverage floors pass.
-- **NPG-8.** A second person reviewed the whole package with the `code-review` skill. Both axes, Standards and Spec, are clean.
+- **NPG-8.** A second person reviewed the whole package twice, once against these standards and once against the spec. Neither review has an open finding.
 
 ### Release gate
 
@@ -260,19 +258,4 @@ Tools check the **(tool)** rules. Reviewers check these by hand:
 4. The tests: T-4 and T-6.
 5. The docs: DOC-1, DOC-4 and DOC-7.
 6. The tells that need a person: TELL-4, TELL-5, TELL-6, TELL-8, TELL-11, TELL-15, TELL-19 and TELL-20.
-7. The smell baseline in the `code-review` skill. Treat each smell as a judgement call.
-
-## Skills for each stage
-
-| Stage | Skill |
-|---|---|
-| Design an interface | `codebase-design`, then `critic` on the result |
-| Name a concept or record a decision | `domain-modeling` |
-| Write code | `test-driven-development` |
-| Write tests | `authoring-test-cases` |
-| Run a plan | `subagent-driven-development` |
-| Claim that work is done | `verification-before-completion` |
-| Review a branch | `code-review` for both axes, `simplify` for cleanups, `security-review` for keys and input handling |
-| Write prose | `asd-ste100`, then `unslop` |
-| Design a screen | `frontend-design` |
-| Write agent docs or skills | `writing-for-agents` |
+7. Code smells that no rule names, such as a function that does several jobs, or the same logic in two places. Treat each smell as a judgement call.

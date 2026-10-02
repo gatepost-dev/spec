@@ -26,7 +26,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Pyth
 | mutmut | mutation tests | the core modules, weekly scheduled job |
 | griffe | API check against the last tag | `griffe check gatepost_postcode --against <last tag>` |
 | towncrier | change files and changelog | one fragment in `changes/` per user-visible change |
-| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in source, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
+| `spec/scripts/check-tells` | agent-tell checks | line length, emojis, other non-ASCII in code, the file names `utils`, `helpers`, `common` and `misc`, the `TODO(#123)` form and debug output |
 | REUSE | licence headers | `reuse lint` |
 | gitleaks | secret scan | each pull request and each push to `main` |
 

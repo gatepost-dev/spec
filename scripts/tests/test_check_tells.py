@@ -1591,3 +1591,89 @@ class SquashCommandTest(unittest.TestCase):
                 with self.assertRaises(SystemExit) as caught, contextlib.redirect_stderr(errors):
                     check_tells.main(options)
                 self.assertEqual(caught.exception.code, 2)
+
+
+def read_template(name: str) -> str:
+    """Read a file of templates/, which the pull request check and the contributors share."""
+    return (Path(__file__).resolve().parents[2] / "templates" / name).read_text(encoding="utf-8")
+
+
+class PullRequestTemplateTest(unittest.TestCase):
+    TITLE = "fix: reject a unit of 00 (#7)"
+
+    def test_holds_the_paragraph_the_closes_line_and_the_sign_off_line(self) -> None:
+        lines = read_template("PULL_REQUEST_TEMPLATE.md").split("\n")
+        self.assertEqual(
+            lines,
+            [
+                PLACEHOLDER_PARAGRAPH,
+                "",
+                "Closes #",
+                "",
+                "Signed-off-by: Your Name <you@example.com>",
+                "",
+            ],
+        )
+
+    def test_has_no_heading_checklist_or_html_comment(self) -> None:
+        text = read_template("PULL_REQUEST_TEMPLATE.md")
+        starts = ("#", "- [", "* [", "<!--")
+        self.assertEqual([line for line in text.split("\n") if line.startswith(starts)], [])
+        self.assertNotIn("<!--", text)
+
+    def test_holds_the_text_that_the_check_looks_for(self) -> None:
+        text = read_template("PULL_REQUEST_TEMPLATE.md")
+        self.assertTrue(text.startswith(check_tells.TEMPLATE_PARAGRAPH))
+        self.assertIn(check_tells.PLACEHOLDER_ADDRESS, text)
+        self.assertIn("Closes #", text.split("\n"))
+
+    def test_fails_the_squash_check_until_the_author_fills_it_in(self) -> None:
+        message = f"{self.TITLE}\n\n" + read_template("PULL_REQUEST_TEMPLATE.md")
+        found = check_squash_message(message, no_scope=True)
+        self.assertEqual(
+            sorted((violation.rule, violation.line) for violation in found),
+            [("GIT-2", 7), ("TELL-18", 3), ("TELL-18", 5)],
+        )
+
+    def test_passes_the_squash_check_once_the_author_fills_it_in(self) -> None:
+        template = read_template("PULL_REQUEST_TEMPLATE.md")
+        prose = template.replace(PLACEHOLDER_PARAGRAPH, "The parser accepted a unit of 00.")
+        named = prose.replace("Your Name <you@example.com>", "Ada Bello <ada@example.org>")
+        with_issue = named.replace("Closes #", "Closes #5")
+        without_issue = named.replace("Closes #\n\n", "")
+        for body in (with_issue, without_issue):
+            with self.subTest(body=body):
+                found = check_squash_message(f"{self.TITLE}\n\n{body}", no_scope=True)
+                self.assertEqual(found, [])
+
+
+class CommunityTemplatesTest(unittest.TestCase):
+    def test_tell_how_to_add_a_missing_sign_off(self) -> None:
+        for name in ("CONTRIBUTING.md", "AGENTS.md"):
+            with self.subTest(name=name):
+                text = read_template(name)
+                self.assertIn("git rebase --signoff", text)
+                self.assertIn("--force-with-lease", text)
+                self.assertNotIn("DCO check", text)
+                self.assertNotIn("remediation", text)
+
+    def test_contributing_points_to_no_code_of_conduct(self) -> None:
+        text = read_template("CONTRIBUTING.md")
+        self.assertNotIn("Conduct", text)
+        self.assertNotIn("CONDUCT", text)
+
+    def test_contributing_holds_the_checklist_of_the_pull_request_template(self) -> None:
+        section = read_template("CONTRIBUTING.md").partition("## Open a pull request")[2]
+        for rule in ("T-1", "DOC-5", "GIT-7", "DOC-7", "TELL-15", "GIT-2"):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, section)
+        self.assertNotIn("[ ]", section)
+
+    def test_contributing_tells_the_author_what_the_title_and_the_body_become(self) -> None:
+        section = read_template("CONTRIBUTING.md").partition("## Open a pull request")[2]
+        self.assertIn("commit message on `main`", section)
+        self.assertIn("Conventional Commits", section)
+
+    def test_agents_names_the_interface_section_of_the_grammar(self) -> None:
+        text = read_template("AGENTS.md")
+        self.assertIn("grammar, with its Interface section, and the vectors", text)
