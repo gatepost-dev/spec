@@ -9,7 +9,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for PHP 
 - PHP 8.1 or later. CI tests PHP 8.1 and the newest PHP release.
 - PHP 8.1 reached end of life on 31 Dec 2025, and PHP 8.2 reaches it on 31 Dec 2026. The 8.1 floor serves WordPress stores on older hosting. Under VER-1, ADR 0001 must record this trade-off with current WordPress usage data before the first release. If the data does not support 8.1, raise the floor.
 - PHPUnit 11 and later need PHP 8.2. CI runs PHPUnit 10 on PHP 8.1 and the newest PHPUnit on newer PHP versions.
-- WordPress and WooCommerce: the plugin sub-plan sets the floors after it tests the Additional Checkout Fields API.
+- WordPress and WooCommerce: the floors are not defined yet. The team sets them after it tests the Additional Checkout Fields API, and before the first release of a plugin.
 
 ## Part A: the SDK
 
@@ -55,7 +55,7 @@ PHP-CS-Fixer does not limit line length, so `check-tells` enforces TELL-1. PHPMD
 
 ### Idiomatic additions (API-1)
 
-The PHP SDK follows the spec's interface section. Its client constructor takes PSR-18, PSR-17 and PSR-16 objects. These are parameters, not new public symbols.
+The PHP SDK follows the Interface section of `spec/grammar.md`. Its client constructor takes PSR-18, PSR-17 and PSR-16 objects. These are parameters, not new public symbols.
 
 ### Names
 

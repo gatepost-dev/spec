@@ -184,3 +184,8 @@ class GrammarTextTest(unittest.TestCase):
             with self.subTest(kind=kind):
                 line = next((line for line in lines if line.startswith(lead_in)), "")
                 self.assertEqual(dict(re.findall(r"`(.)` to `(.)`", line)), suggestions[kind])
+
+    def test_the_version_matches_the_version_file(self) -> None:
+        version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        stated = re.search(r"^Spec version (\S+?)\. ", grammar_text(), flags=re.MULTILINE)
+        self.assertEqual(stated and stated.group(1), version)

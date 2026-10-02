@@ -77,6 +77,14 @@ _Avoid_: max length, length limit, size limit
 The canonical form that `parse` offers with `unknown_state` or `bad_segment`, when a fix of look-alike characters makes the code parse. It is a hint, never a success. The word means this hint from `parse`. It does not mean the suggestions that NIPOST's autocomplete API returns.
 _Avoid_: correction, autocorrect
 
+**Parse result**:
+What `parse` returns: a postcode, or a parse error. The Interface section of `grammar.md` defines its fields.
+_Avoid_: outcome, response
+
+**Parse error**:
+The reason that `parse` rejected its input. It has a code, the failing segment and a suggestion. It is a value that `parse` returns, not an exception.
+_Avoid_: validation error, exception
+
 ### NIPOST's API
 
 **Gateway**:

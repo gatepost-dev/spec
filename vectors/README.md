@@ -29,6 +29,8 @@ Each case has these fields:
 | `truncate` | `{ "canonical": ... }`, or `{ "rejects": true }` when the call must fail with the language's programmer error |
 | `parent` | `{ "canonical": ... }`, where null means no parent |
 
+The Interface section of `grammar.md` defines the fields of a parse result and of a parse error.
+
 ## Runner rules
 
 - For `truncate`, `parent`, `contains` and `redact`, the inputs are canonical codes. Parse them with `allowPartial` before the call.

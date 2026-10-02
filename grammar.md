@@ -1,6 +1,6 @@
 # Postcode grammar
 
-Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
+Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, with two exceptions. Two groups of rules have no shared vectors: the Unicode version (see Normalise) and text that is not well-formed (see Parse). JSON cannot carry invalid UTF-8, and PHP rejects an escape for a lone surrogate. Each SDK tests these rules itself. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
 
 ## Forms
 
@@ -32,7 +32,7 @@ A partial postcode stops after the state, LGA, district or area segment. Its len
 
 An SDK without a full NFKC can apply NFKC through a table. The table lists only the characters whose NFKC form holds only ASCII characters and separators. The SDK's `parse` and `isLegacy` must then give the same results as with full NFKC, for every input. The SDK's `normalize` can keep a character that full NFKC changes, such as U+00B5, in text that `parse` rejects. Each `normalize` vector gives the same result either way.
 
-Unicode 17.0 is the baseline for NFKC. A table must come from that version. A platform can have a Unicode version older than 17.0. An SDK on that platform can give other results for a character that a later version added or changed. For example, NFKC in Unicode 17.0 changes U+1CCDA to E. No vector holds such a character.
+Unicode 17.0 is the baseline for NFKC. A table must come from that version. A platform can have a Unicode version older than 17.0. An SDK on that platform can give other results for a character that a later version added. Unicode's stability policy freezes the NFKC form of an assigned character, so only an added character can differ. For example, NFKC in Unicode 17.0 changes U+A7F1 to S, but a platform with Unicode 16.0 or older keeps it. No vector holds such a character.
 
 A format character that is not in the list stays. For example, the right-to-left override U+202E can change the order in which a code shows on screen, so `parse` gives `bad_character` for it.
 
@@ -40,7 +40,7 @@ A format character that is not in the list stays. For example, the right-to-left
 
 ## Parse
 
-First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
+First count the Unicode code points of the input. Do not count UTF-16 units, UTF-8 bytes or grapheme clusters. A lone surrogate, in a language that can hold one, counts as one code point. The last paragraph of this section gives the rule for input that is not well-formed. An SDK can stop counting at 65. If the input has more than `maxInputCodePoints` code points (64 in `data/format.json`), the error code is `bad_length`, and `parse` does not normalise the input. The limit bounds the cost of NFKC, which can take seconds on a long run of combining marks. Otherwise, normalise the input. Then apply these checks in order. The first check that fails gives the error code.
 
 1. `empty`: no character is left.
 2. `legacy_code`: exactly 6 ASCII digits are left (`legacyPattern` in `data/format.json`). These are old NIPOST postcodes.
@@ -69,7 +69,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## Hierarchy
 
-- `truncate(code, to)` keeps the segments up to `to`. It fails when `to` is more precise than the code. Each language uses its standard error for a programmer mistake, for example `RangeError` in TypeScript.
+- `truncate(code, to)` keeps the segments up to `to`. It fails when `to` is more precise than the code, and when `to` is not a precision. Both are programmer mistakes. Each language uses its standard error for them, for example `RangeError` in TypeScript.
 - `parent(code)` returns the code with one segment fewer. A postcode with only the state segment has no parent, so `parent` returns null for it.
 - `contains(prefix, code)` is true when the code has every segment of the prefix, in the same places.
 - `redact(code)` replaces the unit with `**` in the canonical form. A code without a unit stays the same.
@@ -85,3 +85,34 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 ## Versions
 
 `VERSION` holds the spec version. Each SDK exposes it as `SPEC_VERSION`. Each vector file carries a format version, which is 1.
+
+## Interface
+
+An SDK exposes the symbols in this table and the types that they need. A language file gives the idiomatic form of each name and lists the additions that its language needs, such as an options type. The function names are the names in the vector files. This section covers the core. The interface of the client comes later, with the completed OpenAPI file.
+
+| Symbol | Takes | Returns | Rules |
+|---|---|---|---|
+| `normalize(text)` | text | text | Normalise |
+| `parse(text, allowPartial)` | text, and `allowPartial`, which is false by default | a parse result | Parse |
+| `isLegacy(text)` | text | true or false | Legacy postcodes |
+| `truncate(code, to)` | a postcode and a precision | a postcode | Hierarchy |
+| `parent(code)` | a postcode | a postcode, or null | Hierarchy |
+| `contains(prefix, code)` | two postcodes | true or false | Hierarchy |
+| `redact(code)` | a postcode | text | Hierarchy |
+| `stateName(code)` | text | the name of a state, or null | State names |
+| `precisionForAccuracy(metres)` | a number, or no value | a precision | GPS precision |
+| `SPEC_VERSION` (a constant) | none | the spec version, as text | Versions |
+
+A parse result is a success or a failure. A success holds a postcode. A failure holds a parse error. A language can shape the result in the way that it expects, if it keeps the fields below. In the vectors, a success has the field `ok` with the value true, beside the fields of the postcode. A failure has `ok` with the value false, and an `error` field that holds the parse error.
+
+A postcode that `parse` accepted has these fields:
+
+- `compact`, `canonical` and `display`: the three forms of the code.
+- `precision`: the last segment that the code contains. It is one of `state`, `lga`, `district`, `area` and `unit`.
+- `segments`: the text of each of `state`, `lga`, `district`, `area` and `unit`. Each segment after the precision is null. For example, the segments of `EK-01` are `EK` and `01`, and null for the district, the area and the unit.
+
+A parse error has these fields:
+
+- `code`: one of `empty`, `legacy_code`, `bad_character`, `bad_length`, `unknown_state` and `bad_segment`.
+- `segment`: the name of the failing segment for `unknown_state` and `bad_segment`, and null for the other codes.
+- `suggestion`: the canonical form of one corrected code, or null.

@@ -11,7 +11,7 @@ These standards apply to every Gatepost repo, in every language. Each repo also 
 - A **SHOULD** rule can be skipped only with a written reason in the pull request.
 - A rule marked **(tool)** is enforced by CI. Reviewers do not check it by hand.
 - A language file can change a SHOULD rule for its language. It cannot change a MUST rule.
-- The spec's interface section, vectors and contract scenarios rank above this document. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
+- `spec/grammar.md` (with its Interface section), `spec/data/`, `spec/vectors/` and the contract scenarios in `spec/contract/` rank above this document. `spec/grammar.md` wins over a vector. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
 - To change a rule, open a pull request on the `spec` repo. Increase the version at the top of this file.
 
 ## Principles
@@ -24,11 +24,11 @@ The rules come from these seven principles. If no rule covers a case, apply the 
 4. **Same behaviour, native feel.** Every SDK behaves the same. Every SDK reads like a well-made library in its own language.
 5. **Boring is good.** Prefer the standard library, plain data and well-known tools.
 6. **Private by default.** Send nothing the caller did not ask for. Keep nothing longer than necessary.
-7. **Respect NIPOST's rules.** Follow the terms and the acceptable use policy that the spec lists.
+7. **Respect NIPOST's rules.** Follow NIPOST's Terms and Conditions of Use (https://postcode.gov.ng/terms) and its Acceptable Use Policy (https://postcode.gov.ng/acceptable-use).
 
 ## Public interface
 
-- **API-1 MUST.** Every public symbol maps to a concept in the spec's interface section. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
+- **API-1 MUST.** Every public symbol maps to a concept in the Interface section of `spec/grammar.md`. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
 - **API-2 MUST.** Names and call shapes follow the cross-language map below.
 - **API-3 MUST.** Parse, don't validate. A function that reads a postcode returns a typed result, not a boolean. A boolean helper can exist only as a thin wrapper over `parse`.
 - **API-4 MUST.** Expected failures are values. `parse` returns its errors. Only I/O failures, API failures and programmer errors raise or throw.
@@ -127,7 +127,7 @@ A line in a code or config file can skip one check with a comment that names the
 
 ## Errors and logging
 
-- **ERR-1 MUST.** Each HTTP status maps to exactly one error code. The client sub-plan holds the map.
+- **ERR-1 MUST.** Each HTTP status maps to exactly one error code. The spec does not define the map yet. It will define the map with the contract scenarios, before the first client release.
 - **ERR-2 MUST.** A library does not log. It returns or raises errors. A caller can attach a debug hook.
 - **ERR-3 MUST.** No error, log or exception message contains an API key, a NIN, an email address, or a full postcode next to personal data. Use `redact()` for postcodes.
 - **ERR-4 MUST.** An error message says what happened and what to do, in plain English. Example: "The postcode has 10 characters. A postcode has 11 characters."

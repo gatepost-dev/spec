@@ -31,6 +31,15 @@ def load(stem: str) -> dict[str, Any]:
     return value
 
 
+def input_strings(value: Any) -> list[str]:
+    """Return each string in a vector input: the input itself, or the strings in an object."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [text for item in value.values() for text in input_strings(item)]
+    return []
+
+
 def utf16_units(text: str) -> int:
     return len(text.encode("utf-16-le", errors="surrogatepass")) // 2
 
@@ -93,6 +102,21 @@ class BuildVectorsTest(unittest.TestCase):
                 self.assertTrue(case["description"])
         self.assertEqual(len(ids), len(set(ids)))
         self.assertGreaterEqual(len(ids), 200)
+
+    def test_each_input_character_is_assigned_in_the_running_unicode_version(self) -> None:
+        # NFKC differs between Unicode versions only for a character that a later version added.
+        # CI runs the oldest Python that the scripts support, so it rejects a newer character.
+        unassigned = sorted(
+            {
+                f"U+{ord(character):04X}"
+                for stem in build_vectors.FILES
+                for case in load(stem)["cases"]
+                for text in input_strings(case["input"])
+                for character in text
+                if unicodedata.category(character) == "Cn"
+            }
+        )
+        self.assertEqual(unassigned, [])
 
     def test_each_description_is_unique_across_all_vector_files(self) -> None:
         counts = Counter(

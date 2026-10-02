@@ -119,7 +119,7 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 
 ### Idiomatic additions (API-1)
 
-The TypeScript SDK follows the spec's interface section exactly. It adds no idiomatic symbols.
+The TypeScript SDK follows the Interface section of `spec/grammar.md` exactly. It adds no idiomatic symbols.
 
 ## Names
 

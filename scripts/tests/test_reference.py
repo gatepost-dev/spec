@@ -11,6 +11,8 @@ from typing import Any
 
 import reference
 
+from tests.test_data import grammar_section
+
 ROOT = Path(__file__).resolve().parents[2]
 CODE = "EK01A03FK01"
 
@@ -130,3 +132,28 @@ class ReferenceDataTest(unittest.TestCase):
     def test_truncate_rejects_a_precision_that_the_code_lacks(self) -> None:
         with self.assertRaises(ValueError):
             reference.load().truncate(("EK", "01", "A03"), "area")
+
+
+class InterfaceTest(unittest.TestCase):
+    def test_the_interface_names_each_function_that_a_vector_file_tests(self) -> None:
+        interface = grammar_section("Interface")
+        functions = {document["function"] for _, document in vector_documents()}
+        missing = sorted(name for name in functions if f"`{name}(" not in interface)
+        self.assertEqual(missing, [])
+        self.assertIn("`SPEC_VERSION`", interface)
+
+    def test_the_interface_names_each_field_of_a_parse_result(self) -> None:
+        interface = grammar_section("Interface")
+        expected = [
+            case["expect"]
+            for _, document in vector_documents()
+            if document["function"] == "parse"
+            for case in document["cases"]
+        ]
+        fields = {field for outcome in expected for field in outcome}
+        fields |= {
+            field for outcome in expected if "error" in outcome for field in outcome["error"]
+        }
+        fields |= {field for outcome in expected if outcome["ok"] for field in outcome["segments"]}
+        self.assertEqual(sorted(field for field in fields if f"`{field}`" not in interface), [])
+        self.assertIn("after the precision is null", interface)
