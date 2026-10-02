@@ -7,12 +7,15 @@ info:
   summary: Unofficial. Not made or endorsed by NIPOST.
   description: >-
     Gatepost wrote this description of NIPOST's public postcode gateway. It adds the responses,
-    error codes and headers that NIPOST's OpenAPI file 0.1.0 leaves out. Each response carries
-    x-gatepost-evidence. "observed" means that Gatepost saw the shape in its own calls on
-    2 Oct 2026. "documented" means that NIPOST's docs describe it, but no call showed it.
-    "assumed" means that neither source shows it, and Gatepost's mock server chose it.
-    Gatepost's calls used a key with lookup level 1 only, so every lookup body above level 1
-    is documented, not observed.
+    error codes and headers that NIPOST's OpenAPI file 0.1.0 leaves out. Each response and each
+    header carries x-gatepost-evidence. "observed" means that Gatepost saw the shape in its own
+    calls on 2 Oct 2026. "documented" means that NIPOST's docs describe it, but no call showed
+    it. "assumed" means that neither source shows it, and Gatepost's mock server chose it. An
+    error response lists its error codes in x-gatepost-error-codes, each with its own mark, and
+    a code never claims more than its response. Gatepost's calls used a key with lookup level 1
+    only, so every lookup body above level 1 is documented, not observed. The calls without a
+    key reached lookup and autocomplete only. x-gatepost-unknown-path describes the answer to a
+    path that this file does not list.
   license:
     name: Apache-2.0
     identifier: Apache-2.0
@@ -46,7 +49,9 @@ paths:
         - name: code
           in: query
           required: true
-          description: The postcode, in any form. The gateway ignores spaces, hyphens and case.
+          description: >-
+            The postcode, in any form. NIPOST's docs say that the gateway ignores spaces, hyphens
+            and case. Calls showed hyphens and lower case. No call sent spaces.
           schema: { type: string }
         - name: level
           in: query
@@ -65,10 +70,11 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/LookupEnvelope" }
         "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "401": { $ref: "#/components/responses/UnauthorizedSeen" }
         "402": { $ref: "#/components/responses/PaymentRequired" }
-        "403": { $ref: "#/components/responses/Forbidden" }
+        "403": { $ref: "#/components/responses/LookupForbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
   /v1/search/reverse:
     get:
       operationId: reverse
@@ -77,12 +83,16 @@ paths:
         - name: lat
           in: query
           required: true
-          description: The latitude in degrees. A client rejects a value outside this range.
+          description: >-
+            The latitude in degrees. The range is Gatepost's rule, not NIPOST's: a client rejects
+            a value outside it. No call showed what the gateway does with such a value.
           schema: { type: number, minimum: -90, maximum: 90 }
         - name: lng
           in: query
           required: true
-          description: The longitude in degrees. A client rejects a value outside this range.
+          description: >-
+            The longitude in degrees. The range is Gatepost's rule, not NIPOST's: a client
+            rejects a value outside it. No call showed what the gateway does with such a value.
           schema: { type: number, minimum: -180, maximum: 180 }
         - name: max_distance_m
           in: query
@@ -105,6 +115,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
   /v1/search/nearby:
     get:
       operationId: nearby
@@ -113,12 +124,16 @@ paths:
         - name: lat
           in: query
           required: true
-          description: The latitude in degrees. A client rejects a value outside this range.
+          description: >-
+            The latitude in degrees. The range is Gatepost's rule, not NIPOST's: a client rejects
+            a value outside it. No call showed what the gateway does with such a value.
           schema: { type: number, minimum: -90, maximum: 90 }
         - name: lng
           in: query
           required: true
-          description: The longitude in degrees. A client rejects a value outside this range.
+          description: >-
+            The longitude in degrees. The range is Gatepost's rule, not NIPOST's: a client
+            rejects a value outside it. No call showed what the gateway does with such a value.
           schema: { type: number, minimum: -180, maximum: 180 }
         - name: radius
           in: query
@@ -140,6 +155,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
   /v1/search/autocomplete:
     get:
       operationId: autocomplete
@@ -163,9 +179,10 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AutocompleteEnvelope" }
         "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "401": { $ref: "#/components/responses/UnauthorizedSeen" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
   /v1/assembly/assemble:
     post:
       operationId: assemble
@@ -189,6 +206,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
   /v1/assembly/disassemble:
     get:
       operationId: disassemble
@@ -212,6 +230,20 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "5XX": { $ref: "#/components/responses/ServerError" }
+x-gatepost-unknown-path:
+  description: >-
+    The answer to a path that this file does not list. No call and no doc showed it. The mock
+    server sends it.
+  responses:
+    "404":
+      description: The gateway serves no such path.
+      x-gatepost-evidence: assumed
+      x-gatepost-error-codes:
+        not_found: assumed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 components:
   securitySchemes:
     ApiKey:
@@ -224,32 +256,77 @@ components:
         its list.
   headers:
     RateLimitLimit:
-      description: The requests that one key can make in each clock minute.
+      description: >-
+        The requests that one key can make in each window. Calls showed 600, and a counter that
+        started again at each clock minute. No header states the window.
+      x-gatepost-evidence: observed
       schema: { type: integer, examples: [600] }
     RateLimitRemaining:
-      description: The requests that the key has left in this clock minute.
+      description: The requests that the key has left in this window. A 403 also counts.
+      x-gatepost-evidence: observed
       schema: { type: integer, minimum: 0 }
     RetryAfter:
-      description: The seconds to wait before the next request.
-      schema: { type: integer, minimum: 0 }
+      description: >-
+        The wait before the next request, in seconds or as an HTTP date. No call showed this
+        header. The mock server sends seconds.
+      x-gatepost-evidence: assumed
+      schema:
+        oneOf:
+          - { type: integer, minimum: 0 }
+          - { type: string, description: An HTTP date. }
   responses:
     BadRequest:
       description: The request has a missing or malformed parameter.
       x-gatepost-evidence: assumed
+      x-gatepost-error-codes:
+        invalid_request: assumed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    UnauthorizedSeen:
+      description: >-
+        A request with no key got auth_required in a call. NIPOST's docs list 401 for a missing
+        or invalid key. No call sent a key that the gateway does not know, so invalid_api_key is
+        assumed. The response to a call with no key had no rate-limit headers.
+      x-gatepost-evidence: observed
+      x-gatepost-error-codes:
+        auth_required: observed
+        invalid_api_key: assumed
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     Unauthorized:
       description: >-
-        No key (auth_required, observed), or a key that the gateway does not know
-        (invalid_api_key, observed on 1 Oct 2026). Neither response has rate-limit headers.
-      x-gatepost-evidence: observed
+        NIPOST's OpenAPI file asks for a key on this path, and its docs list 401 for a missing or
+        invalid key. No call without a key reached this path, so both codes are assumed.
+      x-gatepost-evidence: documented
+      x-gatepost-error-codes:
+        auth_required: assumed
+        invalid_api_key: assumed
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     PaymentRequired:
       description: The organisation has no credits for a lookup above level 1.
       x-gatepost-evidence: documented
+      x-gatepost-error-codes:
+        insufficient_credits: documented
+      headers:
+        X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
+        X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    LookupForbidden:
+      description: >-
+        A lookup above the key's level got level_not_granted in a call. NIPOST's docs list 403
+        for a key without the scope or the level, but name no code for the scope. NIPOST's docs
+        name origin_not_allowed only for the widget's calls to another host.
+      x-gatepost-evidence: observed
+      x-gatepost-error-codes:
+        level_not_granted: observed
+        scope_not_granted: assumed
+        origin_not_allowed: assumed
       headers:
         X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
         X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
@@ -258,10 +335,13 @@ components:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     Forbidden:
       description: >-
-        A lookup above the key's level (level_not_granted, observed), a key without the scope
-        (code assumed), or a publishable key from an origin that is not on its list
-        (origin_not_allowed, documented).
-      x-gatepost-evidence: observed
+        NIPOST's docs list 403 for a key without the scope, but name no code. No call got a 403
+        on this path. NIPOST's docs name origin_not_allowed only for the widget's calls to another
+        host.
+      x-gatepost-evidence: documented
+      x-gatepost-error-codes:
+        scope_not_granted: assumed
+        origin_not_allowed: assumed
       headers:
         X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
         X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
@@ -270,13 +350,26 @@ components:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     TooManyRequests:
       description: >-
-        The key used up its requests for this clock minute. NIPOST's docs give the status, but
-        no call reached it, so the error code and Retry-After are assumed.
+        The key has no requests left in this window. NIPOST's docs give the status, but no call
+        reached it, so the error code and Retry-After are assumed.
       x-gatepost-evidence: documented
+      x-gatepost-error-codes:
+        rate_limited: assumed
       headers:
         X-RateLimit-Limit: { $ref: "#/components/headers/RateLimitLimit" }
         X-RateLimit-Remaining: { $ref: "#/components/headers/RateLimitRemaining" }
         Retry-After: { $ref: "#/components/headers/RetryAfter" }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    ServerError:
+      description: >-
+        A fault of the gateway, such as 500, 502, 503 or 504. No call and no doc showed one. The
+        client contract gives the rule for each status.
+      x-gatepost-evidence: assumed
+      x-gatepost-error-codes:
+        internal: assumed
+        unavailable: assumed
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }

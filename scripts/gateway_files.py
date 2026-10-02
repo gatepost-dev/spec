@@ -21,7 +21,14 @@ from referencing.jsonschema import DRAFT202012
 ROOT = Path(__file__).resolve().parents[1]
 OPENAPI = ROOT / "openapi" / "gateway.completed.yaml"
 FIXTURES = ROOT / "fixtures"
+# The marks, from the strongest claim to the weakest.
 EVIDENCE = ("observed", "documented", "assumed")
+MARKS = ", ".join(EVIDENCE)
+EVIDENCE_MARK = "x-gatepost-evidence"
+ERROR_CODES = "x-gatepost-error-codes"
+# The gateway answers a path that it does not serve. This key of the file describes that answer.
+UNKNOWN_PATH = "x-gatepost-unknown-path"
+HTTP_METHODS = ("get", "put", "post", "delete", "options", "head", "patch", "trace")
 # NIPOST documents these gateway paths. SEC-4 lets a client call no other path.
 DOCUMENTED_PATHS = (
     "/healthz",
@@ -59,30 +66,71 @@ def load_openapi(path: Path = OPENAPI) -> dict[str, Any]:
     return document
 
 
-def responses(openapi: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
-    """Yield a label and the response object for each response of each operation.
+def operations(openapi: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield a label and each operation, then the answer to a path that the file does not list.
+
+    A path item can also hold keys that are not methods, such as `parameters`. They are skipped.
+    """
+    for path, item in openapi["paths"].items():
+        for method in HTTP_METHODS:
+            if method in item:
+                yield f"{method.upper()} {path}", item[method]
+    yield "Any unknown path", openapi[UNKNOWN_PATH]
+
+
+def responses(openapi: dict[str, Any]) -> Iterator[tuple[str, str, dict[str, Any]]]:
+    """Yield the operation's label, the status and the response object of each response.
 
     A response that refers to `components/responses` yields the component that it names.
     """
     shared = openapi.get("components", {}).get("responses", {})
-    for path, operations in openapi["paths"].items():
-        for method, operation in operations.items():
-            for status, response in operation["responses"].items():
-                reference = response.get("$ref", "")
-                target = shared.get(reference.rpartition("/")[2], response)
-                yield f"{method.upper()} {path} {status}", target
+    for label, operation in operations(openapi):
+        for status, response in operation["responses"].items():
+            reference = response.get("$ref", "")
+            yield label, status, shared.get(reference.rpartition("/")[2], response)
+
+
+def code_problems(label: str, status: str, response: dict[str, Any]) -> list[str]:
+    """Return the problems of the error codes of one response.
+
+    An error response names each code that it can carry, and gives each code its own mark. A
+    code can claim no more than its response: a code is not observed in a response that no call
+    returned.
+    """
+    codes = response.get(ERROR_CODES)
+    if status.startswith("2"):
+        return [] if codes is None else [f"{label} {status} is a success and has no error codes."]
+    if not isinstance(codes, dict) or not codes:
+        return [f"{label} {status} needs {ERROR_CODES}."]
+    ceiling = response[EVIDENCE_MARK]
+    problems = []
+    for code, mark in codes.items():
+        if mark not in EVIDENCE:
+            problems.append(f"{label} {status} needs a mark for {code}: one of {MARKS}.")
+        elif EVIDENCE.index(mark) < EVIDENCE.index(ceiling):
+            problems.append(
+                f"{label} {status} marks {code} {mark}, above its response ({ceiling})."
+            )
+    return problems
 
 
 def openapi_problems(openapi: dict[str, Any]) -> list[str]:
-    """Return the problems of the OpenAPI file: extra paths and missing evidence marks."""
+    """Return the problems of the OpenAPI file: extra paths, and missing or excessive marks."""
     problems = [
         f"The path {path} is not a documented gateway path."
         for path in openapi["paths"]
         if path not in DOCUMENTED_PATHS
     ]
-    for label, response in responses(openapi):
-        if response.get("x-gatepost-evidence") not in EVIDENCE:
-            problems.append(f"{label} needs x-gatepost-evidence: one of {', '.join(EVIDENCE)}.")
+    problems += [
+        f"The header {name} needs {EVIDENCE_MARK}: one of {MARKS}."
+        for name, header in openapi["components"]["headers"].items()
+        if header.get(EVIDENCE_MARK) not in EVIDENCE
+    ]
+    for label, status, response in responses(openapi):
+        if response.get(EVIDENCE_MARK) not in EVIDENCE:
+            problems.append(f"{label} {status} needs {EVIDENCE_MARK}: one of {MARKS}.")
+            continue
+        problems += code_problems(label, status, response)
     return problems
 
 
@@ -111,7 +159,7 @@ def schema_check(openapi: dict[str, Any]) -> SchemaCheck:
 def schemas_in_responses(openapi: dict[str, Any]) -> set[str]:
     """Return the names of the schemas that the responses use directly."""
     names = set()
-    for _, response in responses(openapi):
+    for _, _, response in responses(openapi):
         for media in response.get("content", {}).values():
             names.add(media["schema"]["$ref"].rpartition("/")[2])
     return names
@@ -133,7 +181,7 @@ def fixture_problems(name: str, fixture: Any, check: SchemaCheck) -> list[str]:
     if fixture["version"] != 1:
         problems.append(f"Fixture {name} must have version 1.")
     if fixture["evidence"] not in EVIDENCE:
-        problems.append(f"Fixture {name} needs evidence: one of {', '.join(EVIDENCE)}.")
+        problems.append(f"Fixture {name} needs evidence: one of {MARKS}.")
     if type(fixture["status"]) is not int:
         problems.append(f"Fixture {name} needs an integer status.")
     problems += [

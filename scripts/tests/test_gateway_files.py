@@ -16,6 +16,13 @@ FIXTURES = gateway_files.load_fixtures()
 KEYS = gateway_files.read_json(gateway_files.FIXTURES / "keys.json")
 
 
+def marks(openapi: dict[str, Any]) -> dict[str, str]:
+    return {
+        f"{operation} {status}": response["x-gatepost-evidence"]
+        for operation, status, response in gateway_files.responses(openapi)
+    }
+
+
 def edited_fixture(name: str, **fields: Any) -> dict[str, Any]:
     fixture: dict[str, Any] = copy.deepcopy(FIXTURES[name])
     fixture.update(fields)
@@ -43,12 +50,110 @@ class OpenApiTest(unittest.TestCase):
         [problem] = gateway_files.openapi_problems(openapi)
         self.assertTrue(problem.startswith("GET /v1/lookup 200 needs x-gatepost-evidence"))
 
+    def test_rejects_an_evidence_value_that_is_not_a_mark(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        openapi["paths"]["/v1/lookup"]["get"]["responses"]["200"]["x-gatepost-evidence"] = "guess"
+        [problem] = gateway_files.openapi_problems(openapi)
+        self.assertTrue(problem.startswith("GET /v1/lookup 200 needs x-gatepost-evidence"))
+
     def test_reads_the_evidence_of_a_shared_response_from_its_component(self) -> None:
         openapi = copy.deepcopy(OPENAPI)
-        del openapi["components"]["responses"]["Unauthorized"]["x-gatepost-evidence"]
+        del openapi["components"]["responses"]["BadRequest"]["x-gatepost-evidence"]
         labels = [problem.split(" needs")[0] for problem in gateway_files.openapi_problems(openapi)]
-        self.assertIn("GET /v1/lookup 401", labels)
-        self.assertIn("POST /v1/assembly/assemble 401", labels)
+        self.assertIn("GET /v1/lookup 400", labels)
+        self.assertIn("POST /v1/assembly/assemble 400", labels)
+
+    def test_marks_as_observed_only_the_responses_that_a_call_returned(self) -> None:
+        observed = sorted(label for label, mark in marks(OPENAPI).items() if mark == "observed")
+        self.assertEqual(
+            observed,
+            [
+                "GET /v1/assembly/disassemble 200",
+                "GET /v1/lookup 200",
+                "GET /v1/lookup 401",
+                "GET /v1/lookup 403",
+                "GET /v1/search/autocomplete 200",
+                "GET /v1/search/autocomplete 401",
+                "GET /v1/search/nearby 200",
+                "GET /v1/search/reverse 200",
+                "POST /v1/assembly/assemble 200",
+            ],
+        )
+
+    def test_marks_as_observed_only_the_error_codes_that_a_call_returned(self) -> None:
+        observed = sorted(
+            f"{operation} {status} {code}"
+            for operation, status, response in gateway_files.responses(OPENAPI)
+            for code, mark in response.get("x-gatepost-error-codes", {}).items()
+            if mark == "observed"
+        )
+        self.assertEqual(
+            observed,
+            [
+                "GET /v1/lookup 401 auth_required",
+                "GET /v1/lookup 403 level_not_granted",
+                "GET /v1/search/autocomplete 401 auth_required",
+            ],
+        )
+
+    def test_gives_each_error_code_of_a_response_its_own_mark(self) -> None:
+        lookup = OPENAPI["paths"]["/v1/lookup"]["get"]["responses"]
+        shared = OPENAPI["components"]["responses"]
+        forbidden = shared[lookup["403"]["$ref"].rpartition("/")[2]]
+        self.assertEqual(
+            forbidden["x-gatepost-error-codes"],
+            {
+                "level_not_granted": "observed",
+                "scope_not_granted": "assumed",
+                "origin_not_allowed": "assumed",
+            },
+        )
+
+    def test_rejects_an_error_response_with_no_error_codes(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        del openapi["components"]["responses"]["BadRequest"]["x-gatepost-error-codes"]
+        problems = gateway_files.openapi_problems(openapi)
+        self.assertIn("GET /v1/lookup 400 needs x-gatepost-error-codes.", problems)
+
+    def test_rejects_an_error_code_that_claims_more_than_its_response(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        codes = openapi["components"]["responses"]["BadRequest"]["x-gatepost-error-codes"]
+        codes["invalid_request"] = "observed"
+        problems = gateway_files.openapi_problems(openapi)
+        self.assertIn(
+            "GET /v1/lookup 400 marks invalid_request observed, above its response (assumed).",
+            problems,
+        )
+
+    def test_describes_the_answer_to_a_path_that_the_gateway_does_not_serve(self) -> None:
+        [(status, response)] = [
+            (status, response)
+            for operation, status, response in gateway_files.responses(OPENAPI)
+            if operation == "Any unknown path"
+        ]
+        self.assertEqual(status, "404")
+        self.assertEqual(response["x-gatepost-error-codes"], {"not_found": "assumed"})
+
+    def test_rejects_a_header_with_no_evidence_mark(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        del openapi["components"]["headers"]["RetryAfter"]["x-gatepost-evidence"]
+        [problem] = gateway_files.openapi_problems(openapi)
+        self.assertEqual(
+            problem,
+            "The header RetryAfter needs x-gatepost-evidence: "
+            "one of observed, documented, assumed.",
+        )
+
+    def test_marks_the_retry_after_header_as_assumed(self) -> None:
+        headers = OPENAPI["components"]["headers"]
+        self.assertEqual(headers["RetryAfter"]["x-gatepost-evidence"], "assumed")
+        self.assertEqual(headers["RateLimitLimit"]["x-gatepost-evidence"], "observed")
+
+    def test_reads_a_path_item_with_shared_parameters(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        openapi["paths"]["/v1/lookup"]["parameters"] = []
+        openapi["paths"]["/v1/lookup"]["summary"] = "Lookups"
+        self.assertEqual(gateway_files.openapi_problems(openapi), [])
 
     def test_marks_each_lookup_above_level_1_as_not_observed(self) -> None:
         schemas = OPENAPI["components"]["schemas"]
