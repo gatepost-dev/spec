@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A lookup above level 2 with a key that holds level 2.",
+  "evidence": "assumed",
+  "schema": "ErrorEnvelope",
+  "status": 403,
+  "body": {
+    "error": {
+      "code": "level_not_granted",
+      "message": "this key cannot read above lookup level 2"
+    }
+  }
+}

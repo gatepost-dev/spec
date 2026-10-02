@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A key that used up its requests for this clock minute.",
+  "evidence": "assumed",
+  "schema": "ErrorEnvelope",
+  "status": 429,
+  "body": {
+    "error": {
+      "code": "rate_limited",
+      "message": "too many requests; wait for the next minute"
+    }
+  }
+}

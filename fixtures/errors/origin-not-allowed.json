@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A publishable key from an origin off its list. The message is Gatepost's.",
+  "evidence": "documented",
+  "schema": "ErrorEnvelope",
+  "status": 403,
+  "body": {
+    "error": {
+      "code": "origin_not_allowed",
+      "message": "this origin is not allowed for this key"
+    }
+  }
+}

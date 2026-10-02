@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A key that the gateway does not know. The message is Gatepost's.",
+  "evidence": "observed",
+  "schema": "ErrorEnvelope",
+  "status": 401,
+  "body": {
+    "error": {
+      "code": "invalid_api_key",
+      "message": "the API key is not valid"
+    }
+  }
+}

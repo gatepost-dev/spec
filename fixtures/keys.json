@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "description": "The mock server's keys. Each one makes the mock behave in one way.",
+  "requestsPerMinute": 600,
+  "keys": [
+    {
+      "key": "nipost_test_mock_l1",
+      "kind": "secret",
+      "lookupLevel": 1,
+      "lookupScope": true,
+      "credits": true,
+      "rateLimited": false,
+      "origins": null
+    },
+    {
+      "key": "nipost_test_mock_l2",
+      "kind": "secret",
+      "lookupLevel": 2,
+      "lookupScope": true,
+      "credits": true,
+      "rateLimited": false,
+      "origins": null
+    },
+    {
+      "key": "nipost_test_mock_l3",
+      "kind": "secret",
+      "lookupLevel": 3,
+      "lookupScope": true,
+      "credits": true,
+      "rateLimited": false,
+      "origins": null
+    },
+    {
+      "key": "nipost_test_mock_no_credits",
+      "kind": "secret",
+      "lookupLevel": 3,
+      "lookupScope": true,
+      "credits": false,
+      "rateLimited": false,
+      "origins": null
+    },
+    {
+      "key": "nipost_test_mock_no_scope",
+      "kind": "secret",
+      "lookupLevel": 3,
+      "lookupScope": false,
+      "credits": true,
+      "rateLimited": false,
+      "origins": null
+    },
+    {
+      "key": "nipost_test_mock_rate_limited",
+      "kind": "secret",
+      "lookupLevel": 3,
+      "lookupScope": true,
+      "credits": true,
+      "rateLimited": true,
+      "origins": null
+    },
+    {
+      "key": "nipost_pk_test_mock",
+      "kind": "publishable",
+      "lookupLevel": 3,
+      "lookupScope": true,
+      "credits": true,
+      "rateLimited": false,
+      "origins": [
+        "http://localhost:3000"
+      ]
+    }
+  ]
+}

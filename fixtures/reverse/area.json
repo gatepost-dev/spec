@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "A point in the synthetic area with no unit within the radius.",
+  "evidence": "observed",
+  "schema": "ReverseEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "found": true,
+      "coordinate": [
+        7.001,
+        9.001
+      ],
+      "area": "FC-01-Z99-ZZ",
+      "district": "FC-01-Z99",
+      "state": "FC",
+      "depth": "area",
+      "radius_m": 25
+    }
+  }
+}

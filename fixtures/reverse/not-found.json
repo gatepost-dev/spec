@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "description": "A point with no postcode within the radius.",
+  "evidence": "observed",
+  "schema": "ReverseEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "found": false,
+      "coordinate": [
+        0,
+        0
+      ],
+      "message": "no postcode found near this point",
+      "radius_m": 25
+    }
+  }
+}

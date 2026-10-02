@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "description": "A point 4.2 m from the synthetic unit.",
+  "evidence": "observed",
+  "schema": "ReverseEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "found": true,
+      "coordinate": [
+        7,
+        9
+      ],
+      "unit": {
+        "postcode": "FC-01-Z99-ZZ-01",
+        "display": "FC 01 Z99 ZZ 01",
+        "distance_m": 4.2,
+        "confidence": "high"
+      },
+      "area": "FC-01-Z99-ZZ",
+      "district": "FC-01-Z99",
+      "state": "FC",
+      "depth": "unit",
+      "radius_m": 25
+    }
+  }
+}

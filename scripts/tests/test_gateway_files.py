@@ -1,14 +1,25 @@
 # SPDX-FileCopyrightText: 2026 The Gatepost authors
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for gateway_files: the OpenAPI file has the documented paths, evidence and schemas."""
+"""Tests for gateway_files: the OpenAPI file, fixtures and keys agree and stay synthetic."""
 
 import copy
+import tempfile
 import unittest
+from pathlib import Path
+from typing import Any
 
 import gateway_files
 
 OPENAPI = gateway_files.load_openapi()
 CHECK = gateway_files.schema_check(OPENAPI)
+FIXTURES = gateway_files.load_fixtures()
+KEYS = gateway_files.read_json(gateway_files.FIXTURES / "keys.json")
+
+
+def edited_fixture(name: str, **fields: Any) -> dict[str, Any]:
+    fixture: dict[str, Any] = copy.deepcopy(FIXTURES[name])
+    fixture.update(fields)
+    return fixture
 
 
 class OpenApiTest(unittest.TestCase):
@@ -68,3 +79,104 @@ class SchemaCheckTest(unittest.TestCase):
 
     def test_rejects_a_schema_name_that_the_file_does_not_have(self) -> None:
         self.assertEqual(CHECK("Lookups", {}), ["The OpenAPI file has no schema Lookups."])
+
+
+class FixtureTest(unittest.TestCase):
+    def test_each_fixture_has_no_problem(self) -> None:
+        for name, fixture in FIXTURES.items():
+            with self.subTest(name):
+                self.assertEqual(gateway_files.fixture_problems(name, fixture, CHECK), [])
+
+    def test_each_fixture_uses_a_schema_of_a_response(self) -> None:
+        used = gateway_files.schemas_in_responses(OPENAPI)
+        self.assertEqual(sorted({fixture["schema"] for fixture in FIXTURES.values()} - used), [])
+
+    def test_has_a_body_for_each_lookup_level_that_a_mock_key_holds(self) -> None:
+        for level in (1, 2, 3):
+            with self.subTest(level=level):
+                self.assertIn(f"lookup/valid-level-{level}", FIXTURES)
+                self.assertIn(f"errors/level-not-granted-{level}", FIXTURES)
+
+    def test_rejects_a_body_that_does_not_match_its_schema(self) -> None:
+        body = {"data": {"found": True, "coordinate": [7], "radius_m": 25}}
+        fixture = edited_fixture("reverse/unit", body=body)
+        self.assertEqual(
+            gateway_files.fixture_problems("reverse/unit", fixture, CHECK),
+            ["Fixture reverse/unit: [7] is too short at $.data.coordinate"],
+        )
+
+    def test_rejects_an_evidence_value_that_the_openapi_file_does_not_use(self) -> None:
+        fixture = edited_fixture("nearby/empty", evidence="seen")
+        [problem] = gateway_files.fixture_problems("nearby/empty", fixture, CHECK)
+        self.assertEqual(
+            problem, "Fixture nearby/empty needs evidence: one of observed, documented, assumed."
+        )
+
+    def test_rejects_a_status_that_is_not_an_integer(self) -> None:
+        fixture = edited_fixture("nearby/empty", status="200")
+        self.assertEqual(
+            gateway_files.fixture_problems("nearby/empty", fixture, CHECK),
+            ["Fixture nearby/empty needs an integer status."],
+        )
+
+    def test_rejects_a_fixture_with_a_field_missing(self) -> None:
+        fixture = edited_fixture("nearby/empty")
+        del fixture["evidence"]
+        [problem] = gateway_files.fixture_problems("nearby/empty", fixture, CHECK)
+        self.assertTrue(problem.startswith("Fixture nearby/empty must have the fields version,"))
+
+
+class KeysTest(unittest.TestCase):
+    def test_the_key_file_has_no_problem(self) -> None:
+        self.assertEqual(gateway_files.key_problems(KEYS), [])
+
+    def test_rejects_a_key_that_could_be_real(self) -> None:
+        keys = copy.deepcopy(KEYS)
+        keys["keys"][0]["key"] = "nipost_test_a1b2c3d4e5"
+        self.assertEqual(
+            gateway_files.key_problems(keys),
+            ["The key nipost_test_a1b2c3d4e5 must be unique and start with a mock prefix."],
+        )
+
+    def test_rejects_a_key_twice(self) -> None:
+        keys = copy.deepcopy(KEYS)
+        keys["keys"].append(copy.deepcopy(keys["keys"][0]))
+        self.assertEqual(len(gateway_files.key_problems(keys)), 1)
+
+    def test_rejects_a_level_that_no_key_can_hold(self) -> None:
+        keys = copy.deepcopy(KEYS)
+        keys["keys"][0]["lookupLevel"] = 4
+        self.assertEqual(
+            gateway_files.key_problems(keys),
+            ["The key nipost_test_mock_l1 needs a lookupLevel from 1 to 3."],
+        )
+
+
+class SyntheticPostcodeTest(unittest.TestCase):
+    def test_finds_no_real_postcode_in_the_committed_files(self) -> None:
+        files = sorted(
+            [
+                *gateway_files.FIXTURES.rglob("*.json"),
+                *(gateway_files.ROOT / "contract").glob("*.json"),
+            ]
+        )
+        self.assertEqual(gateway_files.postcode_problems(files), [])
+
+    def test_finds_a_real_postcode_in_each_form_and_case(self) -> None:
+        text = "EK-01-A03-FK-01, EK 01 A03 FK 01, ek01a03fk01 and FC-01-Z99-ZZ-01"
+        self.assertEqual(
+            gateway_files.real_postcodes(text),
+            ["EK-01-A03-FK-01", "EK 01 A03 FK 01", "ek01a03fk01"],
+        )
+
+    def test_keeps_a_partial_postcode_and_a_longer_word(self) -> None:
+        self.assertEqual(gateway_files.real_postcodes("EK-01-A03 and XEK01A03FK01"), [])
+
+    def test_names_the_file_that_holds_a_real_postcode(self) -> None:
+        with tempfile.TemporaryDirectory(dir=gateway_files.ROOT) as folder:
+            path = Path(folder) / "probe.json"
+            path.write_text('{"postcode": "LA-12-K23-IV-95"}', encoding="utf-8")
+            [problem] = gateway_files.postcode_problems([path])
+        self.assertTrue(
+            problem.endswith("probe.json holds the postcode LA-12-K23-IV-95. Use a synthetic code.")
+        )
