@@ -46,10 +46,10 @@ A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` 
 | `buildingUseStatus` | text, or null |
 
 - The client never takes `postcode` from the response. The gateway echoes the caller's text there, also for text that is not a postcode. The scenario `lookup-echo-ignored` tests this rule.
-- `status` is null when the response has no `status`. The client returns any other value of `status` as it is, also when this table does not list it, so that a new gateway status is not lost.
+- `status` is null when the response has no `status`. The client returns any other value of `status` as it is, also when this table does not list it, so that a new gateway status is not lost. The scenarios `lookup-level-2` and `lookup-unknown-status` test this rule.
 - `levelReceived` comes from the fields of the response. It is 5 when `point_geometry` is present, 4 for `other_building_info`, 3 for `building_use_status`, and 2 for either address field. Otherwise it is 1. It can be lower than `levelRequested`. The scenarios `lookup-level-2`, `lookup-level-3`, `lookup-level-4`, `lookup-level-5`, `lookup-building-use-only` and `lookup-lower-level` test this rule.
 - `recentHouseAddress` is the text in `recent_house_address.recent`. The scenario `lookup-level-2` tests it.
-- A `status` that is present, not null and not text raises `unexpected_response`.
+- A `status` that is present, not null and not text raises `unexpected_response`. The scenario `lookup-status-not-text` tests it.
 - A response with `valid: false` is a result, not an error. The scenario `lookup-not-found` tests it.
 
 ### Reverse result
@@ -77,7 +77,7 @@ A unit has these fields:
 - `found` can be true while `unit` is null. The gateway then found an area, but no unit within the radius. The scenario `reverse-area` tests it.
 - A response with `found: false` is a result, not an error. The scenario `reverse-not-found` tests it.
 - `confidence` is `low` for a value that this table does not list. The scenario `reverse-unknown-confidence` tests it.
-- The gateway sends the coordinate as `[lng, lat]`. The client does not return it.
+- The gateway sends the coordinate as `[lng, lat]`. The client does not return it. The scenario `reverse-unit` tests it.
 
 ### Autocomplete result
 
@@ -139,8 +139,8 @@ The error code comes from the first row that matches.
 | no response, because the connection failed | `network_error` | yes | `lookup-network-error` |
 | no response within `timeoutMs` | `timeout` | yes, except for `autocomplete` | `lookup-timeout`, `autocomplete-timeout` |
 
-- `apiCode` is set when the body is a JSON object whose `error.code` is text. The client never raises an error for an unexpected error body.
-- A part that is missing or has the wrong type gives `unexpected_response`. These parts are: `valid` of a lookup, `found` of a reverse, `suggestions` of an autocomplete, a `status` that is present, not null and not text, and a postcode of a reverse result that the core cannot parse. The client never returns a guessed empty value in their place. The scenarios `lookup-malformed-body`, `lookup-missing-valid`, `lookup-status-not-text`, `reverse-missing-found`, `reverse-bad-postcode` and `autocomplete-suggestions-not-list` test this rule.
+- `apiCode` is set when the body is a JSON object whose `error.code` is text. The client never raises an error for an unexpected error body. The scenarios `lookup-bad-request` and `lookup-malformed-body` test this rule.
+- A part that is missing or has the wrong type gives `unexpected_response`. These parts are: `valid` of a lookup, `found` of a reverse, `suggestions` of an autocomplete, a `status` that is present, not null and not text, and a postcode of a reverse result that the core cannot parse. The client never returns a guessed empty value in their place. The scenarios `lookup-malformed-body`, `lookup-missing-valid`, `lookup-status-not-text`, `lookup-no-data`, `reverse-missing-found`, `reverse-bad-postcode` and `autocomplete-suggestions-not-list` test this rule.
 - A cancelled call ends with the platform's own cancellation error, not with `PostcodeError` (API-11).
 - No error message holds the API key (ERR-3).
 

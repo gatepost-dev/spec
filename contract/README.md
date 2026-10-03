@@ -72,9 +72,9 @@ The mock server gives the first response to the first request, the second respon
 | `request` | the first request: `method`, `path`, `query` and `apiKey`, which is null when the request had no `X-API-Key` header. `query` holds every parameter of the request, and no other, with each value as text |
 | `outcomes` | one outcome for each call, in the order of the calls |
 
-An outcome is `{"result": ...}` or `{"error": ...}`. With one call, the reply to the last attempt decides the outcome, as `client.md` says, and `make check` compares the two. A result uses the field names in `client.md`. A postcode in a result is its canonical form. An error has `code`, `status`, `apiCode` and `retryAfterMs`.
+An outcome is `{"result": ...}` or `{"error": ...}`. `make check` plays each scenario as `client.md` says. It checks the attempts, the waits, the requests in flight, the first request and each outcome. The reply to the last attempt of a call decides its outcome. A result uses the field names in `client.md`. A postcode in a result is its canonical form. An error has `code`, `status`, `apiCode` and `retryAfterMs`.
 
-A wait runs from the end of one attempt to the start of the next one. Timers can fire late, so a test can accept a wait up to 100 ms over `max`. It must not accept a wait under `min`.
+A wait runs from the end of one attempt to the start of the next one. Timers can fire late, so a test can accept a wait up to 100 ms over `max`. It must not accept a wait under `min`. The scenario `lookup-retry-after-ten` waits 10 seconds, so a runner needs a time limit of at least 12 seconds for it.
 
 ## Running a scenario
 

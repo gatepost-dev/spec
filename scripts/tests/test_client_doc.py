@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 import contract_files
+import scenario_truth
 
 CLIENT = contract_files.CLIENT_DOC.read_text(encoding="utf-8")
 TYPESCRIPT = contract_files.ROOT / "standards" / "languages" / "typescript.md"
@@ -74,6 +75,7 @@ class RequestRulesTest(unittest.TestCase):
         lead = "Each of these raises `invalid_input`, and the client sends no request:"
         rule = bullets(self.requests, lead)[3]
         self.assertIn("The gateway cuts a larger value to 250 without a sign", rule)
+        self.assertIn("so the client rejects it", rule)
         self.assertNotIn("is clamped", self.requests)
 
     def test_each_input_rule_names_its_scenario(self) -> None:
@@ -158,6 +160,8 @@ class RetryRulesTest(unittest.TestCase):
         self.assertIn("`(1 + maxRetries) x timeoutMs`", bullet)
         self.assertIn("`500 x 2^(n - 1) + 250`", bullet)
         self.assertIn("raises the error of the last attempt at once", bullet)
+        seconds = scenario_truth.deadline_ms(8000, 2) // 1000
+        self.assertIn(f"With the defaults for `lookup`, that is {seconds} seconds.", bullet)
         self.assertIn("`lookup-deadline`", bullet)
 
     def test_a_retry_after_on_a_5xx_is_used_when_valid_and_short(self) -> None:
@@ -229,3 +233,34 @@ class ScenarioNamesTest(unittest.TestCase):
         names = set(re.findall(r"`((?:lookup|reverse|autocomplete)-[a-z0-9-]+)`", CLIENT))
         self.assertGreaterEqual(len(names), 19)
         self.assertEqual(sorted(names - set(scenarios)), [])
+
+
+class RuleScenarioTest(unittest.TestCase):
+    def test_each_rule_names_a_scenario_or_is_left_to_each_client(self) -> None:
+        headings = (
+            "### Lookup result",
+            "### Reverse result",
+            "### Autocomplete result",
+            "## Requests",
+            "## Errors",
+            "## Retries",
+            "## Sharing, queue and cache",
+        )
+        rules = [
+            rule
+            for heading in headings
+            for rule in re.split(r"\n(?=- )", section(CLIENT, heading))
+            if rule.startswith("- ")
+        ]
+        unnamed = [rule[2:40] for rule in rules if not contract_files.SCENARIO_NAME.search(rule)]
+        self.assertEqual(
+            unnamed,
+            [
+                "A cancelled call ends with the platfor",
+                "No error message holds the API key (ER",
+                "A shared request stops only when every",
+            ],
+        )
+        untested = section(CLIENT, "## Rules that no scenario tests")
+        for text in ("Cancellation (API-11)", "no error message holds", "a shared request stops"):
+            self.assertIn(text, untested)

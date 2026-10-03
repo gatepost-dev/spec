@@ -8,14 +8,14 @@ info:
   description: >-
     Gatepost wrote this description of NIPOST's public postcode gateway. It adds the responses,
     error codes and headers that NIPOST's OpenAPI file 0.1.0 leaves out. Each response and each
-    header carries x-gatepost-evidence. "observed" means that Gatepost saw the shape in its own
-    calls on 2 Oct 2026. "documented" means that NIPOST's docs describe it, but no call showed
-    it. "assumed" means that neither source shows it, and Gatepost's mock server chose it. An
-    error response lists its error codes in x-gatepost-error-codes, each with its own mark, and
-    a code never claims more than its response. Gatepost's calls used a key with lookup level 1
-    only, so every lookup body above level 1 is documented, not observed. The calls without a
-    key reached lookup and autocomplete only. x-gatepost-unknown-path describes the answer to a
-    path that this file does not list.
+    header carries x-gatepost-evidence, and so does each field of a body that no call showed.
+    "observed" means that Gatepost saw the shape in its own calls on 2 Oct 2026. "documented" means
+    that NIPOST's docs describe it, but no call showed it. "assumed" means that neither source shows
+    it, and Gatepost's mock server chose it. An error response lists its error codes in
+    x-gatepost-error-codes, each with its own mark, and a code never claims more than its response.
+    Gatepost's calls used a key with lookup level 1 only, so every lookup body above level 1 is
+    documented, not observed. The calls without a key reached lookup and autocomplete only.
+    x-gatepost-unknown-path describes the answer to a path that this file does not list.
   license:
     name: Apache-2.0
     identifier: Apache-2.0
@@ -420,16 +420,20 @@ components:
         building_use_status:
           type: string
           description: Level 3 and above. Documented, not observed.
+          x-gatepost-evidence: documented
           examples: [residential]
         other_building_info:
           type: object
           description: Level 4 and above. NIPOST gives no fields.
+          x-gatepost-evidence: documented
         point_geometry:
           type: object
           description: Level 5. NIPOST gives no fields.
+          x-gatepost-evidence: documented
     AdministrativeAddress:
       type: object
       description: Level 2 and above. Documented, not observed.
+      x-gatepost-evidence: documented
       required: [state_name, lga_name, locality_name, zone]
       properties:
         state_name: { type: string }
@@ -439,6 +443,7 @@ components:
     RecentHouseAddress:
       type: object
       description: Level 2 and above. Documented, not observed.
+      x-gatepost-evidence: documented
       required: [recent]
       properties:
         recent: { type: string }

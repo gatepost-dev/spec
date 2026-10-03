@@ -21,7 +21,7 @@
           "unit": {
             "postcode": "FC-01-Z99-ZZ-01",
             "distanceM": 4.2,
-            "confidence": "high",
+            "confidence": "low",
             "stateName": null,
             "lgaName": null,
             "localityName": null,

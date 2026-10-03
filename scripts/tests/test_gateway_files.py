@@ -109,6 +109,15 @@ class OpenApiTest(unittest.TestCase):
             },
         )
 
+    def test_rejects_error_codes_on_a_success(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        success = openapi["paths"]["/v1/lookup"]["get"]["responses"]["200"]
+        success["x-gatepost-error-codes"] = {"not_found": "assumed"}
+        self.assertEqual(
+            gateway_files.openapi_problems(openapi),
+            ["GET /v1/lookup 200 is a success and has no error codes."],
+        )
+
     def test_rejects_an_error_response_with_no_error_codes(self) -> None:
         openapi = copy.deepcopy(OPENAPI)
         del openapi["components"]["responses"]["BadRequest"]["x-gatepost-error-codes"]
@@ -239,6 +248,23 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual(
             gateway_files.fixture_response_problems("errors/invalid-api-key", fixture, OPENAPI),
             ["Fixture errors/invalid-api-key claims observed, but the OpenAPI file says assumed."],
+        )
+
+    def test_rejects_a_body_above_level_1_marked_as_observed(self) -> None:
+        for name in ("lookup/valid-level-2", "lookup/valid-level-3"):
+            with self.subTest(name):
+                fixture = edited_fixture(name, evidence="observed")
+                self.assertEqual(
+                    gateway_files.fixture_response_problems(name, fixture, OPENAPI),
+                    [f"Fixture {name} claims observed, but the OpenAPI file says documented."],
+                )
+
+    def test_skips_a_mark_that_is_not_valid_and_lets_the_file_check_name_it(self) -> None:
+        openapi = copy.deepcopy(OPENAPI)
+        openapi["paths"]["/v1/lookup"]["get"]["responses"]["200"]["x-gatepost-evidence"] = "guess"
+        fixture = edited_fixture("lookup/valid-level-1")
+        self.assertEqual(
+            gateway_files.fixture_response_problems("lookup/valid-level-1", fixture, openapi), []
         )
 
     def test_accepts_a_status_in_a_range_of_the_openapi_file(self) -> None:

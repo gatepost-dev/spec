@@ -212,12 +212,44 @@ def stated_code(name: str) -> str:
     return re.sub(r"-[0-9]+$", "", name.rpartition("/")[2]).replace("-", "_")
 
 
-def evidence_problems(name: str, evidence: str, marks: list[str]) -> list[str]:
-    """Return a problem when a fixture claims more than the strongest of the marks."""
-    strongest = min(marks, key=EVIDENCE.index)
+def evidence_problems(name: str, evidence: str, marks: list[Any]) -> list[str]:
+    """Return a problem when a fixture claims more than the strongest of the marks.
+
+    A mark that is not valid counts for nothing here. The check of the OpenAPI file names it.
+    """
+    valid = [mark for mark in marks if mark in EVIDENCE]
+    if not valid:
+        return []
+    strongest = min(valid, key=EVIDENCE.index)
     if EVIDENCE.index(evidence) >= EVIDENCE.index(strongest):
         return []
     return [f"Fixture {name} claims {evidence}, but the OpenAPI file says {strongest}."]
+
+
+def resolve(openapi: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    """Return the schema that a `$ref` names, or the schema itself when it has no `$ref`."""
+    if "$ref" not in schema:
+        return schema
+    named: dict[str, Any] = openapi["components"]["schemas"][schema["$ref"].rpartition("/")[2]]
+    return named
+
+
+def field_marks(openapi: dict[str, Any], schema: str, body: Any) -> list[str]:
+    """Return the marks of the fields in the `data` of a body, where the schema marks a field.
+
+    A lookup body above level 1 holds such fields, because no call showed them.
+    """
+    data = body.get("data") if isinstance(body, dict) else None
+    envelope = openapi["components"]["schemas"][schema].get("properties", {})
+    fields = resolve(openapi, envelope.get("data", {})).get("properties", {})
+    if not isinstance(data, dict):
+        return []
+    marks = [
+        fields[name].get(EVIDENCE_MARK) or resolve(openapi, fields[name]).get(EVIDENCE_MARK)
+        for name in data
+        if name in fields
+    ]
+    return [mark for mark in marks if mark in EVIDENCE]
 
 
 def fixture_response_problems(
@@ -238,7 +270,11 @@ def fixture_response_problems(
     if not found:
         return [f"Fixture {name}: no response with the schema {schema} has the status {status}."]
     if schema != ERROR_SCHEMA:
-        return evidence_problems(name, fixture["evidence"], [r[EVIDENCE_MARK] for r in found])
+        weakest = sorted(field_marks(openapi, schema, fixture["body"]), key=EVIDENCE.index)[-1:]
+        response_marks = [r.get(EVIDENCE_MARK) for r in found]
+        return evidence_problems(name, fixture["evidence"], response_marks) or evidence_problems(
+            name, fixture["evidence"], weakest
+        )
     code = fixture["body"]["error"]["code"]
     named = stated_code(name)
     listed = {

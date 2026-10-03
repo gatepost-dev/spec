@@ -34,7 +34,7 @@ The mock server answers with these files. Each file holds one response of NIPOST
 | `reverse` at any other coordinate | `reverse/not-found.json` |
 | `nearby` | `nearby/empty.json` |
 | an error | the file in `errors/` with the same error code |
-| a path that the gateway does not serve | `errors/unknown-path.json` |
+| a path that the gateway does not serve | `errors/unknown-path.json`, which `x-gatepost-unknown-path` of the OpenAPI file describes |
 
 - The mock server puts the caller's text, in upper case, in `postcode` of a lookup body, as the gateway does.
 - It puts the request's coordinate and the applied radius in a reverse body.

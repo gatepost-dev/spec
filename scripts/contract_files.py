@@ -11,14 +11,13 @@ It prints one line for each problem, and it exits with 1 when it finds one.
 
 from __future__ import annotations
 
-import json
 import re
 import sys
-from http import HTTPStatus
 from pathlib import Path
 from typing import Any, NamedTuple
 
 import gateway_files
+import scenario_truth
 
 ROOT = gateway_files.ROOT
 CONTRACT = ROOT / "contract"
@@ -32,7 +31,7 @@ CALL_FIELDS = {
     "reverse": ({"lat", "lng"}, {"maxDistanceM"}),
     "autocomplete": ({"q"}, set()),
 }
-RESPONSE_KINDS = ("body", "text", "fixture", "hang", "drop")
+RESPONSE_KINDS = scenario_truth.RESPONSE_KINDS
 RESPONSE_EXTRAS = ("status", "headers", "delayMs")
 EXPECT_FIELDS = {"attempts", "outcomes", "waitsMs", "maxInFlight", "request"}
 ERROR_FIELDS = ("code", "status", "apiCode", "retryAfterMs")
@@ -43,33 +42,9 @@ SHAPES = {
     "responses": (list, "a list"),
     "expect": (dict, "an object"),
 }
-# client.md gives these defaults.
-DEFAULT_LEVEL = 1
-DEFAULT_MAX_RETRIES = 2
 # A scenario id in client.md: the method, a hyphen and the rule, in backticks.
 SCENARIO_NAME = re.compile(r"`((?:lookup|reverse|autocomplete)-[a-z0-9-]+)`")
 ERROR_ROW = re.compile(r"^\| [^|]+ \| `[a-z_]+` \|")
-# The error map of client.md for a response that arrived. A test compares it with the table.
-STATUS_CODES = {401: "unauthorized", 402: "insufficient_credits", 429: "rate_limited"}
-RETRIED_STATUSES = (502, 503, 504)
-CLIENT_ERRORS = range(400, 500)
-RETRY_AFTER_STATUSES = (429, *RETRIED_STATUSES)
-NO_RESPONSE_CODES = {"hang": "timeout", "drop": "network_error"}
-METHOD_SCHEMAS = {
-    "lookup": "LookupEnvelope",
-    "reverse": "ReverseEnvelope",
-    "autocomplete": "AutocompleteEnvelope",
-}
-# The fields of a lookup body that raise the level of the data, from the highest level down.
-LEVEL_FIELDS = (
-    ("point_geometry", 5),
-    ("other_building_info", 4),
-    ("building_use_status", 3),
-    ("administrative_address", 2),
-    ("recent_house_address", 2),
-)
-CONFIDENCES = ("high", "medium", "low")
-UNIT_FIELDS = ("postcode", "distanceM", "confidence")
 
 
 class ErrorRow(NamedTuple):
@@ -78,15 +53,6 @@ class ErrorRow(NamedTuple):
     condition: str
     code: str
     scenarios: tuple[str, ...]
-
-
-class Reply(NamedTuple):
-    """What the mock server sends for one response of a scenario."""
-
-    kind: str
-    status: int | None
-    body: Any
-    headers: dict[str, str]
 
 
 def error_rows(text: str) -> list[ErrorRow]:
@@ -107,19 +73,6 @@ def error_codes(path: Path = CLIENT_DOC) -> list[str]:
     """Return the error codes in the table of the Errors section of client.md, in order."""
     rows = error_rows(path.read_text(encoding="utf-8"))
     return list(dict.fromkeys(row.code for row in rows))
-
-
-def error_code(status: int, api_code: str | None) -> str:
-    """Return the error code that the error map of client.md gives for a response."""
-    if status in STATUS_CODES:
-        return STATUS_CODES[status]
-    if status == HTTPStatus.FORBIDDEN:
-        return "origin_not_allowed" if api_code == "origin_not_allowed" else "forbidden"
-    if status == HTTPStatus.OK:
-        return "unexpected_response"
-    if status in RETRIED_STATUSES or status not in CLIENT_ERRORS:
-        return "server_error"
-    return "invalid_input"
 
 
 def load_scenarios(root: Path = CONTRACT) -> dict[str, Any]:
@@ -234,159 +187,8 @@ def scenario_problems(
         problems += response_problems(response, fixtures)
     problems += expect_problems(scenario, codes)
     if not problems:
-        problems = truth_problems(scenario, fixtures)
+        problems = scenario_truth.truth_problems(scenario, fixtures)
     return [f"{name}: {problem}" for problem in problems]
-
-
-def reply_of(response: dict[str, Any], fixtures: dict[str, Any]) -> Reply:
-    """Return what the mock server sends for one response of a scenario."""
-    kind = next(kind for kind in RESPONSE_KINDS if kind in response)
-    headers = response.get("headers", {})
-    if kind == "fixture":
-        fixture = fixtures[response["fixture"]]
-        return Reply(kind, fixture["status"], fixture["body"], headers)
-    return Reply(kind, response.get("status"), response.get("body"), headers)
-
-
-def last_reply(scenario: dict[str, Any], fixtures: dict[str, Any]) -> Reply | None:
-    """Return the reply to the last attempt of a scenario, or None when no request goes out.
-
-    The mock server repeats the last response when the requests outnumber the responses.
-    """
-    attempts = scenario["expect"]["attempts"]
-    if attempts == 0:
-        return None
-    responses = scenario["responses"]
-    return reply_of(responses[min(attempts, len(responses)) - 1], fixtures)
-
-
-def api_code(body: Any) -> str | None:
-    """Return the `error.code` of a body when it is text, as client.md reads it."""
-    error = body.get("error") if isinstance(body, dict) else None
-    code = error.get("code") if isinstance(error, dict) else None
-    return code if isinstance(code, str) else None
-
-
-def retry_after_ms(reply: Reply) -> int | None:
-    """Return the wait of a valid Retry-After in seconds, when the status can carry one."""
-    value = reply.headers.get("Retry-After", "")
-    if reply.status not in RETRY_AFTER_STATUSES or not re.fullmatch(r"[0-9]+", value):
-        return None
-    return int(value) * 1000
-
-
-def expected_error(reply: Reply | None) -> dict[str, Any]:
-    """Return the error that client.md gives for the reply to the last attempt."""
-    if reply is None or reply.status is None:
-        code = "invalid_input" if reply is None else NO_RESPONSE_CODES[reply.kind]
-        return {"code": code, "status": None, "apiCode": None, "retryAfterMs": None}
-    return {
-        "code": error_code(reply.status, api_code(reply.body)),
-        "status": reply.status,
-        "apiCode": api_code(reply.body),
-        "retryAfterMs": retry_after_ms(reply),
-    }
-
-
-def level_received(data: dict[str, Any]) -> int:
-    """Return the lookup level of the data, from the fields that it holds."""
-    return next((level for field, level in LEVEL_FIELDS if field in data), DEFAULT_LEVEL)
-
-
-def body_fields(call: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
-    """Return the fields of the result that client.md takes from the body, for one call."""
-    if call["method"] == "lookup":
-        return {
-            "valid": data.get("valid"),
-            "status": data.get("status"),
-            "levelRequested": call.get("level", DEFAULT_LEVEL),
-            "levelReceived": level_received(data),
-        }
-    if call["method"] == "autocomplete":
-        codes = [suggestion.get("code") for suggestion in data.get("suggestions", [])]
-        return {"segment": data.get("segment"), "suggestions": codes}
-    fields = {key: data.get(key) for key in ("found", "area", "district", "state")}
-    fields["radiusM"] = data.get("radius_m")
-    unit = data.get("unit")
-    fields["unit"] = None
-    if isinstance(unit, dict):
-        confidence = unit.get("confidence")
-        fields["unit"] = {
-            "postcode": unit.get("postcode"),
-            "distanceM": unit.get("distance_m"),
-            "confidence": confidence if confidence in CONFIDENCES else "low",
-        }
-    return fields
-
-
-def result_fields(result: dict[str, Any], names: list[str]) -> dict[str, Any]:
-    """Return the named fields of an expected result, in the form that body_fields gives."""
-    fields = {name: result.get(name) for name in names}
-    unit, suggestions = fields.get("unit"), fields.get("suggestions")
-    if isinstance(unit, dict):
-        fields["unit"] = {name: unit.get(name) for name in UNIT_FIELDS}
-    if isinstance(suggestions, list):
-        fields["suggestions"] = [suggestion.get("code") for suggestion in suggestions]
-    return fields
-
-
-def outcome_truth(call: dict[str, Any], outcome: dict[str, Any], reply: Reply | None) -> list[str]:
-    """Return the problems of the outcome of a call against the reply to its last attempt."""
-    if "error" in outcome:
-        expected = expected_error(reply)
-        if outcome["error"] == expected:
-            return []
-        return [
-            f"The last response gives {json.dumps(expected)}, not {json.dumps(outcome['error'])}."
-        ]
-    data = reply.body.get("data") if reply and isinstance(reply.body, dict) else None
-    if reply is None or reply.status != HTTPStatus.OK or not isinstance(data, dict):
-        return ["A result needs a last response with the status 200 and an object in data."]
-    expected = body_fields(call, data)
-    stated = result_fields(outcome["result"], list(expected))
-    return [
-        f"The last response gives {name} {expected[name]!r}, not {stated[name]!r}."
-        for name in expected
-        if expected[name] != stated[name]
-    ]
-
-
-def fixture_method_problems(scenario: dict[str, Any], fixtures: dict[str, Any]) -> list[str]:
-    """Return a problem for each fixture that answers another method than the calls use."""
-    methods = {call["method"] for call in scenario["calls"]}
-    allowed = {gateway_files.ERROR_SCHEMA, *(METHOD_SCHEMAS[method] for method in methods)}
-    names = [response["fixture"] for response in scenario["responses"] if "fixture" in response]
-    return [
-        f"A {' or '.join(sorted(methods))} call cannot get {name}."
-        for name in names
-        if fixtures[name]["schema"] not in allowed
-    ]
-
-
-def truth_problems(scenario: dict[str, Any], fixtures: dict[str, Any]) -> list[str]:
-    """Return the problems of a scenario whose outcomes disagree with its responses.
-
-    With one call, the reply to the last attempt decides the outcome, as client.md says. Calls
-    that share the responses, a cache or a queue get no such check, but each of their errors
-    must still fit its own status and API code.
-    """
-    calls, expect = scenario["calls"], scenario["expect"]
-    limit = len(calls) * (1 + scenario["client"].get("maxRetries", DEFAULT_MAX_RETRIES))
-    problems = fixture_method_problems(scenario, fixtures)
-    if expect["attempts"] > limit:
-        problems.append(f"{expect['attempts']} attempts are more than the calls allow ({limit}).")
-    if len(calls) == 1:
-        return problems + outcome_truth(
-            calls[0], expect["outcomes"][0], last_reply(scenario, fixtures)
-        )
-    errors = [outcome["error"] for outcome in expect["outcomes"] if "error" in outcome]
-    return problems + [
-        f"The status {error['status']} gives {error_code(error['status'], error['apiCode'])}, "
-        f"not {error['code']}."
-        for error in errors
-        if error["status"] is not None
-        and error_code(error["status"], error["apiCode"]) != error["code"]
-    ]
 
 
 def coverage_problems(scenarios: dict[str, Any], client_text: str) -> list[str]:
@@ -416,11 +218,15 @@ def coverage_problems(scenarios: dict[str, Any], client_text: str) -> list[str]:
     return problems
 
 
-def final_codes(scenario: dict[str, Any]) -> set[str]:
-    """Return the error codes that the calls of a scenario end with."""
-    return {
-        outcome["error"]["code"] for outcome in scenario["expect"]["outcomes"] if "error" in outcome
-    }
+def final_codes(scenario: Any) -> set[str]:
+    """Return the error codes that the calls of a scenario end with.
+
+    A scenario out of the format gives no code, and the check of its file names the fault.
+    """
+    expect = scenario.get("expect") if isinstance(scenario, dict) else None
+    outcomes = expect.get("outcomes") if isinstance(expect, dict) else None
+    errors = [item.get("error") for item in outcomes or [] if isinstance(item, dict)]
+    return {error["code"] for error in errors if isinstance(error, dict) and "code" in error}
 
 
 def synthetic_files() -> list[Path]:

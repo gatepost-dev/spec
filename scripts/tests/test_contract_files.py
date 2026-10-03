@@ -10,6 +10,7 @@ from typing import Any
 
 import contract_files
 import gateway_files
+import scenario_truth
 
 SCENARIOS = contract_files.load_scenarios()
 FIXTURES = gateway_files.load_fixtures()
@@ -223,13 +224,9 @@ class ScenarioTruthTest(unittest.TestCase):
         def send_level_3(scenario: dict[str, Any]) -> None:
             scenario["responses"][0]["fixture"] = "lookup/valid-level-3"
 
-        self.assertEqual(
-            problems_of("lookup-level-1", send_level_3),
-            [
-                "lookup-level-1: The last response gives status None, not 'valid'.",
-                "lookup-level-1: The last response gives levelReceived 3, not 1.",
-            ],
-        )
+        problems = problems_of("lookup-level-1", send_level_3)
+        self.assertIn("lookup-level-1: The last response gives status None, not 'valid'.", problems)
+        self.assertIn("lookup-level-1: The last response gives levelReceived 3, not 1.", problems)
 
     def test_rejects_a_fixture_of_another_method(self) -> None:
         def send_reverse(scenario: dict[str, Any]) -> None:
@@ -238,19 +235,21 @@ class ScenarioTruthTest(unittest.TestCase):
         problems = problems_of("lookup-level-1", send_reverse)
         self.assertEqual(problems[0], "lookup-level-1: A lookup call cannot get reverse/unit.")
 
-    def test_rejects_more_attempts_than_the_retries_allow(self) -> None:
+    def test_rejects_more_attempts_than_the_responses_give(self) -> None:
         self.assertEqual(
             problems_of("lookup-level-1", lambda s: s["expect"].update(attempts=4)),
-            ["lookup-level-1: 4 attempts are more than the calls allow (3)."],
+            ["lookup-level-1: The responses and client.md give 1 attempts, not 4."],
         )
 
     def test_rejects_a_code_that_does_not_fit_its_status_when_calls_share_responses(self) -> None:
         def say_forbidden(scenario: dict[str, Any]) -> None:
             scenario["expect"]["outcomes"][0]["error"]["code"] = "forbidden"
 
-        self.assertEqual(
-            problems_of("lookup-error-not-cached", say_forbidden),
-            ["lookup-error-not-cached: The status 400 gives invalid_input, not forbidden."],
+        [problem] = problems_of("lookup-error-not-cached", say_forbidden)
+        self.assertTrue(
+            problem.startswith(
+                'lookup-error-not-cached: Call 1: The last response gives {"code": "invalid_input"'
+            )
         )
 
     def test_reads_the_retry_after_of_the_last_response(self) -> None:
@@ -281,7 +280,7 @@ class StatusMapTest(unittest.TestCase):
         for row in rows:
             for status, api_code in samples.get(row.condition, [(200, None)]):
                 with self.subTest(status=status, api_code=api_code):
-                    self.assertEqual(contract_files.error_code(status, api_code), row.code)
+                    self.assertEqual(scenario_truth.error_code(status, api_code), row.code)
 
 
 class CoverageTest(unittest.TestCase):
