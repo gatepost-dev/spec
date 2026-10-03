@@ -54,11 +54,11 @@
   "@use_suggestion": {
     "description": "The button that puts the suggested postcode in the input."
   },
-  "legacy_accepted": "This is an old 6-digit postcode. If you know your new postcode, enter it instead.",
+  "legacy_accepted": "This is an old 6-digit postcode. If you know your new one, enter it instead.",
   "@legacy_accepted": {
     "description": "The text is an old postcode, and the page accepts old postcodes."
   },
-  "legacy_rejected": "This is an old 6-digit postcode. Enter your new postcode, for example EK 01 A03 FK 01.",
+  "legacy_rejected": "This is an old 6-digit postcode. Enter a new one, such as EK 01 A03 FK 01.",
   "@legacy_rejected": {
     "description": "The text is an old postcode, and the page needs a new one."
   },
@@ -119,14 +119,9 @@
   "@locating": {
     "description": "The field waits for the location, or for NIPOST's answer about it."
   },
-  "gps_coarse": "Your location is accurate to about {metres} metres, so we filled in the first part only. Type the rest.",
+  "gps_coarse": "We added part of your postcode from your location. Type the rest.",
   "@gps_coarse": {
-    "description": "The location is not precise enough for a whole postcode.",
-    "placeholders": {
-      "metres": {
-        "type": "int"
-      }
-    }
+    "description": "The location gave only part of a postcode, which the field put in the input."
   },
   "gps_not_found": "We found no postcode at your location. Type your postcode.",
   "@gps_not_found": {
@@ -134,10 +129,10 @@
   },
   "gps_denied": "We cannot use your location. Type your postcode.",
   "@gps_denied": {
-    "description": "The user or the browser refused the location."
+    "description": "The user or the platform refused the location."
   },
   "gps_unavailable": "We could not find your location. Type your postcode.",
   "@gps_unavailable": {
-    "description": "The device gave no location in time, or the request to NIPOST failed."
+    "description": "The device gave no location, or the request to NIPOST failed."
   }
 }

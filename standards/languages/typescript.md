@@ -122,7 +122,13 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 The TypeScript packages follow the Interface sections of `spec/grammar.md`, `spec/client.md` and `spec/field.md`. They add these idiomatic symbols:
 
 - `@gatepost/client`: the options type `ClientOptions`, and a type for each result and each set of codes, such as `LookupResult` and `PostcodeErrorCode`.
-- `@gatepost/field`: the element class `PostcodeFieldElement`, and its form-control members `form`, `validity`, `validationMessage`, `willValidate`, `checkValidity()` and `reportValidity()`. The detail types `ChangeDetail`, `ConfirmDetail` and `ErrorDetail`, the unions `ChangeSource` and `FieldErrorCode`, and `Messages`, the type of a catalogue, with its keys in `MessageKey`.
+- `@gatepost/field`: the element class `PostcodeFieldElement`, with the members that the platform needs:
+  - the static members `formAssociated` and `observedAttributes`.
+  - the lifecycle callbacks `connectedCallback()`, `disconnectedCallback()` and `attributeChangedCallback()`.
+  - the form callbacks `formResetCallback()`, `formDisabledCallback()` and `formStateRestoreCallback()`.
+  - the form-control members `form`, `validity`, `validationMessage`, `willValidate`, `checkValidity()` and `reportValidity()`.
+  - the properties `value` and `messages`, which are the settings of the same names.
+- `@gatepost/field` also adds the detail types `ChangeDetail`, `ConfirmDetail` and `ErrorDetail`, and the unions `ChangeSource` and `FieldErrorCode`. It adds `Messages`, the type of a catalogue, and `MessageKey`, the type of its keys.
 - `@gatepost/react`: the component `PostcodeField` and its props type `PostcodeFieldProps`. Each setting of the field is a prop in camelCase, except `value`, which is `defaultValue`. The events are `onChange`, `onConfirm` and `onError`.
 
 ## Names

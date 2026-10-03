@@ -170,7 +170,7 @@ To show the user what a postcode points to before the app stores it.
 _Avoid_: verify, validate (for this step)
 
 **Form value**:
-The text that a field gives its form when the form is sent: the canonical form of a postcode, a legacy postcode, or the text as the user typed it.
+The text that a field gives its form when the form is sent: the canonical form of a postcode, the 6 digits of a legacy postcode, or the text without white space at the start and the end.
 _Avoid_: submitted value, output
 
 **Message catalogue**:
