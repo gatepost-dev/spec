@@ -175,6 +175,7 @@ class InterfaceTest(unittest.TestCase):
                 ("GPS denied", "`gps_denied`", "`gps_denied`"),
                 ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
                 ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
+                ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
                 ("GPS denied", "`gps_unavailable`", client),
                 ("GPS denied", "`gps_not_found`", "no event"),
             ],
@@ -206,12 +207,54 @@ class TextTest(unittest.TestCase):
     def test_the_parse_error_and_the_suggestion_stay_two_texts(self) -> None:
         self.assertIn("never one joined string (UI-2)", section("## Text"))
 
+    def test_an_empty_text_is_never_a_parse_error(self) -> None:
+        part = section("## Text")
+        self.assertIn("An empty text is never a parse error.", part)
+        self.assertIn("The field shows errors after the user first leaves the input", part)
+        states = {row[0]: row[1] for row in rows("## States")}
+        for state in ("invalid format", "typing"):
+            self.assertIn("the text is not empty and does not parse", states[state])
+
+    def test_leaving_the_input_keeps_the_state(self) -> None:
+        self.assertIn("The form value and the state stay the same", section("## Text"))
+
     def test_the_display_form_sends_no_new_lookup(self) -> None:
         part = section("## Lookups")
-        self.assertIn("the field keeps that lookup and its outcome", part)
+        self.assertIn("the field keeps that lookup and its state", part)
 
     def test_the_console_error_never_holds_the_key(self) -> None:
         self.assertIn("The error never holds the key (ERR-3).", section("## Lookups"))
+
+
+class RequestTest(unittest.TestCase):
+    lookups = section("## Lookups")
+
+    def test_the_error_event_follows_the_table_of_failures(self) -> None:
+        error = next(x for x in rows("## Interface") if x[0] == "`error`")
+        self.assertIn("a failure that the table in Failures gives an event code", error[2])
+
+    def test_the_field_remembers_only_a_lookup_that_the_gateway_answered(self) -> None:
+        self.assertIn("The field remembers a lookup that ended with an answer", self.lookups)
+        self.assertIn("never remembers a lookup that failed or was cancelled", self.lookups)
+
+    def test_a_new_gateway_address_alone_sends_no_lookup(self) -> None:
+        self.assertIn(
+            "A change of `baseUrl` alone starts no lookup and cancels none.", self.lookups
+        )
+
+    def test_a_setting_never_cancels_a_location_request(self) -> None:
+        part = section("## Location")
+        self.assertIn("A change of a setting never cancels it.", part)
+        self.assertIn("While a location request is in progress, the field starts no lookup.", part)
+
+    def test_a_location_fill_raises_change_only_for_a_new_form_value(self) -> None:
+        self.assertIn("It raises `change` when the form value changes", section("## Location"))
+
+    def test_a_removed_field_starts_again_from_its_text(self) -> None:
+        part = section("## Removal from the page")
+        self.assertIn("it cancels any request in progress", part)
+        self.assertIn("forgets the remembered lookup", part)
+        self.assertIn("When the field is added again", part)
 
 
 class LocationTest(unittest.TestCase):
@@ -224,7 +267,7 @@ class LocationTest(unittest.TestCase):
     def test_the_fill_ends_in_a_space_and_takes_the_focus(self) -> None:
         self.assertIn("A partial postcode ends in a space", self.part)
         self.assertIn("The input takes the focus", self.part)
-        self.assertIn("It raises `change` with the source `gps`", self.part)
+        self.assertIn("The source is `gps`", self.part)
 
     def test_a_platform_with_no_location_api_gives_gps_unavailable(self) -> None:
         self.assertIn(

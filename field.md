@@ -18,7 +18,7 @@ A field exposes the symbols in this table and the types that they need. A langua
 | `messages` | setting | text that replaces messages of the catalogue, by key |
 | `change` | event | the form value changed through the user |
 | `confirm` | event | the gateway knows the postcode |
-| `error` | event | a request failed, the location failed, or the key is a secret key |
+| `error` | event | a failure that the table in Failures gives an event code |
 | `SPEC_VERSION` | constant | the spec version, as text |
 
 ### Events
@@ -55,11 +55,12 @@ The web field is the custom element `gatepost-postcode-field`. It is a form-asso
 - The field reads its text with `parse`. Partial postcodes do not pass.
 - The count of a text is the number of code points in its normalised form. Spaces and hyphens do not count.
 - Above `maxInputCodePoints` code points (64 in `data/format.json`), the field never calls `normalize`, because NFKC can take seconds on a long text. The count is then the number of code points of the raw text.
-- The field shows a parse error when the count is 11 or more. So a text above the input limit shows its error at once.
-- The field also shows a parse error after the user leaves the input, and after a validity check that fails, such as a form submit. From then on, it shows each error at once, until the form resets.
+- An empty text is never a parse error. It gives the state `idle`, except in a required field that shows errors.
+- The field shows errors after the user first leaves the input, or after a validity check fails, such as on a form submit. It stops after a form reset.
+- A parse error shows when the field shows errors, or when the count of the text is 11 or more. So a text above the input limit shows its error at once.
 - A user who is still typing a short text sees no error.
 - A legacy postcode shows its message at once. A new postcode starts with letters, so 6 digits are never the start of one.
-- When the user leaves the input, a text that parses shows in the display form. The form value stays the same, so the field raises no `change` and sends no new lookup.
+- When the user leaves the input, a text that parses shows in the display form. The form value and the state stay the same, so the field raises no `change` and sends no new lookup.
 - For an error with a suggestion, the field shows the suggestion and a button that uses it. The field never applies a suggestion by itself.
 - The message of the parse error and the message `suggestion` are two separate texts, never one joined string (UI-2).
 - The suggestion button puts the suggestion in the input, in the display form. It raises `change` with the source `suggestion`, and it moves the focus to the input.
@@ -69,9 +70,14 @@ The web field is the custom element `gatepost-postcode-field`. It is a form-asso
 
 - The field sends a request only when it has a key. Without a key, it checks the format offline, and a text that parses ends in the state `valid`.
 - With a key, and `confirm` set to `level1` or `level2`, the field asks the gateway about each whole postcode, with a lookup at that level. It sends no lookup for a legacy postcode.
-- The field remembers the canonical postcode, the level and the key of its last lookup. When the text or a setting changes, and these three stay the same, the field keeps that lookup and its outcome. It sends no new request.
-- When one of the three changes, the field cancels the lookup in progress and forgets its outcome. It then starts a new lookup if the text parses as a whole postcode.
-- A press of the location button also cancels the lookup in progress, and the field forgets the last lookup.
+- The field remembers a lookup that ended with an answer from the gateway: its canonical postcode, its level and its key. The answer gives the state `confirmed` or `not found`.
+- When the text or a setting changes, and the three values still match the remembered lookup, the field keeps that lookup and its state. It sends no new request.
+- A lookup in progress also stays while the three values still match it.
+- When one of the three values changes, the field cancels the lookup in progress. It forgets the remembered lookup and its state. It then starts a new lookup if the text parses as a whole postcode.
+- The field never remembers a lookup that failed or was cancelled. So the next change of the text or of a setting tries the same postcode again.
+- The state `error` lasts until the text or a setting changes.
+- A change of `baseUrl` alone starts no lookup and cancels none. The next request uses the new address.
+- A press of the location button cancels the lookup in progress, and the field forgets the remembered lookup.
 - The field ignores the answer to a cancelled request. It changes nothing on screen, and it raises no event.
 - The field refuses a secret key, which starts with `nipost_test_` or `nipost_live_`. It sends no request with that key, and it shows no location button.
 - The field logs one console error for the developer each time it reads a secret key. It reads the key when it starts, and when the key or `baseUrl` changes. The error never holds the key (ERR-3).
@@ -89,11 +95,19 @@ The web field is the custom element `gatepost-postcode-field`. It is a form-asso
 - `precisionForAccuracy` gives the most precise segment that the accuracy supports. The field truncates the postcode to that precision, unless the postcode already stops before it.
 - So a fix worse than 50 m keeps the state and the LGA only, from a unit, an area or a district.
 - When the result holds no postcode, the field shows the message `gps_not_found`.
-- Otherwise, the field replaces the text with the postcode in the display form. It raises `change` with the source `gps`, and `accuracyM` set to the accuracy of the fix.
+- Otherwise, the field replaces the text with the postcode in the display form. It raises `change` when the form value changes, as for typing. The source is `gps`, and `accuracyM` is the accuracy of the fix.
 - A whole postcode then follows the rules for a typed one. It gets a lookup, or the state `valid` when `confirm` is `none`.
 - A partial postcode ends in a space, so the user can type the next segment at once. The input takes the focus, and the field shows the state `GPS coarse`.
 - A partial postcode leaves the field invalid until the text is a whole postcode.
 - The user can always type. A change of the text cancels a location request in progress.
+- A new press of the button and the removal of the field also cancel it. A change of a setting never cancels it.
+- While a location request is in progress, the field starts no lookup. A change of a setting then changes only the validity.
+- The states `GPS coarse` and `GPS denied` last until the text changes.
+
+## Removal from the page
+
+- When the field is removed from the page, it cancels any request in progress. It forgets the remembered lookup and the state of each request. It then shows the state that its text gives.
+- When the field is added again, it starts from that state, as at the first start. So a whole postcode gets a new lookup.
 
 ## Failures
 
@@ -106,28 +120,29 @@ Each failure gives one state and one message. The last column gives the code of 
 | a lookup is due, and the key is a secret key | error | `secret_key` | `secret_key` |
 | the user or the platform refuses the location | GPS denied | `gps_denied` | `gps_denied` |
 | the platform has no location API | GPS denied | `gps_unavailable` | `gps_unavailable` |
+| the device reports that it has no location | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | the device gives no location within the time limit | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | `reverse` fails with an error of the client | GPS denied | `gps_unavailable` | the code of the client's error |
 | `reverse` gives no postcode that parses | GPS denied | `gps_not_found` | no event |
 
 ## States
 
-The field shows the first state in this table whose condition holds. The first seven states come from a request. A change of the text ends the states of a location request. Lookups says when the states of a lookup end.
+The field shows the first state in this table whose condition holds. The first seven states come from a request. Lookups, Location and Removal from the page say when each of them ends.
 
 | State | When | Messages |
 |---|---|---|
 | GPS locating | a location request is in progress | `locating` |
 | checking | a lookup is in progress | `checking` |
-| confirmed | the last lookup found the postcode | `confirmed` or `confirmed_place` |
-| not found | the last lookup says that the gateway does not know the postcode | `not_found` |
+| confirmed | the remembered lookup found the postcode | `confirmed` or `confirmed_place` |
+| not found | the remembered lookup says that the gateway does not know the postcode | `not_found` |
 | error | the last lookup failed, or it was due and the key is a secret key | `check_failed` or `secret_key` |
 | GPS coarse | the last location request gave a partial postcode, and the text has not changed since | `gps_coarse` |
 | GPS denied | the last location request failed, and the text has not changed since | `gps_denied`, `gps_unavailable` or `gps_not_found` |
 | legacy code | the text is a legacy postcode | `legacy_accepted` or `legacy_rejected` |
 | valid | the text parses as a whole postcode | `valid` |
-| invalid format | the field shows errors, and the text does not parse, or the text is empty and `required` is set | the message of the parse error and `suggestion`, or `empty` |
-| typing | the text does not parse, and the field shows no error yet | none |
-| idle | the text is empty | none |
+| invalid format | the text is not empty and does not parse, and its parse error shows (see Text). Or the text is empty, `required` is set and the field shows errors | the message of the parse error and `suggestion`, or `empty` |
+| typing | the text is not empty and does not parse, and its parse error does not show yet | none |
+| idle | the text is empty, and the row `invalid format` does not apply | none |
 
 ## Messages
 
