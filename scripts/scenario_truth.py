@@ -14,6 +14,7 @@ import math
 import re
 from decimal import Decimal
 from http import HTTPStatus
+from itertools import pairwise
 from typing import Any, NamedTuple
 
 from gateway_files import ERROR_SCHEMA
@@ -53,6 +54,8 @@ LEVEL_FIELDS = (
     ("administrative_address", 2),
     ("recent_house_address", 2),
 )
+SEGMENT_LENGTHS = (("state", 2), ("lga", 2), ("district", 3), ("area", 2), ("unit", 2))
+OFFSETS = (0, 2, 4, 7, 9, 11)
 ADDRESS_FIELDS = {
     "stateName": "state_name",
     "lgaName": "lga_name",
@@ -116,6 +119,22 @@ def query_number(number: float) -> str:
 def compact(text: str) -> str:
     """Return text as the core normalises it: no spaces and no hyphens, in upper case."""
     return re.sub(r"[\s-]", "", text).upper()
+
+
+def partial_postcode(prefix: str, segment: Any, code: Any) -> str | None:
+    """Return the partial postcode of the typed segments before the active one, plus its code.
+
+    It is None when the code does not fit its segment, as client.md says.
+    """
+    start = 0
+    for name, length in SEGMENT_LENGTHS:
+        if name == segment:
+            if not isinstance(code, str) or len(code) != length:
+                return None
+            text = compact(prefix)[:start] + code
+            return "-".join(text[a:b] for a, b in pairwise(OFFSETS) if text[a:b])
+        start += length
+    return None
 
 
 def canonical(code: str) -> str:
@@ -323,11 +342,22 @@ def reverse_fields(data: dict[str, Any]) -> dict[str, Any]:
     return fields
 
 
-def autocomplete_fields(data: dict[str, Any]) -> dict[str, Any]:
-    """Return the parts of an autocomplete result that a body decides: segment, codes, labels."""
+def autocomplete_fields(call: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    """Return the parts of an autocomplete result that a body decides.
+
+    These are the segment, and the code, label and postcode of each suggestion.
+    """
+    segment = data.get("segment")
     return {
-        "segment": data.get("segment"),
-        "suggestions": [[item.get("code"), item.get("label")] for item in data["suggestions"]],
+        "segment": segment,
+        "suggestions": [
+            [
+                item.get("code"),
+                item.get("label"),
+                partial_postcode(call.get("q", ""), segment, item.get("code")),
+            ]
+            for item in data["suggestions"]
+        ],
     }
 
 
@@ -336,7 +366,9 @@ def stated_fields(method: str, result: dict[str, Any], names: list[str]) -> dict
     fields = {name: result.get(name) for name in names}
     suggestions = fields.get("suggestions")
     if method == "autocomplete" and isinstance(suggestions, list):
-        fields["suggestions"] = [[item.get("code"), item.get("label")] for item in suggestions]
+        fields["suggestions"] = [
+            [item.get("code"), item.get("label"), item.get("postcode")] for item in suggestions
+        ]
     return fields
 
 
@@ -348,7 +380,7 @@ def result_problems(call: dict[str, Any], result: Any, body: dict[str, Any]) -> 
     elif method == "reverse":
         fields = reverse_fields(data)
     else:
-        fields = autocomplete_fields(data)
+        fields = autocomplete_fields(call, data)
     stated = stated_fields(method, result if isinstance(result, dict) else {}, list(fields))
     return [
         f"The last response gives {name} {fields[name]!r}, not {stated[name]!r}."

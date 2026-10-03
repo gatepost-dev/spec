@@ -64,6 +64,14 @@ class OutcomeTest(unittest.TestCase):
             ],
         )
 
+    def test_rejects_a_suggestion_postcode_that_the_typed_text_does_not_give(self) -> None:
+        def move_postcode(scenario: dict[str, Any]) -> None:
+            suggestions = scenario["expect"]["outcomes"][0]["result"]["suggestions"]
+            suggestions[0]["postcode"] = "FC-01-ZZZ"
+
+        [problem] = problems_of("autocomplete-district", move_postcode)
+        self.assertTrue(problem.startswith("autocomplete-district: The last response gives sugg"))
+
     def test_rejects_a_shared_call_with_another_outcome(self) -> None:
         def change_second(scenario: dict[str, Any]) -> None:
             scenario["expect"]["outcomes"][1]["result"]["valid"] = False
