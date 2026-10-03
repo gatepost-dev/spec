@@ -1,6 +1,6 @@
 # Postcode grammar
 
-Spec version 0.2.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, except the rules in the list below. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
+Spec version 0.3.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, except the rules in the list below. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
 
 No shared vector tests these rules. Each SDK tests them itself.
 

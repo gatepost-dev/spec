@@ -10,6 +10,8 @@ The shared contract for every Gatepost SDK: the postcode grammar, the data files
 |---|---|
 | `grammar.md` | how every SDK reads and writes postcodes, and the public interface |
 | `client.md` | how every client calls NIPOST's gateway: results, errors, retries and the queue |
+| `field.md` | how every postcode field behaves: settings, events, states, accessibility and privacy |
+| `messages/` | the text of the field, one message catalogue for each language |
 | `openapi/` | NIPOST's gateway, completed with the responses that its own file leaves out |
 | `fixtures/` | synthetic gateway responses and keys for the mock server |
 | `contract/` | shared client test cases that every client must pass against the mock server |

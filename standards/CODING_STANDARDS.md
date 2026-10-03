@@ -1,6 +1,6 @@
 # Gatepost coding standards
 
-Version 1.1, 3 Oct 2026.
+Version 1.2, 3 Oct 2026.
 
 These standards apply to every Gatepost repo, in every language. Each repo also follows its language file in `standards/languages/`. Together, the two files are the standard for that repo.
 
@@ -11,7 +11,7 @@ These standards apply to every Gatepost repo, in every language. Each repo also 
 - A **SHOULD** rule can be skipped only with a written reason in the pull request.
 - A rule marked **(tool)** is enforced by CI. Reviewers do not check it by hand.
 - A language file can change a SHOULD rule for its language. It cannot change a MUST rule.
-- `spec/grammar.md` (with its Interface section), `spec/client.md`, `spec/data/`, `spec/vectors/`, `spec/fixtures/` and the contract scenarios in `spec/contract/` rank above this document. `spec/grammar.md` wins over a vector, and `spec/client.md` wins over a scenario. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
+- `spec/grammar.md` (with its Interface section), `spec/client.md`, `spec/field.md`, `spec/messages/`, `spec/data/`, `spec/vectors/`, `spec/fixtures/` and the contract scenarios in `spec/contract/` rank above this document. `spec/grammar.md` wins over a vector, and `spec/client.md` wins over a scenario. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
 - To change a rule, open a pull request on the `spec` repo. Increase the version at the top of this file.
 
 ## Principles
@@ -28,7 +28,7 @@ The rules come from these seven principles. If no rule covers a case, apply the 
 
 ## Public interface
 
-- **API-1 MUST.** Every public symbol maps to a concept in the Interface section of `spec/grammar.md` or `spec/client.md`. A dev tool that no SDK user imports, such as the mock server, is outside this rule. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
+- **API-1 MUST.** Every public symbol maps to a concept in the Interface section of `spec/grammar.md`, `spec/client.md` or `spec/field.md`. A dev tool that no SDK user imports, such as the mock server, is outside this rule. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
 - **API-2 MUST.** Names and call shapes follow the cross-language map below.
 - **API-3 MUST.** Parse, don't validate. A function that reads a postcode returns a typed result, not a boolean. A boolean helper can exist only as a thin wrapper over `parse`.
 - **API-4 MUST.** Expected failures are values. `parse` returns its errors. Only I/O failures, API failures and programmer errors raise or throw.
