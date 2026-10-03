@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "lookup-status-not-text",
+  "description": "A 200 with a status that is not text gives unexpected_response.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 1
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": 5
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "unexpected_response",
+          "status": 200,
+          "apiCode": null,
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

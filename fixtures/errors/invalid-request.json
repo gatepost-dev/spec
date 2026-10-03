@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A missing or malformed parameter.",
+  "evidence": "assumed",
+  "schema": "ErrorEnvelope",
+  "status": 400,
+  "body": {
+    "error": {
+      "code": "invalid_request",
+      "message": "a parameter is missing or malformed"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "lookup-error-not-cached",
+  "description": "An error stays out of the cache, so the next identical call sends a request.",
+  "client": {"apiKey": "nipost_test_mock_l3", "cacheTtlMs": 60000},
+  "order": "sequential",
+  "calls": [
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1},
+    {"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}
+  ],
+  "responses": [{"fixture": "errors/invalid-request"}, {"fixture": "lookup/valid-level-1"}],
+  "expect": {
+    "attempts": 2,
+    "outcomes": [
+      {
+        "error": {
+          "code": "invalid_input",
+          "status": 400,
+          "apiCode": "invalid_request",
+          "retryAfterMs": null
+        }
+      },
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

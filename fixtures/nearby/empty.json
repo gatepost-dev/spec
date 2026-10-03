@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "description": "The only nearby body seen so far.",
+  "evidence": "observed",
+  "schema": "NearbyEnvelope",
+  "status": 200,
+  "body": {
+    "data": []
+  }
+}

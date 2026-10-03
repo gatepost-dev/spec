@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "id": "reverse-bad-postcode",
+  "description": "A 200 whose unit postcode does not parse gives unexpected_response.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "reverse",
+      "lat": 9,
+      "lng": 7
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "found": true,
+          "coordinate": [
+            7,
+            9
+          ],
+          "unit": {
+            "postcode": "HELLO",
+            "display": "FC 01 Z99 ZZ 01",
+            "distance_m": 4.2,
+            "confidence": "high"
+          },
+          "area": "FC-01-Z99-ZZ",
+          "district": "FC-01-Z99",
+          "state": "FC",
+          "depth": "unit",
+          "radius_m": 25
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "unexpected_response",
+          "status": 200,
+          "apiCode": null,
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "Text that is not a postcode. The gateway echoes it in upper case.",
+  "evidence": "observed",
+  "schema": "LookupEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "postcode": "HELLO",
+      "valid": false,
+      "status": "invalid",
+      "verified": false
+    }
+  }
+}

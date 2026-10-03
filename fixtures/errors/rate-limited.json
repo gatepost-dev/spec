@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A key with no requests left in this minute.",
+  "evidence": "assumed",
+  "schema": "ErrorEnvelope",
+  "status": 429,
+  "body": {
+    "error": {
+      "code": "rate_limited",
+      "message": "too many requests for this key in this minute"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "lookup-no-key",
+  "description": "With no key, the client sends no X-API-Key header, and maps the 401.",
+  "client": {},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"fixture": "errors/auth-required"}],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/lookup",
+      "query": {"code": "FC-01-Z99-ZZ-01", "level": "1"},
+      "apiKey": null
+    },
+    "outcomes": [
+      {
+        "error": {
+          "code": "unauthorized",
+          "status": 401,
+          "apiCode": "auth_required",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "id": "reverse-max-distance-zero",
+  "description": "A radius of 0 metres is a limit of the range, so the client sends it.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "reverse",
+      "lat": 9,
+      "lng": 7,
+      "maxDistanceM": 0
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "found": false,
+          "coordinate": [
+            7,
+            9
+          ],
+          "message": "no postcode found near this point",
+          "radius_m": 0
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/search/reverse",
+      "query": {
+        "lat": "9",
+        "lng": "7",
+        "max_distance_m": "0"
+      },
+      "apiKey": "nipost_test_mock_l3"
+    },
+    "outcomes": [
+      {
+        "result": {
+          "found": false,
+          "radiusM": 0,
+          "unit": null,
+          "area": null,
+          "district": null,
+          "state": null
+        }
+      }
+    ]
+  }
+}

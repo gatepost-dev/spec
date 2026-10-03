@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "lookup-level-5",
+  "description": "A body with point_geometry gives level 5.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 5
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "point_geometry": {}
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": null,
+          "levelRequested": 5,
+          "levelReceived": 5,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

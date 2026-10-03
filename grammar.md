@@ -1,6 +1,6 @@
 # Postcode grammar
 
-Spec version 0.1.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, except the rules in the list below. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
+Spec version 0.2.0. This file defines how every Gatepost SDK reads and writes Nigeria's digital postcodes. The values live in `data/`. The vectors in `vectors/` test every rule, except the rules in the list below. If this file and a vector disagree, this file wins. Such a disagreement is a bug in the spec.
 
 No shared vector tests these rules. Each SDK tests them itself.
 
@@ -95,7 +95,7 @@ Parse the corrected code with the same options. If it parses, the suggestion is 
 
 ## Interface
 
-An SDK exposes the symbols in this table and the types that they need. A language file gives the idiomatic form of each name and lists the additions that its language needs, such as an options type. The function names are the names in the vector files. This section covers the core. The interface of the client comes later, with the completed OpenAPI file.
+An SDK exposes the symbols in this table and the types that they need. A language file gives the idiomatic form of each name and lists the additions that its language needs, such as an options type. The function names are the names in the vector files. This section covers the core. `client.md` covers the client.
 
 | Symbol | Takes | Returns | Rules |
 |---|---|---|---|

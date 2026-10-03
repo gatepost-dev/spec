@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "The synthetic unit FC-01-Z99-ZZ-01 at lookup level 1.",
+  "evidence": "observed",
+  "schema": "LookupEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "postcode": "FC-01-Z99-ZZ-01",
+      "valid": true,
+      "status": "valid",
+      "verified": false
+    }
+  }
+}

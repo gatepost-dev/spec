@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "id": "lookup-unknown-fields",
+  "description": "The client ignores a field that client.md does not list.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "verified": false,
+          "new_field": {"any": 1}
+        },
+        "meta": 1
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

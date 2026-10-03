@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "id": "autocomplete-unknown-fields",
+  "description": "The client ignores a field that client.md does not list.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "autocomplete", "q": "f"}],
+  "responses": [
+    {
+      "status": 200,
+      "body": {
+        "data": {
+          "segment": "state",
+          "suggestions": [{"code": "FC", "rank": 1}],
+          "total": 1
+        },
+        "meta": 1
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "segment": "state",
+          "suggestions": [{"code": "FC", "label": null, "postcode": "FC"}]
+        }
+      }
+    ]
+  }
+}

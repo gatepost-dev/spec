@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "lookup-server-error",
+  "description": "A 500 gives server_error, and the client does not retry it.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [
+    {"status": 500, "body": {"error": {"code": "internal", "message": "internal error"}}}
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "server_error",
+          "status": 500,
+          "apiCode": "internal",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

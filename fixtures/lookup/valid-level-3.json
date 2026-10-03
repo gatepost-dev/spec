@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "description": "The synthetic unit at lookup level 3, in the shape of NIPOST's example.",
+  "evidence": "documented",
+  "schema": "LookupEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "postcode": "FC-01-Z99-ZZ-01",
+      "valid": true,
+      "administrative_address": {
+        "state_name": "FEDERAL CAPITAL TERRITORY",
+        "lga_name": "SYNTHETIC LGA",
+        "locality_name": "SYNTHETIC LOCALITY",
+        "zone": "NORTH CENTRAL"
+      },
+      "recent_house_address": {
+        "recent": "1 SYNTHETIC STREET, SYNTHETIC LOCALITY"
+      },
+      "building_use_status": "residential"
+    }
+  }
+}

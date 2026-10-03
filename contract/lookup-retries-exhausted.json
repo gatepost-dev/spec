@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "lookup-retries-exhausted",
+  "description": "A 503 on every attempt gives server_error after three attempts.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [
+    {"status": 503, "body": {"error": {"code": "unavailable", "message": "try again"}}}
+  ],
+  "expect": {
+    "attempts": 3,
+    "waitsMs": [{"min": 500, "max": 750}, {"min": 1000, "max": 1250}],
+    "outcomes": [
+      {
+        "error": {
+          "code": "server_error",
+          "status": 503,
+          "apiCode": "unavailable",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}

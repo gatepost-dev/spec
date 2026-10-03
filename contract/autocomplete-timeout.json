@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "autocomplete-timeout",
+  "description": "A timeout of autocomplete is not retried. The next keystroke replaces it.",
+  "client": {"apiKey": "nipost_test_mock_l3", "timeoutMs": 200},
+  "calls": [{"method": "autocomplete", "q": "F"}],
+  "responses": [{"hang": true}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {"error": {"code": "timeout", "status": null, "apiCode": null, "retryAfterMs": null}}
+    ]
+  }
+}

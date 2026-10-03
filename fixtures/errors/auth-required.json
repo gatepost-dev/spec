@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A request with no key.",
+  "evidence": "observed",
+  "schema": "ErrorEnvelope",
+  "status": 401,
+  "body": {
+    "error": {
+      "code": "auth_required",
+      "message": "send an API key in the X-API-Key header"
+    }
+  }
+}
