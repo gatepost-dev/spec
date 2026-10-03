@@ -1,6 +1,6 @@
 # PHP standards
 
-Version 1.0, 1 Oct 2026.
+Version 1.1, 3 Oct 2026.
 
 This file and `standards/CODING_STANDARDS.md` together are the standard for PHP code. Part A applies to the SDK in the `php` repo. Part B applies to WordPress plugins, such as the WooCommerce plugin. Each part names its own code style, because the two ecosystems use different conventions.
 
@@ -9,7 +9,8 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for PHP 
 - PHP 8.1 or later. CI tests PHP 8.1 and the newest PHP release.
 - PHP 8.1 reached end of life on 31 Dec 2025, and PHP 8.2 reaches it on 31 Dec 2026. The 8.1 floor serves WordPress stores on older hosting. Under VER-1, ADR 0001 must record this trade-off with current WordPress usage data before the first release. If the data does not support 8.1, raise the floor.
 - PHPUnit 11 and later need PHP 8.2. CI runs PHPUnit 10 on PHP 8.1 and the newest PHPUnit on newer PHP versions.
-- WordPress and WooCommerce: the floors are not defined yet. The team sets them after it tests the Additional Checkout Fields API, and before the first release of a plugin.
+- WordPress 6.7 and WooCommerce 10.0 or later. WooCommerce 10.0 is the first release whose checkout block skips a hidden address field on the server. On 9.9, a required field that a rule hides still stopped the order. WooCommerce 10.0 needs WordPress 6.7. ADR 0002 of the `woocommerce` repo holds the test results and the usage data.
+- WordPress's test suite runs only on PHPUnit 9, so the tests of a WordPress plugin use PHPUnit 9.6 on every PHP version.
 
 ## Part A: the SDK
 
