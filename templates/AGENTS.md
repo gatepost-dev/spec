@@ -11,6 +11,7 @@ This repo is part of Gatepost, unofficial open-source developer tools for Nigeri
 
 ## Rules that no config file shows
 
+- If the task needs a public symbol that the Interface section of `spec/grammar.md` does not list, add nothing, not even an internal helper. Stop, and say that a spec change must come first (API-1, CS-8).
 - Call only the documented NIPOST gateway endpoints.
 - Commit only NIPOST's published test codes and synthetic values, such as `FC-01-Z99-ZZ-01`.
 - Sign off each commit with `git commit -s`. The person who opens the pull request is the only author. Leave out co-author lines for AI tools.
