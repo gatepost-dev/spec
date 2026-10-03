@@ -121,12 +121,14 @@ Each failure gives one state and one message. The last column gives the code of 
 |---|---|---|---|
 | the gateway does not know the postcode | not found | `not_found` | no event |
 | a lookup fails with an error of the client | error | `check_failed` | the code of the client's error, such as `network_error` or `rate_limited` |
+| a lookup throws an error that is not an error of the client, such as for a base address with no scheme | error | `check_failed` | `network_error` |
 | a lookup is due, and the key is a secret key | error | `secret_key` | `secret_key` |
 | the user or the platform refuses the location | GPS denied | `gps_denied` | `gps_denied` |
 | the platform has no location API | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | the device reports that it has no location | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | the device gives no location within the time limit | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | `reverse` fails with an error of the client | GPS denied | `gps_unavailable` | the code of the client's error |
+| `reverse` throws an error that is not an error of the client | GPS denied | `gps_unavailable` | `network_error` |
 | `reverse` gives no postcode that parses | GPS denied | `gps_not_found` | no event |
 | `reverse` is due, and the key is now a secret key | error | `secret_key` | `secret_key` |
 
