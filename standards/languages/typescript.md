@@ -27,7 +27,7 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 | Playwright with `@axe-core/playwright` | browser and accessibility tests | field and docs site |
 | monocart-coverage-reports | merged coverage | merges Vitest and Playwright V8 coverage for the field, so T-7 counts browser tests |
 | StrykerJS | mutation tests | `@gatepost/core`, weekly scheduled job |
-| size-limit | size limits | core 4 KB, client 5 KB, field 20 KB, compressed, as size-limit measures them |
+| size-limit | size limits | core 4 KB, client 6 KB, field 20 KB, compressed, as size-limit measures them |
 | publint and `@arethetypeswrong/cli` | package checks | every published package |
 | API Extractor | API report | `etc/<package>.api.md`, checked in CI |
 | Changesets | versions and changelogs | one change file per user-visible change |
