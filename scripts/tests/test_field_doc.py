@@ -178,6 +178,7 @@ class InterfaceTest(unittest.TestCase):
                 ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
                 ("GPS denied", "`gps_unavailable`", client),
                 ("GPS denied", "`gps_not_found`", "no event"),
+                ("error", "`secret_key`", "`secret_key`"),
             ],
         )
 
@@ -244,7 +245,7 @@ class RequestTest(unittest.TestCase):
 
     def test_a_setting_never_cancels_a_location_request(self) -> None:
         part = section("## Location")
-        self.assertIn("A change of a setting never cancels it.", part)
+        self.assertIn("A change of a setting never cancels it, not even a change of the key.", part)
         self.assertIn("While a location request is in progress, the field starts no lookup.", part)
 
     def test_a_location_fill_raises_change_only_for_a_new_form_value(self) -> None:
@@ -255,6 +256,62 @@ class RequestTest(unittest.TestCase):
         self.assertIn("it cancels any request in progress", part)
         self.assertIn("forgets the remembered lookup", part)
         self.assertIn("When the field is added again", part)
+
+
+class PinTest(unittest.TestCase):
+    """Each rule here is a sentence that a later edit could drop without another test failing."""
+
+    def test_each_rule_of_a_lookup_is_in_lookups(self) -> None:
+        part = section("## Lookups")
+        for rule in (
+            "A lookup in progress also stays while the three values still match it.",
+            "When one of the three values changes, the field cancels the lookup in progress."
+            " It forgets the remembered lookup and its state.",
+            "For a text that is not a whole postcode, the field remembers no lookup,"
+            " so the same postcode typed again gets a new lookup.",
+            "The state `error` lasts until the text or a setting changes.",
+            "A press of the location button cancels the lookup in progress, and the field"
+            " forgets the remembered lookup.",
+            "It sends no request with that key, and it shows no location button.",
+        ):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, part)
+
+    def test_each_rule_of_a_location_request_is_in_location(self) -> None:
+        part = section("## Location")
+        for rule in (
+            "A new press of the button and the removal of the field also cancel it.",
+            "A change of a setting never cancels it, not even a change of the key.",
+            "A request that the field sends after a change of the key follows the rules for"
+            " the new key.",
+            "When the position arrives, the field sends `reverse` with the key that it holds then.",
+            "With a secret key, it sends nothing, shows the state `error` and raises the event"
+            " `error` with the code `secret_key`.",
+            "With no key, it sends nothing and shows the state that its text gives.",
+            "The states `GPS coarse` and `GPS denied` last until the text changes.",
+        ):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, part)
+
+    def test_a_parse_error_shows_at_once_for_a_long_text(self) -> None:
+        self.assertIn(
+            "A parse error shows when the field shows errors, or when the count of the text is"
+            " 11 or more.",
+            section("## Text"),
+        )
+
+    def test_a_required_empty_field_that_shows_errors_is_invalid(self) -> None:
+        states = {row[0]: row[1] for row in rows("## States")}
+        self.assertIn(
+            "Or the text is empty, `required` is set and the field shows errors",
+            states["invalid format"],
+        )
+        self.assertIn("a secret key", states["error"])
+        self.assertIn("`reverse`", states["error"])
+
+    def test_the_catalogue_says_when_the_device_gives_no_location(self) -> None:
+        description = catalogue()["@gps_unavailable"]["description"]
+        self.assertIn("The device gave no location", description)
 
 
 class LocationTest(unittest.TestCase):
