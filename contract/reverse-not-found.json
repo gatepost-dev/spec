@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "reverse-not-found",
+  "description": "A point with no postcode in range is a result with found false.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "reverse", "lat": 0, "lng": 0}],
+  "responses": [{"fixture": "reverse/not-found"}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "found": false,
+          "radiusM": 25,
+          "unit": null,
+          "area": null,
+          "district": null,
+          "state": null
+        }
+      }
+    ]
+  }
+}

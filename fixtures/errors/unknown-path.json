@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "A path that the gateway does not serve.",
+  "evidence": "assumed",
+  "schema": "ErrorEnvelope",
+  "status": 404,
+  "body": {
+    "error": {
+      "code": "not_found",
+      "message": "no such endpoint"
+    }
+  }
+}

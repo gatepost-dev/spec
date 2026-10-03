@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "lookup-timeout",
+  "description": "A request with no answer ends at timeoutMs and is retried, then gives timeout.",
+  "client": {"apiKey": "nipost_test_mock_l3", "timeoutMs": 200},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"hang": true}],
+  "expect": {
+    "attempts": 3,
+    "waitsMs": [{"min": 500, "max": 750}, {"min": 1000, "max": 1250}],
+    "outcomes": [
+      {"error": {"code": "timeout", "status": null, "apiCode": null, "retryAfterMs": null}}
+    ]
+  }
+}

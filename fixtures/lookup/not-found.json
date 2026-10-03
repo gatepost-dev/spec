@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "A well-formed postcode that the gateway does not know.",
+  "evidence": "observed",
+  "schema": "LookupEnvelope",
+  "status": 200,
+  "body": {
+    "data": {
+      "postcode": "FC-01-Z99-ZZ-02",
+      "valid": false,
+      "status": "not_found",
+      "verified": false
+    }
+  }
+}

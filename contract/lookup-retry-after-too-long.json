@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "lookup-retry-after-too-long",
+  "description": "A 429 that asks for over 10 seconds gives rate_limited at once, with the wait.",
+  "client": {"apiKey": "nipost_test_mock_l3"},
+  "calls": [{"method": "lookup", "code": "FC-01-Z99-ZZ-01", "level": 1}],
+  "responses": [{"fixture": "errors/rate-limited", "headers": {"Retry-After": "120"}}],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "rate_limited",
+          "status": 429,
+          "apiCode": "rate_limited",
+          "retryAfterMs": 120000
+        }
+      }
+    ]
+  }
+}

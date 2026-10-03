@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "lookup-echo-ignored",
+  "description": "The client keeps the caller's postcode, not the text that the gateway echoes.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 1
+    }
+  ],
+  "responses": [
+    {
+      "fixture": "lookup/invalid"
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": false,
+          "status": "invalid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}
