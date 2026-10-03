@@ -367,10 +367,10 @@ class SyntheticPostcodeTest(unittest.TestCase):
     def test_names_the_file_that_holds_a_real_postcode(self) -> None:
         with tempfile.TemporaryDirectory(dir=gateway_files.ROOT) as folder:
             path = Path(folder) / "probe.json"
-            path.write_text('{"postcode": "LA-12-K23-IV-95"}', encoding="utf-8")
+            path.write_text('{"postcode": "LA-12-Z98-IV-95"}', encoding="utf-8")
             [problem] = gateway_files.postcode_problems([path])
         self.assertTrue(
-            problem.endswith("probe.json holds the postcode LA-12-K23-IV-95. Use a synthetic code.")
+            problem.endswith("probe.json holds the postcode LA-12-Z98-IV-95. Use a synthetic code.")
         )
 
 

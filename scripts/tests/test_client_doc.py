@@ -74,7 +74,7 @@ class RequestRulesTest(unittest.TestCase):
     def test_a_distance_over_250_is_rejected_because_the_gateway_would_clamp_it(self) -> None:
         lead = "Each of these raises `invalid_input`, and the client sends no request:"
         rule = bullets(self.requests, lead)[3]
-        self.assertIn("The gateway cuts a larger value to 250 without a sign", rule)
+        self.assertIn("the gateway cuts a larger value to 250 without a sign", rule)
         self.assertIn("so the client rejects it", rule)
         self.assertNotIn("is clamped", self.requests)
 

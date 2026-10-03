@@ -4,7 +4,7 @@
   "description": "A wait past the total deadline ends the call at once, with the last error.",
   "client": {
     "apiKey": "nipost_test_mock_l3",
-    "timeoutMs": 200,
+    "timeoutMs": 2000,
     "maxRetries": 1
   },
   "calls": [
@@ -24,7 +24,7 @@
         }
       },
       "headers": {
-        "Retry-After": "2"
+        "Retry-After": "7"
       }
     }
   ],
@@ -36,7 +36,7 @@
           "code": "server_error",
           "status": 503,
           "apiCode": "unavailable",
-          "retryAfterMs": 2000
+          "retryAfterMs": 7000
         }
       }
     ]

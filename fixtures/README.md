@@ -30,7 +30,7 @@ The mock server answers with these files. Each file holds one response of NIPOST
 | `lookup` of the postcode in `lookup/valid-level-1.json` | `lookup/valid-level-N.json`, where N is the level |
 | `lookup` of another postcode that is well-formed | `lookup/not-found.json` |
 | `lookup` of text that is not a postcode | `lookup/invalid.json` |
-| `reverse` at the coordinate of `reverse/unit.json` or `reverse/area.json` | that file |
+| `reverse` at the coordinate of `reverse/unit.json` or `reverse/area.json` | that file, unless the radius is below the `distance_m` of the unit, and then `reverse/not-found.json` |
 | `reverse` at any other coordinate | `reverse/not-found.json` |
 | `nearby` | `nearby/empty.json` |
 | an error | the file in `errors/` with the same error code |

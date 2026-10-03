@@ -78,8 +78,8 @@ tsdown builds the packages, so `tsc` only checks types. Each package's `tsconfig
 | `jsdoc/tag-lines` with `startLines: 1` | error in packages | one blank line between a description and its tags |
 | `@typescript-eslint/explicit-module-boundary-types` | error in `packages/*/src` | TS-8 |
 | `@typescript-eslint/no-non-null-assertion` | off in `packages/*/test` | TS-4 |
-| `no-restricted-imports` for every Node built-in module, by bare name and as `node:*` | error in `packages/*/src` | CS-2 |
-| `no-restricted-globals` for `process`, `Buffer`, `__dirname`, `__filename`, `global` and `require` | error in `packages/*/src` | CS-2 |
+| `no-restricted-imports` for every Node built-in module, by bare name and as `node:*` | error in `packages/*/src`, except `packages/mock-server` | CS-2 |
+| `no-restricted-globals`, and `no-restricted-properties` on `globalThis`, for `process`, `Buffer`, `__dirname`, `__filename`, `global` and `require` | error in `packages/*/src`, except `packages/mock-server` | CS-2 |
 | `max-depth` | 3 | TELL-2 |
 | `complexity` | 10 | TELL-2 |
 | `max-params` | 4 | TELL-3 |

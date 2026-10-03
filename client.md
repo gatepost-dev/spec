@@ -57,10 +57,10 @@ A `timeoutMs` of 0 or less is a programmer error. So is a negative `maxRetries` 
 | Field | Value |
 |---|---|
 | `found` | true when the gateway found a unit or an area within the radius |
-| `radiusM` | the radius that the gateway applied, in metres |
+| `radiusM` | the radius that the gateway applied, in metres, or null when the body has no `radius_m` |
 | `unit` | the nearest unit, or null |
-| `area` | the area as a postcode, or null |
-| `district` | the district as a postcode, or null |
+| `area` | the text that the gateway sent for the area, or null. The client does not parse it |
+| `district` | the text that the gateway sent for the district, or null. The client does not parse it |
 | `state` | the state code, or null |
 
 A unit has these fields:
@@ -107,7 +107,7 @@ A client ignores a field that this contract does not use, in a lookup, a reverse
   - A `level` that is not a whole number from 1 to 5. The scenario `lookup-invalid-level` tests it.
   - A `lat` that is not finite or is outside -90 to 90. The scenario `reverse-invalid-lat` tests it.
   - A `lng` that is not finite or is outside -180 to 180. The scenario `reverse-invalid-lng` tests it.
-  - A `maxDistanceM` below 0 or above 250. The OpenAPI file gives the range 0 to 250. The gateway cuts a larger value to 250 without a sign, so the client rejects it. It does not return a result for another radius. The scenarios `reverse-invalid-max-distance` and `reverse-invalid-negative-distance` test it. The scenarios `reverse-max-distance-zero` and `reverse-max-distance-250` test that both limits pass.
+  - A `maxDistanceM` below 0 or above 250. The OpenAPI file gives the range 0 to 250. NIPOST's OpenAPI file says that the gateway cuts a larger value to 250 without a sign. Gatepost did not test this, so the client rejects it. It does not return a result for another radius. The scenarios `reverse-invalid-max-distance` and `reverse-invalid-negative-distance` test it. The scenarios `reverse-max-distance-zero` and `reverse-max-distance-250` test that both limits pass.
 - The client writes each number in the query in its shortest decimal form, with no exponent and no trailing zero: `lat=9`, not `lat=9.0` and not `lat=9e0`. A negative zero is written `0`. A small value is written in full: `0.0000001`, not `1e-7`. Languages print numbers in different forms, so one fixed form gives every client the same query for the same input. The mock server compares numbers by value, so it also accepts `9.0`. The scenarios `reverse-plain-decimal` and `reverse-whole-number` test this rule.
 - `autocomplete` normalises its text with the core. Empty text, text of more than 11 characters, and text with a character other than A to Z and 0 to 9 raise `invalid_input`, and the client sends no request. The gateway does not answer an empty `q`. The request sends the normalised text: `q=FC01Z`. The scenarios `autocomplete-empty-input`, `autocomplete-too-long`, `autocomplete-bad-character` and `autocomplete-district` test this rule.
 
@@ -176,3 +176,5 @@ Each client tests these rules itself.
 - A `Retry-After` that holds an HTTP date. A scenario cannot hold a date that is a few seconds ahead.
 - The order of the queue. A scenario counts the requests in flight, but not the order in which they leave.
 - `clearCache()`. The scenario format has calls of the three methods only.
+- A negative zero in a query. A JSON reader may turn `-0.0` into `0`, so a scenario cannot send it in the same way to each language. The rule is in the section Requests.
+- Whether a call that waits between two attempts keeps its place among the 4. This contract leaves it open, and no scenario depends on it.

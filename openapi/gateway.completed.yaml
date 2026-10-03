@@ -98,7 +98,8 @@ paths:
           in: query
           required: false
           description: >-
-            The search radius in metres. The gateway lowers a radius above 250 m to 250 m.
+            The search radius in metres. NIPOST's OpenAPI file says that the gateway lowers a
+            radius above 250 m to 250 m.
             A client rejects a value outside 0 to 250 and sends no request.
           schema: { type: number, minimum: 0, maximum: 250, default: 25 }
       responses:
@@ -490,10 +491,22 @@ components:
           type: string
           enum: [high, medium, low]
           description: Calls showed low only. NIPOST's file names all three.
-        state_name: { type: string, description: Level 2 and above. Documented. }
-        lga_name: { type: string, description: Level 2 and above. Documented. }
-        locality_name: { type: string, description: Level 2 and above. Documented. }
-        address: { type: string, description: Level 2 and above. Documented. }
+        state_name:
+          type: string
+          description: Level 2 and above. Documented.
+          x-gatepost-evidence: documented
+        lga_name:
+          type: string
+          description: Level 2 and above. Documented.
+          x-gatepost-evidence: documented
+        locality_name:
+          type: string
+          description: Level 2 and above. Documented.
+          x-gatepost-evidence: documented
+        address:
+          type: string
+          description: Level 2 and above. Documented.
+          x-gatepost-evidence: documented
     NearbyEnvelope:
       type: object
       required: [data]
@@ -527,6 +540,7 @@ components:
               label:
                 type: string
                 description: NIPOST's file names it, but no suggestion in any call had one.
+                x-gatepost-evidence: documented
     AssembleEnvelope:
       type: object
       required: [data]
