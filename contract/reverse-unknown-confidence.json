@@ -1,29 +1,38 @@
 {
   "version": 1,
-  "id": "reverse-unknown-fields",
-  "description": "The client ignores a field that client.md does not list.",
-  "client": {"apiKey": "nipost_test_mock_l3"},
-  "calls": [{"method": "reverse", "lat": 9, "lng": 7}],
+  "id": "reverse-unknown-confidence",
+  "description": "The client maps a confidence that client.md does not list to low.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "reverse",
+      "lat": 9,
+      "lng": 7
+    }
+  ],
   "responses": [
     {
       "status": 200,
       "body": {
         "data": {
           "found": true,
-          "coordinate": [7, 9],
+          "coordinate": [
+            7,
+            9
+          ],
           "unit": {
             "postcode": "FC-01-Z99-ZZ-01",
             "display": "FC 01 Z99 ZZ 01",
             "distance_m": 4.2,
-            "confidence": "high",
-            "floor": 2
+            "confidence": "very_high"
           },
           "area": "FC-01-Z99-ZZ",
           "district": "FC-01-Z99",
           "state": "FC",
           "depth": "unit",
-          "radius_m": 25,
-          "source": "new"
+          "radius_m": 25
         }
       }
     }
@@ -38,7 +47,7 @@
           "unit": {
             "postcode": "FC-01-Z99-ZZ-01",
             "distanceM": 4.2,
-            "confidence": "high",
+            "confidence": "low",
             "stateName": null,
             "lgaName": null,
             "localityName": null,

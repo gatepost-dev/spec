@@ -12,8 +12,9 @@ import contract_files
 import gateway_files
 
 SCENARIOS = contract_files.load_scenarios()
-FIXTURE_NAMES = set(gateway_files.load_fixtures())
+FIXTURES = gateway_files.load_fixtures()
 CODES = contract_files.error_codes()
+CLIENT = contract_files.CLIENT_DOC.read_text(encoding="utf-8")
 STANDARDS = gateway_files.ROOT / "standards" / "CODING_STANDARDS.md"
 FILES = contract_files.synthetic_files()
 
@@ -21,7 +22,15 @@ FILES = contract_files.synthetic_files()
 def problems_of(name: str, edit: Any) -> list[str]:
     scenario = copy.deepcopy(SCENARIOS[name])
     edit(scenario)
-    return contract_files.scenario_problems(name, scenario, FIXTURE_NAMES, CODES)
+    return contract_files.scenario_problems(name, scenario, FIXTURES, CODES)
+
+
+def without(name: str) -> dict[str, Any]:
+    return {other: scenario for other, scenario in SCENARIOS.items() if other != name}
+
+
+def error_row(condition: str) -> str:
+    return next(line for line in CLIENT.splitlines() if line.startswith(f"| {condition} |"))
 
 
 class ClientDocTest(unittest.TestCase):
@@ -64,11 +73,11 @@ class ScenarioFileTest(unittest.TestCase):
         for name, scenario in SCENARIOS.items():
             with self.subTest(name):
                 self.assertEqual(
-                    contract_files.scenario_problems(name, scenario, FIXTURE_NAMES, CODES), []
+                    contract_files.scenario_problems(name, scenario, FIXTURES, CODES), []
                 )
 
     def test_the_scenarios_cover_each_error_code_and_each_required_rule(self) -> None:
-        self.assertEqual(contract_files.coverage_problems(SCENARIOS, CODES), [])
+        self.assertEqual(contract_files.coverage_problems(SCENARIOS, CLIENT), [])
 
     def test_the_whole_check_finds_no_problem(self) -> None:
         self.assertEqual(contract_files.all_problems(), [])
@@ -154,7 +163,7 @@ class ScenarioProblemTest(unittest.TestCase):
 
         self.assertEqual(
             problems_of("lookup-level-1", add_field),
-            ["lookup-level-1: A lookup call needs code, level, and nothing else."],
+            ["lookup-level-1: A lookup call needs code and can hold level, and nothing else."],
         )
 
     def test_rejects_a_client_option_that_client_md_does_not_name(self) -> None:
@@ -169,27 +178,148 @@ class ScenarioProblemTest(unittest.TestCase):
             ["lookup-level-1: No attempt means no response, and the other way round."],
         )
 
+    def test_accepts_a_lookup_call_with_no_level(self) -> None:
+        self.assertEqual(problems_of("lookup-level-1", lambda s: s["calls"][0].pop("level")), [])
+
+    def test_names_a_field_of_the_wrong_type_instead_of_failing(self) -> None:
+        def name_a_list(scenario: dict[str, Any]) -> None:
+            scenario["responses"][0]["fixture"] = ["lookup/valid-level-1"]
+
+        cases = {
+            "calls": (lambda s: s.update(calls=None), "calls must be a list."),
+            "outcomes": (
+                lambda s: s["expect"].update(outcomes=5),
+                "expect needs attempts and a list of outcomes.",
+            ),
+            "fixture": (name_a_list, "No fixture is named ['lookup/valid-level-1']."),
+        }
+        for field, (edit, problem) in cases.items():
+            with self.subTest(field):
+                self.assertEqual(
+                    problems_of("lookup-level-1", edit), [f"lookup-level-1: {problem}"]
+                )
+
+
+class ScenarioTruthTest(unittest.TestCase):
+    def test_rejects_an_error_code_that_the_last_response_does_not_give(self) -> None:
+        def say_forbidden(scenario: dict[str, Any]) -> None:
+            scenario["expect"]["outcomes"][0]["error"]["code"] = "forbidden"
+
+        [problem] = problems_of("lookup-bad-request", say_forbidden)
+        self.assertTrue(
+            problem.startswith(
+                'lookup-bad-request: The last response gives {"code": "invalid_input", '
+            )
+        )
+
+    def test_rejects_a_status_that_the_last_response_does_not_have(self) -> None:
+        def say_200(scenario: dict[str, Any]) -> None:
+            scenario["expect"]["outcomes"][0]["error"]["status"] = 200
+
+        [problem] = problems_of("lookup-server-error", say_200)
+        self.assertIn('"status": 500', problem)
+
+    def test_rejects_a_result_that_the_fixture_does_not_give(self) -> None:
+        def send_level_3(scenario: dict[str, Any]) -> None:
+            scenario["responses"][0]["fixture"] = "lookup/valid-level-3"
+
+        self.assertEqual(
+            problems_of("lookup-level-1", send_level_3),
+            [
+                "lookup-level-1: The last response gives status None, not 'valid'.",
+                "lookup-level-1: The last response gives levelReceived 3, not 1.",
+            ],
+        )
+
+    def test_rejects_a_fixture_of_another_method(self) -> None:
+        def send_reverse(scenario: dict[str, Any]) -> None:
+            scenario["responses"][0]["fixture"] = "reverse/unit"
+
+        problems = problems_of("lookup-level-1", send_reverse)
+        self.assertEqual(problems[0], "lookup-level-1: A lookup call cannot get reverse/unit.")
+
+    def test_rejects_more_attempts_than_the_retries_allow(self) -> None:
+        self.assertEqual(
+            problems_of("lookup-level-1", lambda s: s["expect"].update(attempts=4)),
+            ["lookup-level-1: 4 attempts are more than the calls allow (3)."],
+        )
+
+    def test_rejects_a_code_that_does_not_fit_its_status_when_calls_share_responses(self) -> None:
+        def say_forbidden(scenario: dict[str, Any]) -> None:
+            scenario["expect"]["outcomes"][0]["error"]["code"] = "forbidden"
+
+        self.assertEqual(
+            problems_of("lookup-error-not-cached", say_forbidden),
+            ["lookup-error-not-cached: The status 400 gives invalid_input, not forbidden."],
+        )
+
+    def test_reads_the_retry_after_of_the_last_response(self) -> None:
+        def drop_wait(scenario: dict[str, Any]) -> None:
+            scenario["expect"]["outcomes"][0]["error"]["retryAfterMs"] = None
+
+        [problem] = problems_of("lookup-retry-after-too-long", drop_wait)
+        self.assertIn('"retryAfterMs": 120000', problem)
+
+
+class StatusMapTest(unittest.TestCase):
+    def test_maps_each_status_as_the_error_table_of_client_md_does(self) -> None:
+        samples: dict[str, list[tuple[int, str | None]]] = {
+            "status 401": [(401, "auth_required")],
+            "status 402": [(402, "insufficient_credits")],
+            "status 403, with the API code `origin_not_allowed`": [(403, "origin_not_allowed")],
+            "status 403, with any other API code": [(403, "level_not_granted"), (403, None)],
+            "status 429": [(429, "rate_limited")],
+            "status 502, 503 or 504": [(502, None), (503, "unavailable"), (504, None)],
+            "any other status from 400 to 499": [(400, None), (404, "not_found"), (499, None)],
+            "any other status that is not 200": [(500, "internal"), (501, None), (302, None)],
+        }
+        rows = [row for row in contract_files.error_rows(CLIENT) if "status" in row.condition]
+        self.assertEqual(
+            [row.condition for row in rows if not row.condition.startswith("status 200")],
+            list(samples),
+        )
+        for row in rows:
+            for status, api_code in samples.get(row.condition, [(200, None)]):
+                with self.subTest(status=status, api_code=api_code):
+                    self.assertEqual(contract_files.error_code(status, api_code), row.code)
+
 
 class CoverageTest(unittest.TestCase):
-    def test_reports_an_error_code_that_no_scenario_reaches(self) -> None:
-        scenarios = {
-            name: scenario
-            for name, scenario in SCENARIOS.items()
-            if name != "lookup-origin-not-allowed"
-        }
+    def test_reports_each_scenario_that_is_deleted(self) -> None:
+        for name in SCENARIOS:
+            with self.subTest(name):
+                self.assertIn(
+                    f"client.md names the scenario {name}, which has no file.",
+                    contract_files.coverage_problems(without(name), CLIENT),
+                )
+
+    def test_reports_a_scenario_that_client_md_does_not_name(self) -> None:
+        scenarios = {**SCENARIOS, "lookup-level-one": SCENARIOS["lookup-level-1"]}
         self.assertEqual(
-            contract_files.coverage_problems(scenarios, CODES),
-            ["No scenario ends with the error code origin_not_allowed."],
+            contract_files.coverage_problems(scenarios, CLIENT),
+            ["client.md names no rule for the scenario lookup-level-one."],
         )
 
-    def test_reports_a_required_scenario_that_is_missing(self) -> None:
-        scenarios = {
-            name: scenario for name, scenario in SCENARIOS.items() if name != "lookup-queue-limit"
-        }
+    def test_reports_an_error_row_with_no_scenario(self) -> None:
+        row = error_row("status 402")
+        text = CLIENT.replace(row, row.replace("`lookup-insufficient-credits`", ""))
         self.assertEqual(
-            contract_files.coverage_problems(scenarios, CODES),
-            ["The scenario lookup-queue-limit is missing."],
+            contract_files.coverage_problems(without("lookup-insufficient-credits"), text),
+            ["The error row status 402 in client.md names no scenario."],
         )
+
+    def test_reports_a_scenario_of_a_row_that_ends_with_another_code(self) -> None:
+        row = error_row("status 402")
+        text = CLIENT.replace(row, f"{row} `lookup-no-key` |")
+        self.assertEqual(
+            contract_files.coverage_problems(SCENARIOS, text),
+            ["The scenario lookup-no-key does not end with insufficient_credits, as its row says."],
+        )
+
+    def test_reads_the_scenarios_of_each_error_row(self) -> None:
+        rows = {row.condition: row for row in contract_files.error_rows(CLIENT)}
+        self.assertEqual(rows["status 429"].code, "rate_limited")
+        self.assertIn("lookup-rate-limited", rows["status 429"].scenarios)
 
 
 class SyntheticFilesTest(unittest.TestCase):

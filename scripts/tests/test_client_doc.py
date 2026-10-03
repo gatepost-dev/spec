@@ -86,7 +86,7 @@ class RequestRulesTest(unittest.TestCase):
                 ["lookup-invalid-level"],
                 ["reverse-invalid-lat"],
                 ["reverse-invalid-lng"],
-                ["reverse-invalid-max-distance"],
+                ["reverse-invalid-max-distance", "reverse-invalid-negative-distance"],
             ],
         )
 

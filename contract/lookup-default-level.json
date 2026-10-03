@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "id": "lookup-default-level",
+  "description": "A lookup with no level sends level 1.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01"
+    }
+  ],
+  "responses": [
+    {
+      "fixture": "lookup/valid-level-1"
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request": {
+      "method": "GET",
+      "path": "/v1/lookup",
+      "query": {
+        "code": "FC-01-Z99-ZZ-01",
+        "level": "1"
+      },
+      "apiKey": "nipost_test_mock_l3"
+    },
+    "outcomes": [
+      {
+        "result": {
+          "postcode": "FC-01-Z99-ZZ-01",
+          "valid": true,
+          "status": "valid",
+          "levelRequested": 1,
+          "levelReceived": 1,
+          "administrativeAddress": null,
+          "recentHouseAddress": null,
+          "buildingUseStatus": null
+        }
+      }
+    ]
+  }
+}

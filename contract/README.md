@@ -40,7 +40,7 @@ The outcome above is short. A real scenario lists every field of the result.
 
 | `method` | Other fields |
 |---|---|
-| `lookup` | `code` and `level` |
+| `lookup` | `code`, and `level` when the call passes a level |
 | `reverse` | `lat`, `lng`, and `maxDistanceM` when the call passes a radius |
 | `autocomplete` | `q` |
 
@@ -69,10 +69,10 @@ The mock server gives the first response to the first request, the second respon
 | `attempts` | the number of requests that reached the transport, for all calls together |
 | `waitsMs` | for one call, the bounds of each wait between two attempts, in milliseconds |
 | `maxInFlight` | the most requests that were in flight at one time |
-| `request` | the first request: `method`, `path`, `query` and `apiKey`, which is null when the request had no `X-API-Key` header |
+| `request` | the first request: `method`, `path`, `query` and `apiKey`, which is null when the request had no `X-API-Key` header. `query` holds every parameter of the request, and no other, with each value as text |
 | `outcomes` | one outcome for each call, in the order of the calls |
 
-An outcome is `{"result": ...}` or `{"error": ...}`. A result uses the field names in `client.md`. A postcode in a result is its canonical form. An error has `code`, `status`, `apiCode` and `retryAfterMs`.
+An outcome is `{"result": ...}` or `{"error": ...}`. With one call, the reply to the last attempt decides the outcome, as `client.md` says, and `make check` compares the two. A result uses the field names in `client.md`. A postcode in a result is its canonical form. An error has `code`, `status`, `apiCode` and `retryAfterMs`.
 
 A wait runs from the end of one attempt to the start of the next one. Timers can fire late, so a test can accept a wait up to 100 ms over `max`. It must not accept a wait under `min`.
 

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "id": "lookup-shared-error",
+  "description": "Two identical calls that share one request both get its error.",
+  "client": {
+    "apiKey": "nipost_test_mock_l3"
+  },
+  "order": "parallel",
+  "calls": [
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 1
+    },
+    {
+      "method": "lookup",
+      "code": "FC-01-Z99-ZZ-01",
+      "level": 1
+    }
+  ],
+  "responses": [
+    {
+      "fixture": "errors/invalid-request",
+      "delayMs": 100
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "outcomes": [
+      {
+        "error": {
+          "code": "invalid_input",
+          "status": 400,
+          "apiCode": "invalid_request",
+          "retryAfterMs": null
+        }
+      },
+      {
+        "error": {
+          "code": "invalid_input",
+          "status": 400,
+          "apiCode": "invalid_request",
+          "retryAfterMs": null
+        }
+      }
+    ]
+  }
+}
