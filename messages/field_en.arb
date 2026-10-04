@@ -1,0 +1,138 @@
+{
+  "@@locale": "en",
+  "label": "Postcode",
+  "@label": {
+    "description": "The label of the input, when the page gives no label."
+  },
+  "hint": "11 letters and numbers, for example EK 01 A03 FK 01",
+  "@hint": {
+    "description": "The hint under the label. The example is the one in NIPOST's docs."
+  },
+  "empty": "Enter your postcode.",
+  "@empty": {
+    "description": "The input is required and empty."
+  },
+  "bad_character": "Use only letters and numbers.",
+  "@bad_character": {
+    "description": "The text holds a character that a postcode never has, such as a comma."
+  },
+  "bad_length": "A postcode has 11 letters and numbers. You entered {count}.",
+  "@bad_length": {
+    "description": "The text has too few or too many characters. Spaces and hyphens do not count.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknown_state": "The first part must be a state code, such as LA or FC.",
+  "@unknown_state": {
+    "description": "The first 2 letters are not one of the 37 state codes."
+  },
+  "bad_lga": "The second part must be a number from 01 to 99.",
+  "@bad_lga": {
+    "description": "The LGA segment, the second part, is not a number from 01 to 99."
+  },
+  "bad_area": "The fourth part must be 2 letters.",
+  "@bad_area": {
+    "description": "The area segment, the fourth part, holds a digit."
+  },
+  "bad_unit": "The last part must be a number from 01 to 99.",
+  "@bad_unit": {
+    "description": "The unit segment, the last part, is not a number from 01 to 99."
+  },
+  "suggestion": "Did you mean {postcode}?",
+  "@suggestion": {
+    "description": "A fix of look-alike characters, such as O for 0, gives this postcode.",
+    "placeholders": {
+      "postcode": {
+        "type": "String"
+      }
+    }
+  },
+  "use_suggestion": "Use this postcode",
+  "@use_suggestion": {
+    "description": "The button that puts the suggested postcode in the input."
+  },
+  "legacy_accepted": "This is an old 6-digit postcode. If you know your new one, enter it instead.",
+  "@legacy_accepted": {
+    "description": "The text is an old postcode, and the page accepts old postcodes."
+  },
+  "legacy_rejected": "This is an old 6-digit postcode. Enter a new one, such as EK 01 A03 FK 01.",
+  "@legacy_rejected": {
+    "description": "The text is an old postcode, and the page needs a new one."
+  },
+  "valid": "This postcode is in {state}.",
+  "@valid": {
+    "description": "The postcode has the right format. No check with NIPOST ran.",
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "checking": "Checking your postcode.",
+  "@checking": {
+    "description": "The field is asking NIPOST about the postcode."
+  },
+  "not_found": "We could not find this postcode. Check each part, or continue if you are sure.",
+  "@not_found": {
+    "description": "NIPOST does not know the postcode. The user can still send the form."
+  },
+  "confirmed": "We found this postcode in {state}.",
+  "@confirmed": {
+    "description": "NIPOST knows the postcode.",
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmed_place": "We found this postcode: {locality}, {lga}, {state}.",
+  "@confirmed_place": {
+    "description": "NIPOST knows the postcode and gave the names of its place.",
+    "placeholders": {
+      "locality": {
+        "type": "String"
+      },
+      "lga": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "check_failed": "We could not check this postcode just now. You can still continue.",
+  "@check_failed": {
+    "description": "The request to NIPOST failed, for example with no network."
+  },
+  "secret_key": "We cannot check postcodes on this page. You can still continue.",
+  "@secret_key": {
+    "description": "The page holds a secret key, so the field sends no request."
+  },
+  "use_location": "Use my location",
+  "@use_location": {
+    "description": "The button that finds the postcode of the user's location."
+  },
+  "locating": "Finding your location.",
+  "@locating": {
+    "description": "The field waits for the location, or for NIPOST's answer about it."
+  },
+  "gps_coarse": "We added part of your postcode from your location. Type the rest.",
+  "@gps_coarse": {
+    "description": "The location gave only part of a postcode, which the field put in the input."
+  },
+  "gps_not_found": "We found no postcode at your location. Type your postcode.",
+  "@gps_not_found": {
+    "description": "NIPOST has no postcode near the location."
+  },
+  "gps_denied": "We cannot use your location. Type your postcode.",
+  "@gps_denied": {
+    "description": "The user or the platform refused the location."
+  },
+  "gps_unavailable": "We could not find your location. Type your postcode.",
+  "@gps_unavailable": {
+    "description": "The device gave no location, or the request to NIPOST failed."
+  }
+}

@@ -1,6 +1,6 @@
 # Gatepost coding standards
 
-Version 1.1, 3 Oct 2026.
+Version 1.2, 3 Oct 2026.
 
 These standards apply to every Gatepost repo, in every language. Each repo also follows its language file in `standards/languages/`. Together, the two files are the standard for that repo.
 
@@ -11,7 +11,7 @@ These standards apply to every Gatepost repo, in every language. Each repo also 
 - A **SHOULD** rule can be skipped only with a written reason in the pull request.
 - A rule marked **(tool)** is enforced by CI. Reviewers do not check it by hand.
 - A language file can change a SHOULD rule for its language. It cannot change a MUST rule.
-- `spec/grammar.md` (with its Interface section), `spec/client.md`, `spec/data/`, `spec/vectors/`, `spec/fixtures/` and the contract scenarios in `spec/contract/` rank above this document. `spec/grammar.md` wins over a vector, and `spec/client.md` wins over a scenario. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
+- `spec/grammar.md` (with its Interface section), `spec/client.md`, `spec/field.md`, `spec/messages/`, `spec/data/`, `spec/vectors/`, `spec/fixtures/` and the contract scenarios in `spec/contract/` rank above this document. `spec/grammar.md` wins over a vector, and `spec/client.md` wins over a scenario. This document ranks above the language files. If two of them disagree, the higher one wins. Then fix the lower one.
 - To change a rule, open a pull request on the `spec` repo. Increase the version at the top of this file.
 
 ## Principles
@@ -28,7 +28,7 @@ The rules come from these seven principles. If no rule covers a case, apply the 
 
 ## Public interface
 
-- **API-1 MUST.** Every public symbol maps to a concept in the Interface section of `spec/grammar.md` or `spec/client.md`. A dev tool that no SDK user imports, such as the mock server, is outside this rule. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
+- **API-1 MUST.** Every public symbol maps to a concept in the Interface section of `spec/grammar.md`, `spec/client.md` or `spec/field.md`. A dev tool that no SDK user imports, such as the mock server, is outside this rule. A language file lists the idiomatic additions that its language needs, such as options types, async variants and callback types. To add, rename or remove a concept, change the spec first. To add an idiomatic addition, change the language file first.
 - **API-2 MUST.** Names and call shapes follow the cross-language map below.
 - **API-3 MUST.** Parse, don't validate. A function that reads a postcode returns a typed result, not a boolean. A boolean helper can exist only as a thin wrapper over `parse`.
 - **API-4 MUST.** Expected failures are values. `parse` returns its errors. Only I/O failures, API failures and programmer errors raise or throw.
@@ -169,8 +169,9 @@ The command exits with 0 when all files pass, with 1 when a rule is broken, and 
 ## Documentation
 
 - **DOC-1 MUST.** Each public symbol has a doc comment. It gives a one-line summary, each parameter, each error and one example.
-- **DOC-2 MUST.** Each README follows `templates/README.md`.
-- **DOC-3 MUST.** Each code example in a README or on the docs site runs in CI.
+- **DOC-2 MUST.** Each README follows `templates/README.md`, with the sections in its order. It starts with a centred header block: the logo in a `<picture>` element, the name, one tagline, the badges and a row of links. The line "Unofficial. Not made or endorsed by NIPOST." follows as a quote block. The header block is the only place for HTML. A package README has 100 to 130 lines, with an install command, two short examples, a table of the main functions, 4 to 8 feature bullets and the requirements. The docs site holds the rest. A monorepo root README holds a table of packages and little else. A badge shows a thing that exists today, so the version badge waits for the registry. Questions go to GitHub Discussions, bugs to GitHub Issues and security reports to the private form. Steps for maintainers do not belong in a README. Link the contributing guide.
+- **DOC-2a MUST.** An install command is the real command. If the package is not on its registry, a plain sentence under the command says so. The first release removes that sentence.
+- **DOC-3 MUST.** Each code example in a README or on the docs site runs in CI. The quickstart has 10 lines or fewer.
 - **DOC-4 MUST.** Prose uses plain English. Write sentences of 25 words or fewer, with one idea in each. Use the active voice, and name who does the action. Use the plainest word, and use one word for one meaning. Keep every article and connector. Write a verb, not a noun that is made from it, and do not put more than three nouns in a row. Do not use phrasal verbs, semicolons, stacked hedges, em dashes or marketing words such as "powerful" and "seamless". Do not open with filler or close with a summary. Use British spelling.
 - **DOC-5 MUST.** Each package has a changelog that change files generate. It follows the Keep a Changelog format, unless the release tool writes its own format. Changesets, the tool for npm packages, writes its own format.
 - **DOC-6 SHOULD.** Record a decision as an ADR when it is hard to reverse, surprising, and the result of a real trade-off. An ADR is a short file in `docs/adr/` that gives the context, the decision and the reason.
