@@ -400,5 +400,5 @@ class PointerTest(unittest.TestCase):
 
     def test_the_readme_lists_field_md_and_the_catalogues(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("| `field.md` |", readme)
-        self.assertIn("| `messages/` |", readme)
+        self.assertIn("| [`field.md`](field.md) |", readme)
+        self.assertIn("| [`messages/`](messages) |", readme)
