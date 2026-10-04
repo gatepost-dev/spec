@@ -1,6 +1,6 @@
 # TypeScript standards
 
-Version 1.1, 3 Oct 2026.
+Version 1.2, 3 Oct 2026.
 
 This file and `standards/CODING_STANDARDS.md` together are the standard for TypeScript code. They apply to every package and app in the `js` repo: core, client, field, React wrapper, docs site and demos. Later TypeScript work follows them too, such as the MCP server, the n8n node and the spreadsheet add-ins.
 
@@ -25,9 +25,9 @@ This file and `standards/CODING_STANDARDS.md` together are the standard for Type
 | Vitest with V8 coverage | unit tests | coverage floors from T-7 |
 | fast-check | property tests | `parse`, `normalize` and the hierarchy functions |
 | Playwright with `@axe-core/playwright` | browser and accessibility tests | field and docs site |
-| monocart-coverage-reports | merged coverage | merges Vitest and Playwright V8 coverage for the field, so T-7 counts browser tests |
+| Vitest browser mode with `@vitest/browser-playwright` | component tests in Chromium | field and React wrapper. The V8 coverage of these tests counts for T-7 |
 | StrykerJS | mutation tests | `@gatepost/core`, weekly scheduled job |
-| size-limit | size limits | core 4 KB, client 6 KB, field 20 KB, compressed, as size-limit measures them |
+| size-limit | size limits | core 4 KB, client 6 KB, field 20 KB, React wrapper 1 KB without React and the field, compressed, as size-limit measures them |
 | publint and `@arethetypeswrong/cli` | package checks | every published package |
 | API Extractor | API report | `etc/<package>.api.md`, checked in CI |
 | Changesets | versions and changelogs | one change file per user-visible change |
@@ -106,7 +106,7 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 - **TS-22 MUST.** Write an options object type inline as `Readonly<{ name?: Type }>`, and document it with one `@param options` line. The literal `readonly` form fails `eslint-plugin-jsdoc`, and a dotted `@param` name fails the TSDoc parser that API Extractor uses.
 - **TS-10 MUST.** An error class extends `Error`, sets `name` and passes `cause`.
 - **TS-11 MUST.** A `catch` block treats its value as `unknown` and narrows it. **(tool)**
-- **TS-12 MUST.** Packages do not call `console`. **(tool)**
+- **TS-12 MUST.** Packages do not call `console`. The one exception is the console error of the field for a secret key, which `spec/field.md` asks for. **(tool)**
 - **TS-13 MUST.** Each `eslint-disable` comment gives a reason. **(tool)**
 - **TS-14 MUST.** Each package ships ESM with an `exports` map and type declarations. **(tool)**
 - **TS-15 MUST.** Browser code does not read `window`, `document` or `customElements` at import time. The field's guarded registration is the one exception.
@@ -119,7 +119,17 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 
 ### Idiomatic additions (API-1)
 
-The TypeScript SDK follows the Interface section of `spec/grammar.md` exactly. It adds no idiomatic symbols.
+The TypeScript packages follow the Interface sections of `spec/grammar.md`, `spec/client.md` and `spec/field.md`. They add these idiomatic symbols:
+
+- `@gatepost/client`: the options type `ClientOptions`, and a type for each result and each set of codes, such as `LookupResult` and `PostcodeErrorCode`.
+- `@gatepost/field`: the element class `PostcodeFieldElement`, with the members that the platform needs:
+  - the static members `formAssociated` and `observedAttributes`.
+  - the lifecycle callbacks `connectedCallback()`, `disconnectedCallback()` and `attributeChangedCallback()`.
+  - the form callbacks `formResetCallback()`, `formDisabledCallback()` and `formStateRestoreCallback()`.
+  - the form-control members `form`, `validity`, `validationMessage`, `willValidate`, `checkValidity()` and `reportValidity()`.
+  - the properties `value` and `messages`, which are the settings of the same names.
+- `@gatepost/field` also adds the detail types `ChangeDetail`, `ConfirmDetail` and `ErrorDetail`, and the unions `ChangeSource` and `FieldErrorCode`. It adds `Messages`, the type of a catalogue, and `MessageKey`, the type of its keys.
+- `@gatepost/react`: the component `PostcodeField` and its props type `PostcodeFieldProps`. Each setting of the field is a prop in camelCase, except `value`, which is `defaultValue`. The events are `onChange`, `onConfirm` and `onError`.
 
 ## Names
 

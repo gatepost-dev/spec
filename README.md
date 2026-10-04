@@ -69,6 +69,8 @@ Every SDK runs the cases in [`vectors/`](vectors).
 |---|---|
 | [`grammar.md`](grammar.md) | how every SDK reads and writes postcodes, and the public interface |
 | [`client.md`](client.md) | how every client calls NIPOST's gateway: results, errors, retries and the queue |
+| [`field.md`](field.md) | how every postcode field behaves: settings, events, states, accessibility and privacy |
+| [`messages/`](messages) | the text of the field, one message catalogue for each language |
 | [`openapi/`](openapi) | NIPOST's gateway, completed with the responses that its own file leaves out |
 | [`fixtures/`](fixtures) | synthetic gateway responses and keys for the mock server |
 | [`contract/`](contract) | shared client test cases that every client must pass against the mock server |

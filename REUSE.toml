@@ -1,7 +1,9 @@
 version = 1
 
 [[annotations]]
-path = ["**/*.md", "**/*.json", "**/*.yml", "VERSION", "NOTICE", "templates/NOTICE"]
+path = [
+  "**/*.md", "**/*.json", "**/*.yml", "messages/*.arb", "VERSION", "NOTICE", "templates/NOTICE",
+]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 The Gatepost authors"
 SPDX-License-Identifier = "Apache-2.0"
