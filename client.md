@@ -111,6 +111,17 @@ A client ignores a field that this contract does not use, in a lookup, a reverse
 - The client writes each number in the query in its shortest decimal form, with no exponent and no trailing zero: `lat=9`, not `lat=9.0` and not `lat=9e0`. A negative zero is written `0`. A small value is written in full: `0.0000001`, not `1e-7`. Languages print numbers in different forms, so one fixed form gives every client the same query for the same input. The mock server compares numbers by value, so it also accepts `9.0`. The scenarios `reverse-plain-decimal` and `reverse-whole-number` test this rule.
 - `autocomplete` normalises its text with the core. Empty text, text of more than 11 characters, and text with a character other than A to Z and 0 to 9 raise `invalid_input`, and the client sends no request. The gateway does not answer an empty `q`. The request sends the normalised text: `q=FC01Z`. The scenarios `autocomplete-empty-input`, `autocomplete-too-long`, `autocomplete-bad-character` and `autocomplete-district` test this rule.
 
+## Keys in a browser
+
+A browser client runs in a web page, where `document` exists. Anyone can read a key that a web page holds, so a browser client accepts only a publishable key (SEC-1). A server client accepts any key, a secret key included.
+
+- With no key, a browser client sends no `X-API-Key` header, as a server client does.
+- A browser client reads a key without the white space at the start and the end. A browser drops that white space from a header value, so a padded key reaches the gateway as the key itself.
+- A key that starts with `nipost_pk_` passes. This checks the kind of the key only. The gateway can still refuse it.
+- For a key that starts with `nipost_test_` or `nipost_live_`, `PostcodeClient(options)` raises a type error, `TypeError` in TypeScript. Its message says that a web page must not hold a secret key.
+- For an unsupported key, which is any other key, it raises the same type error with a second message. That message says that the key is not a publishable key.
+- Neither message holds the key (ERR-3). No client is created with a refused key, so no request leaves with it.
+
 ## Errors
 
 `PostcodeError` has these fields:
@@ -170,6 +181,7 @@ Each client tests these rules itself.
 - The programmer errors in the client options.
 - Cancellation (API-11), because each language cancels in its own way.
 - That no error message holds the API key.
+- The keys in a browser. A scenario runs in no web page, so each client tests a publishable key, no key, both secret prefixes, an unsupported key and a key with white space around it.
 - The cancellation rules of sharing and the queue: a shared request stops only when every caller cancels, and a cancelled call frees its place among the 4.
 - The default `timeoutMs` of 15 seconds for `autocomplete`, because a scenario would wait that long.
 - The random part of each wait, beyond its bounds.

@@ -16,7 +16,7 @@ STANDARDS = ROOT / "standards" / "CODING_STANDARDS.md"
 TYPESCRIPT = ROOT / "standards" / "languages" / "typescript.md"
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 CODE = re.compile(r"`([a-z_]+)`")
-FIELD_CODES = {"secret_key", "gps_denied", "gps_unavailable"}
+FIELD_CODES = {"secret_key", "unsupported_key", "gps_denied", "gps_unavailable"}
 STATES = [
     "GPS locating",
     "checking",
@@ -173,6 +173,7 @@ class InterfaceTest(unittest.TestCase):
                 ("error", "`check_failed`", client),
                 ("error", "`check_failed`", "`network_error`"),
                 ("error", "`secret_key`", "`secret_key`"),
+                ("error", "`unsupported_key`", "`unsupported_key`"),
                 ("GPS denied", "`gps_denied`", "`gps_denied`"),
                 ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
                 ("GPS denied", "`gps_unavailable`", "`gps_unavailable`"),
@@ -181,6 +182,7 @@ class InterfaceTest(unittest.TestCase):
                 ("GPS denied", "`gps_unavailable`", "`network_error`"),
                 ("GPS denied", "`gps_not_found`", "no event"),
                 ("error", "`secret_key`", "`secret_key`"),
+                ("error", "`unsupported_key`", "`unsupported_key`"),
             ],
         )
 
@@ -274,7 +276,7 @@ class PinTest(unittest.TestCase):
             "The state `error` lasts until the text or a setting changes.",
             "A press of the location button cancels the lookup in progress, and the field"
             " forgets the remembered lookup.",
-            "It sends no request with that key, and it shows no location button.",
+            "It sends no request with a refused key, and it shows no location button.",
         ):
             with self.subTest(rule=rule):
                 self.assertIn(rule, part)
@@ -287,8 +289,8 @@ class PinTest(unittest.TestCase):
             "A request that the field sends after a change of the key follows the rules for"
             " the new key.",
             "When the position arrives, the field sends `reverse` with the key that it holds then.",
-            "With a secret key, it sends nothing, shows the state `error` and raises the event"
-            " `error` with the code `secret_key`.",
+            "With a refused key, it sends nothing, shows the state `error` and raises the event"
+            " `error` with the code that Lookups gives.",
             "With no key, it sends nothing and shows the state that its text gives.",
             "The states `GPS coarse` and `GPS denied` last until the text changes.",
         ):
@@ -308,12 +310,34 @@ class PinTest(unittest.TestCase):
             "Or the text is empty, `required` is set and the field shows errors",
             states["invalid format"],
         )
-        self.assertIn("a secret key", states["error"])
+        self.assertIn("a secret key or an unsupported key", states["error"])
         self.assertIn("`reverse`", states["error"])
 
     def test_the_catalogue_says_when_the_device_gives_no_location(self) -> None:
         description = catalogue()["@gps_unavailable"]["description"]
         self.assertIn("The device gave no location", description)
+
+
+class KeyTest(unittest.TestCase):
+    lookups = section("## Lookups")
+
+    def test_the_field_accepts_only_a_publishable_key(self) -> None:
+        for rule in (
+            "The field accepts only a publishable key, which starts with `nipost_pk_`.",
+            "It reads the key without the white space at the start and the end.",
+            "It refuses a secret key, which starts with `nipost_test_` or `nipost_live_`,"
+            " and an unsupported key, which is any other key.",
+            "The field logs one console error for the developer each time it reads a key"
+            " that it refuses.",
+            "The code is `secret_key` for a secret key and `unsupported_key` for an"
+            " unsupported key.",
+        ):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, self.lookups)
+
+    def test_an_unsupported_key_shows_the_text_of_a_secret_key(self) -> None:
+        self.assertEqual(messages()["unsupported_key"], messages()["secret_key"])
+        self.assertNotIn("secret", catalogue()["@unsupported_key"]["description"])
 
 
 class LocationTest(unittest.TestCase):

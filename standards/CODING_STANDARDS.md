@@ -144,7 +144,7 @@ The command exits with 0 when all files pass, with 1 when a rule is broken, and 
 
 ## Security and privacy
 
-- **SEC-1 MUST.** Client-side code refuses secret keys, which start with `nipost_test_` or `nipost_live_`.
+- **SEC-1 MUST.** Client-side code accepts only publishable keys, which start with `nipost_pk_`. It refuses secret keys, which start with `nipost_test_` or `nipost_live_`, and any other key.
 - **SEC-2 MUST.** There is no telemetry. An SDK sends only the requests that the caller makes.
 - **SEC-3 MUST.** The cache is off by default. When on, it has a time limit and a clear command.
 - **SEC-4 MUST.** Call only the documented gateway endpoints.

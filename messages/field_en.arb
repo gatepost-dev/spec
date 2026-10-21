@@ -111,6 +111,10 @@
   "@secret_key": {
     "description": "The page holds a secret key, so the field sends no request."
   },
+  "unsupported_key": "We cannot check postcodes on this page. You can still continue.",
+  "@unsupported_key": {
+    "description": "The page holds a key of an unknown kind, so the field sends no request."
+  },
   "use_location": "Use my location",
   "@use_location": {
     "description": "The button that finds the postcode of the user's location."
