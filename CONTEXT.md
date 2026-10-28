@@ -115,6 +115,10 @@ _Avoid_: private key, API secret
 An API key that can ship inside an app or a web page. It starts with `nipost_pk_`.
 _Avoid_: public key, client key
 
+**Unsupported key**:
+A key that is neither a publishable key nor a secret key. A browser client and a field refuse it.
+_Avoid_: unknown key, invalid key
+
 **Widget**:
 NIPOST's own postcode picker. Gatepost does not build widgets.
 _Avoid_: using this word for a Gatepost component

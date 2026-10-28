@@ -106,6 +106,32 @@ class RequestRulesTest(unittest.TestCase):
             self.assertIn(text, bullet)
 
 
+class BrowserKeyTest(unittest.TestCase):
+    keys = section(CLIENT, "## Keys in a browser")
+
+    def test_a_browser_client_accepts_only_a_publishable_key(self) -> None:
+        for text in (
+            "a browser client accepts only a publishable key (SEC-1)",
+            "A server client accepts any key, a secret key included.",
+            "without the white space at the start and the end",
+            "A key that starts with `nipost_pk_` passes.",
+            "Neither message holds the key (ERR-3).",
+        ):
+            with self.subTest(text=text):
+                self.assertIn(text, self.keys)
+
+    def test_a_secret_key_and_an_unsupported_key_get_two_messages(self) -> None:
+        lines = self.keys.splitlines()
+        secret = next(x for x in lines if "`nipost_test_` or `nipost_live_`" in x)
+        other = next(x for x in lines if x.startswith("- For an unsupported key"))
+        self.assertIn("must not hold a secret key", secret)
+        self.assertIn("is not a publishable key", other)
+
+    def test_each_client_tests_the_keys_in_a_browser(self) -> None:
+        untested = section(CLIENT, "## Rules that no scenario tests")
+        self.assertIn("The keys in a browser.", untested)
+
+
 class UnknownFieldsTest(unittest.TestCase):
     def test_a_field_that_the_contract_does_not_use_never_changes_a_result(self) -> None:
         paragraph = next(x for x in CLIENT.split("\n\n") if x.startswith("A client ignores"))
@@ -210,6 +236,11 @@ class StandardsTest(unittest.TestCase):
         self.assertIn("`spec/client.md`", ranking)
         self.assertIn("`spec/client.md` wins over a scenario", ranking)
         self.assertIn("`spec/client.md`", api_1)
+
+    def test_sec_1_accepts_only_publishable_keys(self) -> None:
+        lines = STANDARDS.read_text(encoding="utf-8").splitlines()
+        sec_1 = next(x for x in lines if x.startswith("- **SEC-1"))
+        self.assertIn("accepts only publishable keys, which start with `nipost_pk_`", sec_1)
 
     def test_the_mock_server_section_does_not_list_the_core_only_rule(self) -> None:
         text = TYPESCRIPT.read_text(encoding="utf-8")

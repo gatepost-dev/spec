@@ -106,7 +106,7 @@ Prettier's `printWidth: 100` matches TELL-1. Prettier does not split long string
 - **TS-22 MUST.** Write an options object type inline as `Readonly<{ name?: Type }>`, and document it with one `@param options` line. The literal `readonly` form fails `eslint-plugin-jsdoc`, and a dotted `@param` name fails the TSDoc parser that API Extractor uses.
 - **TS-10 MUST.** An error class extends `Error`, sets `name` and passes `cause`.
 - **TS-11 MUST.** A `catch` block treats its value as `unknown` and narrows it. **(tool)**
-- **TS-12 MUST.** Packages do not call `console`. The one exception is the console error of the field for a secret key, which `spec/field.md` asks for. **(tool)**
+- **TS-12 MUST.** Packages do not call `console`. The one exception is the console error of the field for a key that it refuses, which `spec/field.md` asks for. **(tool)**
 - **TS-13 MUST.** Each `eslint-disable` comment gives a reason. **(tool)**
 - **TS-14 MUST.** Each package ships ESM with an `exports` map and type declarations. **(tool)**
 - **TS-15 MUST.** Browser code does not read `window`, `document` or `customElements` at import time. The field's guarded registration is the one exception.

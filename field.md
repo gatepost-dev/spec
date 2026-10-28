@@ -27,7 +27,7 @@ A field exposes the symbols in this table and the types that they need. A langua
 |---|---|
 | `change` | `value`: the form value. `postcode`: the postcode when the text parses as a whole postcode, or null. `source`: `typed`, `pasted`, `suggestion` or `gps`. `accuracyM`: the accuracy of the location in metres when `source` is `gps`, or null |
 | `confirm` | `lookup`: the lookup result of the client |
-| `error` | `code`: an error code of the client, or `secret_key`, `gps_denied` or `gps_unavailable`. The table in Failures gives the code of each failure |
+| `error` | `code`: an error code of the client, or `secret_key`, `unsupported_key`, `gps_denied` or `gps_unavailable`. The table in Failures gives the code of each failure |
 
 ### On the web
 
@@ -80,9 +80,9 @@ The web field is the custom element `gatepost-postcode-field`. It is a form-asso
 - A change of `baseUrl` alone starts no lookup and cancels none. The next request uses the new address.
 - A press of the location button cancels the lookup in progress, and the field forgets the remembered lookup.
 - The field ignores the answer to a cancelled request. It changes nothing on screen, and it raises no event.
-- The field refuses a secret key, which starts with `nipost_test_` or `nipost_live_`. It sends no request with that key, and it shows no location button. Location says what happens to a location request in progress when the key changes.
-- The field logs one console error for the developer each time it reads a secret key. It reads the key when it starts, and when the key or `baseUrl` changes. The error never holds the key (ERR-3).
-- In place of each lookup that it would start, the field shows the state `error` and raises the event `error` with the code `secret_key`. So an app that adds its listener late still hears of it. With `confirm` set to `none`, the field raises no event.
+- The field accepts only a publishable key, which starts with `nipost_pk_`. It reads the key without the white space at the start and the end. It refuses a secret key, which starts with `nipost_test_` or `nipost_live_`, and an unsupported key, which is any other key. It sends no request with a refused key, and it shows no location button. Location says what happens to a location request in progress when the key changes.
+- The field logs one console error for the developer each time it reads a key that it refuses. It reads the key when it starts, and when the key or `baseUrl` changes. The error never holds the key (ERR-3).
+- In place of each lookup that it would start, the field shows the state `error` and raises the event `error`. The code is `secret_key` for a secret key and `unsupported_key` for an unsupported key. So an app that adds its listener late still hears of it. With `confirm` set to `none`, the field raises no event.
 - At level 2, the confirmation names the locality, the LGA and the state from the administrative address, when the lookup gives all three. Otherwise, it names the state of the postcode with `stateName`.
 - The event `confirm` gives the app the whole lookup result. Privacy says what the field itself never shows.
 
@@ -103,7 +103,7 @@ The web field is the custom element `gatepost-postcode-field`. It is a form-asso
 - The user can always type. A change of the text cancels a location request in progress.
 - A new press of the button and the removal of the field also cancel it. A change of a setting never cancels it, not even a change of the key.
 - A request that the field sends after a change of the key follows the rules for the new key. When the position arrives, the field sends `reverse` with the key that it holds then.
-- With a secret key, it sends nothing, shows the state `error` and raises the event `error` with the code `secret_key`. With no key, it sends nothing and shows the state that its text gives.
+- With a refused key, it sends nothing, shows the state `error` and raises the event `error` with the code that Lookups gives. With no key, it sends nothing and shows the state that its text gives.
 - A `reverse` call that the field sent before the change stays, and its answer counts.
 - While a location request is in progress, the field starts no lookup. A change of a setting then changes only the validity.
 - The states `GPS coarse` and `GPS denied` last until the text changes.
@@ -123,6 +123,7 @@ Each failure gives one state and one message. The last column gives the code of 
 | a lookup fails with an error of the client | error | `check_failed` | the code of the client's error, such as `network_error` or `rate_limited` |
 | a lookup throws an error that is not an error of the client, such as for a base address with no scheme | error | `check_failed` | `network_error` |
 | a lookup is due, and the key is a secret key | error | `secret_key` | `secret_key` |
+| a lookup is due, and the key is an unsupported key | error | `unsupported_key` | `unsupported_key` |
 | the user or the platform refuses the location | GPS denied | `gps_denied` | `gps_denied` |
 | the platform has no location API | GPS denied | `gps_unavailable` | `gps_unavailable` |
 | the device reports that it has no location | GPS denied | `gps_unavailable` | `gps_unavailable` |
@@ -131,6 +132,7 @@ Each failure gives one state and one message. The last column gives the code of 
 | `reverse` throws an error that is not an error of the client | GPS denied | `gps_unavailable` | `network_error` |
 | `reverse` gives no postcode that parses | GPS denied | `gps_not_found` | no event |
 | `reverse` is due, and the key is now a secret key | error | `secret_key` | `secret_key` |
+| `reverse` is due, and the key is now an unsupported key | error | `unsupported_key` | `unsupported_key` |
 
 ## States
 
@@ -142,7 +144,7 @@ The field shows the first state in this table whose condition holds. The first s
 | checking | a lookup is in progress | `checking` |
 | confirmed | the remembered lookup found the postcode | `confirmed` or `confirmed_place` |
 | not found | the remembered lookup says that the gateway does not know the postcode | `not_found` |
-| error | the last lookup failed. Or a lookup or a `reverse` call was due, and the key is a secret key | `check_failed` or `secret_key` |
+| error | the last lookup failed. Or a lookup or a `reverse` call was due, and the key is a secret key or an unsupported key | `check_failed`, `secret_key` or `unsupported_key` |
 | GPS coarse | the last location request gave a partial postcode, and the text has not changed since | `gps_coarse` |
 | GPS denied | the last location request failed, and the text has not changed since | `gps_denied`, `gps_unavailable` or `gps_not_found` |
 | legacy code | the text is a legacy postcode | `legacy_accepted` or `legacy_rejected` |
@@ -179,6 +181,7 @@ The field shows the first state in this table whose condition holds. The first s
 | `confirmed_place` | `{locality}`, `{lga}`, `{state}` | in the state `confirmed`, when the lookup gives the locality, the LGA and the state names |
 | `check_failed` | none | in the state `error`, after a failed lookup |
 | `secret_key` | none | in the state `error`, for a secret key |
+| `unsupported_key` | none | in the state `error`, for an unsupported key. A user does not need to know the kind of key, so the English text is that of `secret_key` |
 | `use_location` | none | as the text of the location button |
 | `locating` | none | in the state `GPS locating` |
 | `gps_coarse` | none | in the state `GPS coarse`. A precise fix with no unit also gives a partial postcode, so the text names no cause and no count of segments |
